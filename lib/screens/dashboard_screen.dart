@@ -12,7 +12,7 @@ class DashboardScreen extends StatelessWidget {
     {'judul': 'Bahasa Inggris', 'jenjang': 'SMP', 'icon': Icons.language},
     {'judul': 'Fisika', 'jenjang': 'SMA', 'icon': Icons.bolt},
     {'judul': 'Kimia', 'jenjang': 'SMA', 'icon': Icons.biotech},
-  ];
+  ];   
 
   @override
   Widget build(BuildContext context) {
