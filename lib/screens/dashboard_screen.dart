@@ -1,221 +1,217 @@
 import 'package:flutter/material.dart';
+import '../shared/widgets/headers/app_header.dart';
+
+//Nama: Ali As'ad Muhasiby
+//NIM: E41252166
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
-  static const _accent = Color(0xFF5B5FEF);
-
-  static const List<Map<String, dynamic>> _dummyModul = [
-    {'judul': 'Matematika Dasar', 'jenjang': 'SD', 'icon': Icons.calculate},
-    {'judul': 'Bahasa Indonesia', 'jenjang': 'SD', 'icon': Icons.menu_book},
-    {'judul': 'IPA Terpadu', 'jenjang': 'SMP', 'icon': Icons.science},
-    {'judul': 'Bahasa Inggris', 'jenjang': 'SMP', 'icon': Icons.language},
-    {'judul': 'Fisika', 'jenjang': 'SMA', 'icon': Icons.bolt},
-    {'judul': 'Kimia', 'jenjang': 'SMA', 'icon': Icons.biotech},
-  ];   
-
   @override
   Widget build(BuildContext context) {
+    // Media Query
     final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth > 600 ? 32.0 : 20.0;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
-
-      // biar isi ga nabrak sm status bar HP
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            int jumlahKolom;
-
-            // HP kecil = 2 kolom
-            if (constraints.maxWidth < 500) {
-              jumlahKolom = 2;
-
-              // kalau agak lebar = 3 kolom
-            } else if (constraints.maxWidth < 900) {
-              jumlahKolom = 3;
-
-              // kalau layarnya gede = 4 kolom
-            } else {
-              jumlahKolom = 4;
-            }
-
-            return Padding(
-              // kasih jarak dari pinggir layar
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: _accent.withValues(alpha: 0.1),
-                        child: const Icon(Icons.person, color: _accent),
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Halo, Siswa 👋',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-
-                          Text(
-                            'Pilih modul belajar',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // expanded biar GridView ngisi sisa layar
-                  Expanded(
-                    child: GridView.builder(
-                      // ngatur tampilan grid
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        // jumlah card dalam satu baris
-                        crossAxisCount: jumlahKolom,
-
-                        // jarak antar card
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-
-                        // ngatur ukuran card
-                        childAspectRatio: 0.95,
-                      ),
-
-                      // jumlah card ngikut jumlah modul
-                      itemCount: _dummyModul.length,
-
-                      // bikin card satu-satu
-                      itemBuilder: (context, index) {
-                        // ambil data sesuai index
-                        final modul = _dummyModul[index];
-
-                        return _ModulCard(
-                          judul: modul['judul'] as String,
-                          jenjang: modul['jenjang'] as String,
-                          icon: modul['icon'] as IconData,
-
-                          onTap: () {
-                        
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Buka modul: ${modul['judul']}'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: 16.0,
         ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            const AppHeader(
+              name: 'Admin',
+              subtitle: 'Kelola platform dengan mudah',
+            ),
+            const SizedBox(height: 24),
+
+            _buildMetricsGrid(),
+            const SizedBox(height: 24),
+
+            _buildPlatformActivityCard(),
+            const SizedBox(height: 24),
+
+            _buildTopSubjectsCard(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricsGrid() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 550;
+        return GridView.count(
+          crossAxisCount: isWide ? 4 : 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: isWide ? 1.5 : 1.35,
+          children: const [
+            _CardItem(title: 'Siswa', value: '1,248', icon: Icons.people_outline),
+            _CardItem(title: 'Murid', value: '156', icon: Icons.menu_book_outlined),
+            _CardItem(title: 'Soal', value: '2,450', icon: Icons.edit_outlined),
+            _CardItem(title: 'Quiz', value: '23', icon: Icons.star_outline_rounded),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPlatformActivityCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E9F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Aktivitas Platform', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 100,
+            width: double.infinity,
+            child: CustomPaint(painter: _ChartPainter()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopSubjectsCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E9F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('Top Mata Pelajaran', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          SizedBox(height: 16),
+          _SubjectProgress(title: 'Matematika', percentage: 92),
+          SizedBox(height: 14),
+          _SubjectProgress(title: 'Bahasa Inggris', percentage: 78),
+          SizedBox(height: 14),
+          _SubjectProgress(title: 'IPA', percentage: 65),
+          SizedBox(height: 14),
+          _SubjectProgress(title: 'IPS', percentage: 60),
+        ],
       ),
     );
   }
 }
 
-class _ModulCard extends StatelessWidget {
-  final String judul;
-  final String jenjang;
+// Widget internal kartu
+class _CardItem extends StatelessWidget {
+  final String title;
+  final String value;
   final IconData icon;
-  final VoidCallback onTap;
 
-  const _ModulCard({
-    required this.judul,
-    required this.jenjang,
-    required this.icon,
-    required this.onTap,
-  });
-
-  static const _accent = Color(0xFF5B5FEF);
+  const _CardItem({required this.title, required this.value, required this.icon});
 
   @override
   Widget build(BuildContext context) {
-    // InkWell biar card bs diklik
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-
-      child: Container(
-        padding: const EdgeInsets.all(16),
-
-        // tampilan card
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: _accent.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 26, color: _accent),
-            ),
-
-            const Spacer(),
-
-            Text(
-              judul,
-              maxLines: 2,
-
-              overflow: TextOverflow.ellipsis,
-
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-
-            const SizedBox(height: 6),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                jenjang,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E9F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: const TextStyle(color: Color(0xFF7A869A))),
+              Icon(icon, size: 18, color: const Color(0xFF2F66EE)),
+            ],
+          ),
+          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
+}
+
+// Widget internal progress bar dengan LayoutBuilder
+class _SubjectProgress extends StatelessWidget {
+  final String title;
+  final int percentage;
+
+  const _SubjectProgress({required this.title, required this.percentage});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+            Text('$percentage%', style: const TextStyle(color: Color(0xFF2F66EE), fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                Container(height: 8, width: constraints.maxWidth, decoration: BoxDecoration(color: const Color(0xFFF0F4FA), borderRadius: BorderRadius.circular(4))),
+                Container(height: 8, width: (percentage / 100) * constraints.maxWidth, decoration: BoxDecoration(color: const Color(0xFF2F66EE), borderRadius: BorderRadius.circular(4))),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _ChartPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final dashedPaint = Paint()..color = const Color(0xFFDDE3EC)..strokeWidth = 1.0..style = PaintingStyle.stroke;
+    double startX = 0;
+    while (startX < size.width) {
+      canvas.drawLine(Offset(startX, size.height * 0.55), Offset(startX + 4, size.height * 0.55), dashedPaint);
+      startX += 8;
+    }
+
+    final linePaint = Paint()..color = const Color(0xFF2F66EE)..strokeWidth = 2.5..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
+    final path = Path();
+    final points = [
+      Offset(0, size.height * 0.72),
+      Offset(size.width * 0.15, size.height * 0.60),
+      Offset(size.width * 0.28, size.height * 0.70),
+      Offset(size.width * 0.42, size.height * 0.52),
+      Offset(size.width * 0.55, size.height * 0.58),
+      Offset(size.width * 0.70, size.height * 0.45),
+      Offset(size.width * 0.85, size.height * 0.48),
+      Offset(size.width * 1.0, size.height * 0.20),
+    ];
+    path.moveTo(points.first.dx, points.first.dy);
+    for (int i = 1; i < points.length; i++) {
+      path.lineTo(points[i].dx, points[i].dy);
+    }
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

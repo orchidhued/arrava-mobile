@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../screens/dashboard_screen.dart';
+import '../screens/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     });
   }
