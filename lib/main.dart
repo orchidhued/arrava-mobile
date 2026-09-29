@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF5B5FEF),
+        colorSchemeSeed: const Color(0xFF3B82F6),
       ),
       home: const LoginScreen(),
     );
