@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'auth/login.dart';
+import 'core/routes/app_routes.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,10 +15,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Arrava Mobile',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF3B82F6),
-      ),
+      theme: AppTheme.lightTheme,
+      routes: AppRoutes.routes,
       home: const LoginScreen(),
     );
   }
