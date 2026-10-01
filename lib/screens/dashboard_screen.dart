@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../shared/widgets/headers/app_header.dart';
 
-//Nama: Ali As'ad Muhasiby
-//NIM: E41252166
-
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -23,19 +20,22 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Panggil Header yang dipisah
             const AppHeader(
               name: 'Admin',
               subtitle: 'Kelola platform dengan mudah',
             ),
             const SizedBox(height: 24),
 
+            // Kartu Metrik (LayoutBuilder)
             _buildMetricsGrid(),
             const SizedBox(height: 24),
 
+            // Grafik Aktivitas
             _buildPlatformActivityCard(),
             const SizedBox(height: 24),
 
+            // Top Mata Pelajaran (LayoutBuilder di progress bar)
             _buildTopSubjectsCard(),
           ],
         ),
@@ -43,6 +43,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // Method-method pendukung tetap di dalam file ini karena Anda tidak ingin memisahkannya ke banyak file
   Widget _buildMetricsGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
