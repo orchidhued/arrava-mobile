@@ -81,46 +81,52 @@ class _ModulePageState extends State<ModulePage> {
   Widget build(BuildContext context) {
     final modules = _getFilteredModules();
 
-    return SafeArea(
-      child: Column(
-        children: [
-          AppHeader(title: 'Kelola Modul', onNotificationTap: () {}),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            AppHeader(
+              title: 'Kelola Modul',
+              onNotificationTap: () {},
+            ),
 
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPageHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPageHeader(),
 
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                  _buildSearchField(),
+                    _buildSearchField(),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  _buildFilters(),
+                    _buildFilters(),
 
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                  _buildStatistics(),
+                    _buildStatistics(),
 
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                  ...modules.map(
-                    (module) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildModuleCard(module),
+                    ...modules.map(
+                      (module) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildModuleCard(module),
+                      ),
                     ),
-                  ),
 
-                  if (modules.isEmpty) _buildEmptyState(),
-                ],
+                    if (modules.isEmpty) _buildEmptyState(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

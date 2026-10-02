@@ -3,88 +3,93 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/widgets/app_header.dart';
+import '../modules/module_page.dart';
 
 class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          AppHeader(
-            title: 'Beranda',
-            onNotificationTap: () {
-              // TODO: halaman notifikasi
-            },
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildWelcomeCard(),
+    return Material(
+      color: AppColors.background,
+      child: SafeArea(
+        child: Column(
+          children: [
+            AppHeader(
+              title: 'Beranda',
+              onNotificationTap: () {
+                // TODO: halaman notifikasi
+              },
+            ),
 
-                  const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeCard(),
 
-                  _buildSectionTitle(
-                    title: 'Aksi Cepat',
-                    trailing: '4 Pintasan',
-                  ),
+                    const SizedBox(height: 20),
 
-                  const SizedBox(height: 10),
-
-                  _buildQuickActions(),
-
-                  const SizedBox(height: 28),
-
-                  _buildSectionTitle(
-                    title: 'Ringkasan Statistik',
-                    trailingWidget: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppColors.success,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        const Text(
-                          'Real-time',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.success,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                    _buildSectionTitle(
+                      title: 'Aksi Cepat',
+                      trailing: '4 Pintasan',
                     ),
-                  ),
 
-                  const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                  _buildStatisticsGrid(),
+                    _buildQuickActions(context),
 
-                  const SizedBox(height: 26),
+                    const SizedBox(height: 28),
 
-                  _buildSectionTitle(
-                    title: 'Modul Terbaru',
-                    subtitle: 'Aktivitas pembelajaran tertinggi',
-                    trailing: 'Lihat Semua ›',
-                  ),
+                    _buildSectionTitle(
+                      title: 'Ringkasan Statistik',
+                      trailingWidget: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: AppColors.success,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            'Real-time',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-                  const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                  _buildPopularModules(),
-                ],
+                    _buildStatisticsGrid(),
+
+                    const SizedBox(height: 26),
+
+                    _buildSectionTitle(
+                      title: 'Modul Terbaru',
+                      subtitle: 'Aktivitas pembelajaran tertinggi',
+                      trailing: 'Lihat Semua ›',
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    _buildPopularModules(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -141,10 +146,15 @@ class AdminDashboardPage extends StatelessWidget {
                 size: 14,
                 color: AppColors.textSecondary,
               ),
+
               const SizedBox(width: 6),
+
               const Text(
                 'Kamis, 24 September 2026',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -172,10 +182,14 @@ class AdminDashboardPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: AppTextStyles.heading3.copyWith(fontSize: 16)),
+              Text(
+                title,
+                style: AppTextStyles.heading3.copyWith(fontSize: 16),
+              ),
 
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
+
                 Text(
                   subtitle,
                   style: const TextStyle(
@@ -207,7 +221,7 @@ class AdminDashboardPage extends StatelessWidget {
   // QUICK ACTION
   // ============================================================
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
     return SizedBox(
       height: 40,
       child: ListView(
@@ -231,13 +245,19 @@ class AdminDashboardPage extends StatelessWidget {
               // TODO
             },
           ),
+
           const SizedBox(width: 8),
 
           _buildQuickAction(
             icon: Icons.upload_file_outlined,
             label: 'Unggah Modul',
             onTap: () {
-              // TODO
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ModulePage(),
+                ),
+              );
             },
           ),
 
@@ -271,14 +291,18 @@ class AdminDashboardPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: primary ? null : Border.all(color: AppColors.border),
+            border: primary
+                ? null
+                : Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
               Icon(
                 icon,
                 size: 17,
-                color: primary ? Colors.white : AppColors.primary,
+                color: primary
+                    ? Colors.white
+                    : AppColors.primary,
               ),
 
               const SizedBox(width: 7),
@@ -288,7 +312,9 @@ class AdminDashboardPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: primary ? Colors.white : AppColors.textPrimary,
+                  color: primary
+                      ? Colors.white
+                      : AppColors.textPrimary,
                 ),
               ),
             ],
@@ -383,19 +409,26 @@ class AdminDashboardPage extends StatelessWidget {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 20),
+                child: Icon(
+                  icon,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
 
               const Spacer(),
 
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: badgeError
                       ? const Color(0xFFFFE7E7)
                       : badgeNeutral
-                      ? const Color(0xFFEFF1F7)
-                      : const Color(0xFFD9FBEA),
+                          ? const Color(0xFFEFF1F7)
+                          : const Color(0xFFD9FBEA),
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
@@ -406,8 +439,8 @@ class AdminDashboardPage extends StatelessWidget {
                     color: badgeError
                         ? AppColors.error
                         : badgeNeutral
-                        ? AppColors.textSecondary
-                        : AppColors.success,
+                            ? AppColors.textSecondary
+                            : AppColors.success,
                   ),
                 ),
               ),
@@ -443,7 +476,9 @@ class AdminDashboardPage extends StatelessWidget {
               Icon(
                 footerIcon,
                 size: 13,
-                color: footerError ? AppColors.error : AppColors.success,
+                color: footerError
+                    ? AppColors.error
+                    : AppColors.success,
               ),
 
               const SizedBox(width: 4),
@@ -541,7 +576,11 @@ class AdminDashboardPage extends StatelessWidget {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, size: 20, color: iconColor),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: iconColor,
+                ),
               ),
 
               const SizedBox(width: 10),
@@ -575,7 +614,10 @@ class AdminDashboardPage extends StatelessWidget {
               ),
 
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: review
                       ? const Color(0xFFEFF1F7)
@@ -587,7 +629,9 @@ class AdminDashboardPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
-                    color: review ? AppColors.textSecondary : AppColors.success,
+                    color: review
+                        ? AppColors.textSecondary
+                        : AppColors.success,
                   ),
                 ),
               ),
@@ -600,7 +644,10 @@ class AdminDashboardPage extends StatelessWidget {
             children: [
               const Text(
                 'Tingkat Progres',
-                style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                ),
               ),
 
               const Spacer(),
@@ -625,7 +672,9 @@ class AdminDashboardPage extends StatelessWidget {
               minHeight: 5,
               backgroundColor: AppColors.primaryLight,
               valueColor: AlwaysStoppedAnimation<Color>(
-                review ? AppColors.textSecondary : AppColors.primary,
+                review
+                    ? AppColors.textSecondary
+                    : AppColors.primary,
               ),
             ),
           ),
