@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../../models/module.dart';
-import '../../services/module_service.dart';
+import 'models/module_model.dart';
+import 'providers/module_provider.dart';
 
-class ModulePage extends StatefulWidget {
+class ModulePage extends StatelessWidget {
   const ModulePage({super.key});
 
   @override
-  State<ModulePage> createState() => _ModulePageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ModuleProvider()..fetchModules(),
+      child: const _ModulePageContent(),
+    );
+  }
 }
 
-class _ModulePageState extends State<ModulePage> {
-  List<Module> _modules = [];
+class _ModulePageContent extends StatefulWidget {
+  const _ModulePageContent();
 
-  bool _isLoading = true;
-  String? _errorMessage;
+  @override
+  State<_ModulePageContent> createState() => _ModulePageContentState();
+}
+
+class _ModulePageContentState extends State<_ModulePageContent> {
 
   String _selectedFilter = 'Semua';
 
@@ -28,46 +37,24 @@ class _ModulePageState extends State<ModulePage> {
   @override
   void initState() {
     super.initState();
-    _loadModules();
   }
 
   Future<void> _loadModules() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final modules = await ModuleService.getModules();
-
-      if (!mounted) return;
-
-      setState(() {
-        _modules = modules;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
-      });
-    }
+    await context.read<ModuleProvider>().fetchModules();
   }
 
-  List<Module> get _filteredModules {
+  List<ModuleModel> _getFilteredModules(List<ModuleModel> modules) {
     if (_selectedFilter == 'Semua') {
-      return _modules;
+      return modules;
     }
-
-    // Untuk sementara filter kategori belum diterapkan
-    // karena API saat ini belum mengirim nama kategori.
-    return _modules;
+    return modules;
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<ModuleProvider>();
+    final modules = provider.modules;
+    final filteredModules = _getFilteredModules(modules);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
       body: SafeArea(
@@ -80,7 +67,7 @@ class _ModulePageState extends State<ModulePage> {
 
               const SizedBox(height: 24),
 
-              _buildStats(),
+              _buildStats(modules),
 
               const SizedBox(height: 20),
 
@@ -88,7 +75,7 @@ class _ModulePageState extends State<ModulePage> {
 
               const SizedBox(height: 20),
 
-              _buildContent(),
+              _buildContent(provider, filteredModules),
             ],
           ),
         ),
@@ -122,13 +109,13 @@ class _ModulePageState extends State<ModulePage> {
     );
   }
 
-  Widget _buildStats() {
+  Widget _buildStats(List<ModuleModel> modules) {
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             title: 'Total Modul',
-            value: _modules.length.toString(),
+            value: modules.length.toString(),
             icon: Icons.menu_book_outlined,
           ),
         ),
@@ -138,7 +125,7 @@ class _ModulePageState extends State<ModulePage> {
         Expanded(
           child: _buildStatCard(
             title: 'Modul Aktif',
-            value: _modules
+            value: modules
                 .where(
                   (module) =>
                       module.progressModul?.toLowerCase() == 'tersedia',
@@ -248,8 +235,8 @@ class _ModulePageState extends State<ModulePage> {
     );
   }
 
-  Widget _buildContent() {
-    if (_isLoading) {
+  Widget _buildContent(ModuleProvider provider, List<ModuleModel> filteredModules) {
+    if (provider.isLoading) {
       return const Padding(
         padding: EdgeInsets.only(top: 80),
         child: Center(
@@ -258,16 +245,16 @@ class _ModulePageState extends State<ModulePage> {
       );
     }
 
-    if (_errorMessage != null) {
-      return _buildErrorState();
+    if (provider.error != null) {
+      return _buildErrorState(provider.error!);
     }
 
-    if (_filteredModules.isEmpty) {
+    if (filteredModules.isEmpty) {
       return _buildEmptyState();
     }
 
     return Column(
-      children: _filteredModules
+      children: filteredModules
           .map((module) => _buildModuleCard(module))
           .toList(),
     );
@@ -335,7 +322,7 @@ class _ModulePageState extends State<ModulePage> {
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(String error) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -366,7 +353,7 @@ class _ModulePageState extends State<ModulePage> {
           const SizedBox(height: 8),
 
           Text(
-            _errorMessage ?? 'Terjadi kesalahan.',
+            error,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -385,7 +372,7 @@ class _ModulePageState extends State<ModulePage> {
     );
   }
 
-  Widget _buildModuleCard(Module module) {
+  Widget _buildModuleCard(ModuleModel module) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
