@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/app_header.dart';
 
@@ -297,8 +298,76 @@ class AdminProfilePage extends StatelessWidget {
             subtitle: 'Keluar dari akun administrator',
             iconColor: AppColors.error,
             titleColor: AppColors.error,
-            onTap: () {
-              _showLogoutDialog(context);
+            onTap: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) {
+                  return AlertDialog(
+                    title: const Text(
+                      'Keluar',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    content: const Text(
+                      'Apakah kamu yakin ingin keluar dari akun administrator?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext, false);
+                        },
+                        child: const Text('Batal'),
+                      ),
+
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext, true);
+                        },
+                        child: const Text(
+                          'Keluar',
+                          style: TextStyle(color: AppColors.error),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+
+              if (confirmed != true) return;
+
+              // Tampilkan loading kecil
+              if (!context.mounted) return;
+
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) {
+                  return const Center(child: CircularProgressIndicator());
+                },
+              );
+
+              try {
+                await AuthService.logout();
+
+                if (!context.mounted) return;
+
+                // Tutup loading
+                Navigator.pop(context);
+
+                // Kembali ke halaman login dan hapus seluruh history halaman sebelumnya
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+
+                // Tutup loading
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text('Logout gagal: $e')));
+              }
             },
           ),
         ],
@@ -367,48 +436,6 @@ class AdminProfilePage extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  // ============================================================
-  // LOGOUT DIALOG
-  // ============================================================
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(
-            'Keluar',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
-          content: const Text(
-            'Apakah kamu yakin ingin keluar dari akun administrator?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Batal'),
-            ),
-
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-
-                // TODO:
-                // Tambahkan proses logout ketika backend/auth sudah dibuat.
-              },
-              child: const Text(
-                'Keluar',
-                style: TextStyle(color: AppColors.error),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

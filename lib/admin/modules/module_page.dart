@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../shared/widgets/app_header.dart';
-import 'module_detail_page.dart';
-import 'add_module_page.dart';
+import '../../models/module.dart';
+import '../../services/module_service.dart';
 
 class ModulePage extends StatefulWidget {
   const ModulePage({super.key});
@@ -13,270 +11,160 @@ class ModulePage extends StatefulWidget {
 }
 
 class _ModulePageState extends State<ModulePage> {
-  int _selectedFilter = 0;
-  String _searchQuery = '';
+  List<Module> _modules = [];
 
-  final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  String _selectedFilter = 'Semua';
 
   final List<String> _filters = [
     'Semua',
-    'Fisika & Biologi',
-    'Bahasa Inggris',
-    'Sejarah & IPS',
-    'Matematika',
-  ];
-
-  final List<_ModuleData> _modules = [
-    _ModuleData(
-      category: 'Fisika & Biologi',
-      title: 'IPA Terpadu SMA',
-      description: 'Materi Biologi dasar, Fisika dasar, dan Kimia dasar semester ganjil.',
-      className: 'Kelas 10',
-      students: '128 Siswa',
-      teacher: 'Dr. Emily Okonkwo',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBrxe8EZ9RJAD9uX3JzLYzf50ofAGYTtk4pXQoo3IZTOq_cF-QQmpCDOkewHwLcNz192xlPO0sI_dXOWMq1vj6bH2DnLVy_ewDubaYF_1wDPDjpfFWmDXT7iuz8iNAm245MFy5bkVB2hdGHHP8P1uWAfqIGOmSvB2jRcs846fGthImSuyuVaFoOMn6W91igmqQTn9T4SUjnUiui6PiRMxr6LnShVeZYlyfytJYk8A20YVuEfsXlPzBGFw',
-    ),
-
-    _ModuleData(
-      category: 'Bahasa Inggris',
-      title: 'Bahasa Inggris Conversation',
-      description:
-          'Panduan praktis percakapan bahasa Inggris tingkat menengah.',
-      className: 'Kelas 11',
-      students: '94 Siswa',
-      teacher: 'Maya Chen, M.Pd.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC-K0XaoChg_orBi6YKIT3b41pb7UxWoI0nHGTfnFBN3zQmxKp9o4AMkieD_zM8UUTJxgfOLsz17X79q7suBjR4zVL0y3RCTA1ltWkDQJu_Nq9nZPNYAVQAtdoDS8p5ZDn-aCtW9xa0RsdNQtQ8e2jisJf_DB-3vh7nelH5OSPBZfzlTFQTsxJ7Mg_Me6p0e-7zvcGco2K0lRPTYFcMMOjS-UrhxTTWnp4hn8qrLu_R7yw5XbbMC7IO_w',
-    ),
-
-    _ModuleData(
-      category: 'Sejarah & IPS',
-      title: 'Sejarah Peradaban Dunia',
-      description:
-          'Melacak sejarah peradaban besar dunia dari masa prasejarah.',
-      className: 'Kelas 12',
-      students: '112 Siswa',
-      teacher: 'James Holloway',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBMY5W9DC9BGOuO2RDCHs5LHKnOY86enoD1VrCanWTXtfnQROoRZviNHgiu86-n6pU1ZUNLNIRGC6scxscP1sodkJE-OhTiTYLu0rAJjRZG-In0a4cqA3Fffp0D1i7My2h2vdqRfOTZN4UclSGE2P7e6SBuIUp63Nr3N2d5t8fqS9fFhjGrG03J66-GDqht3S7FZOr5Q7p-f2nkE3H1JO50UPOBevB8FxlDZLYqHhLktF-aEEj5tZFVLA',
-    ),
-
-    _ModuleData(
-      category: 'Matematika',
-      title: 'Matematika Kalkulus Dasar',
-      description:
-          'Konsep dasar kalkulus, fungsi, limit, turunan, dan penerapannya.',
-      className: 'Kelas 12',
-      students: '106 Siswa',
-      teacher: 'Michael Anderson',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCCj0wjba2FvFZs45L1b-PVXBuHYNhTogYaKt0qO-4ILyKf77PADZ_RhIQFqduOYsNnLeJD61qu1cI-p6FWfZzI0sD1anv5UlAdsFLbiQa4bqp90Yms09zl9wAT5PeONeAL8Y4y-_zOzlfAEyWACYdJYSNxsqgQQlPQBX0f3OPIYF853kPq4PuQsl1lYbBvdXG1pt8v2gxDlCELHDwpzHEs4AUb6oa9fHlDwLbyYL1maIA9KsXQuqz9nA',
-    ),
+    'Pemrograman',
+    'Desain UI/UX',
+    'Data Science',
   ];
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadModules();
+  }
+
+  Future<void> _loadModules() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final modules = await ModuleService.getModules();
+
+      if (!mounted) return;
+
+      setState(() {
+        _modules = modules;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+    }
+  }
+
+  List<Module> get _filteredModules {
+    if (_selectedFilter == 'Semua') {
+      return _modules;
+    }
+
+    // Untuk sementara filter kategori belum diterapkan
+    // karena API saat ini belum mengirim nama kategori.
+    return _modules;
   }
 
   @override
   Widget build(BuildContext context) {
-    final modules = _getFilteredModules();
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FF),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _loadModules,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            children: [
+              _buildHeader(),
 
-    return SafeArea(
-      child: Column(
-        children: [
-          AppHeader(title: 'Kelola Modul', onNotificationTap: () {}),
+              const SizedBox(height: 24),
 
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPageHeader(),
+              _buildStats(),
 
-                  const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
-                  _buildSearchField(),
+              _buildFilter(),
 
-                  const SizedBox(height: 12),
+              const SizedBox(height: 20),
 
-                  _buildFilters(),
-
-                  const SizedBox(height: 18),
-
-                  _buildStatistics(),
-
-                  const SizedBox(height: 18),
-
-                  ...modules.map(
-                    (module) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildModuleCard(module),
-                    ),
-                  ),
-
-                  if (modules.isEmpty) _buildEmptyState(),
-                ],
-              ),
-            ),
+              _buildContent(),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  // ============================================================
-  // HEADER
-  // ============================================================
-
-  Widget _buildPageHeader() {
+  Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Manajemen Modul',
+          'Daftar Modul',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 26,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: Color(0xFF111827),
           ),
         ),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
 
-        const Text(
-          'Buat, distribusikan, dan kelola modul pelajaran digital kelas.',
+        Text(
+          'Kelola modul pembelajaran yang tersedia.',
           style: TextStyle(
-            fontSize: 11,
-            height: 1.45,
-            color: AppColors.textSecondary,
-          ),
-        ),
-
-        const SizedBox(height: 14),
-
-        SizedBox(
-          width: double.infinity,
-          height: 42,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddModulePage()),
-              );
-            },
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text(
-              'Tambah Modul',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
+            fontSize: 14,
+            color: Colors.grey.shade600,
           ),
         ),
       ],
     );
   }
 
-  // ============================================================
-  // SEARCH
-  // ============================================================
+  Widget _buildStats() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            title: 'Total Modul',
+            value: _modules.length.toString(),
+            icon: Icons.menu_book_outlined,
+          ),
+        ),
 
-  Widget _buildSearchField() {
-    return TextField(
-      controller: _searchController,
-      onChanged: (value) {
-        setState(() {
-          _searchQuery = value.toLowerCase();
-        });
-      },
-      decoration: InputDecoration(
-        hintText: 'Cari data, laporan, kelas...',
-        hintStyle: const TextStyle(
-          fontSize: 12,
-          color: AppColors.textSecondary,
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: _buildStatCard(
+            title: 'Modul Aktif',
+            value: _modules
+                .where(
+                  (module) =>
+                      module.progressModul?.toLowerCase() == 'tersedia',
+                )
+                .length
+                .toString(),
+            icon: Icons.check_circle_outline,
+          ),
         ),
-        prefixIcon: const Icon(
-          Icons.search,
-          size: 20,
-          color: AppColors.textSecondary,
-        ),
-        filled: true,
-        fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
-      ),
+      ],
     );
   }
 
-  // FILTER
-
-  Widget _buildFilters() {
-    return SizedBox(
-      height: 34,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final selected = _selectedFilter == index;
-
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedFilter = index;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primary : const Color(0xFFEAF0FF),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                _filters[index],
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected ? Colors.white : AppColors.textSecondary,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ============================================================
-  // STATISTIC
-  // ============================================================
-
-  Widget _buildStatistics() {
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE5E7EB),
+        ),
       ),
       child: Row(
         children: [
@@ -284,249 +172,75 @@ class _ModulePageState extends State<ModulePage> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F0FF),
-              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
-              Icons.layers_outlined,
-              color: AppColors.primary,
-              size: 21,
+              Icons.menu_book_outlined,
+              color: Color(0xFF2563EB),
             ),
           ),
 
           const SizedBox(width: 12),
 
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Modul Terdaftar',
+                  title,
                   style: TextStyle(
-                    fontSize: 10,
-                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
                   ),
                 ),
-                SizedBox(height: 2),
+
+                const SizedBox(height: 4),
+
                 Text(
-                  '128 Modul',
-                  style: TextStyle(
-                    fontSize: 18,
+                  value,
+                  style: const TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
           ),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDDF8EC),
-              borderRadius: BorderRadius.circular(7),
-            ),
-            child: const Text(
-              'Kelas Aktif',
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF00875A),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  // ============================================================
-  // MODULE CARD
-  // ============================================================
+  Widget _buildFilter() {
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _filters.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final filter = _filters[index];
+          final isSelected = filter == _selectedFilter;
 
-  Widget _buildModuleCard(_ModuleData module) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ModuleDetailPage(
-              moduleName: module.title,
-              category: module.category,
-              description: module.description,
-              teacher: module.teacher,
-              status: 'Aktif',
-              date: '24 Sep 2026',
+          return ChoiceChip(
+            label: Text(filter),
+            selected: isSelected,
+            onSelected: (_) {
+              setState(() {
+                _selectedFilter = filter;
+              });
+            },
+            selectedColor: const Color(0xFF2563EB),
+            backgroundColor: Colors.white,
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
             ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCoverImage(module),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCategoryTag(module.category),
-
-                  const SizedBox(height: 7),
-
-                  Text(
-                    module.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  Text(
-                    module.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      height: 1.45,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-
-                  const SizedBox(height: 9),
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.school_outlined,
-                        size: 14,
-                        color: AppColors.textSecondary,
-                      ),
-
-                      const SizedBox(width: 4),
-
-                      Text(
-                        module.className,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      const Icon(
-                        Icons.people_outline,
-                        size: 14,
-                        color: AppColors.textSecondary,
-                      ),
-
-                      const SizedBox(width: 4),
-
-                      Text(
-                        module.students,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Row(
-                  //   children: [
-                  //     Expanded(
-                  //       child: Text(
-                  //         'Oleh: ${module.teacher}',
-                  //         maxLines: 1,
-                  //         overflow: TextOverflow.ellipsis,
-                  //         style: const TextStyle(
-                  //           fontSize: 9,
-                  //           color: AppColors.textSecondary,
-                  //         ),
-                  //       ),
-                  //     ),
-
-                  //     _buildActionButton(
-                  //       icon: Icons.edit_outlined,
-                  //       color: AppColors.primary,
-                  //       onTap: () {},
-                  //     ),
-
-                  //     const SizedBox(width: 4),
-
-                  //     _buildActionButton(
-                  //       icon: Icons.delete_outline,
-                  //       color: AppColors.error,
-                  //       onTap: () {},
-                  //     ),
-                  //   ],
-                  // ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // COVER IMAGE
-  // ============================================================
-
-  Widget _buildCoverImage(_ModuleData module) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(9),
-      child: Image.network(
-        module.imageUrl,
-        width: 72,
-        height: 96,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) {
-          return Container(
-            width: 72,
-            height: 96,
-            color: const Color(0xFFE8F0FF),
-            child: const Icon(
-              Icons.menu_book_outlined,
-              color: AppColors.primary,
-              size: 26,
-            ),
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) {
-            return child;
-          }
-
-          return Container(
-            width: 72,
-            height: 96,
-            color: const Color(0xFFE8F0FF),
-            child: const Center(
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+            side: BorderSide(
+              color: isSelected
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFFE5E7EB),
             ),
           );
         },
@@ -534,124 +248,269 @@ class _ModulePageState extends State<ModulePage> {
     );
   }
 
-  // ============================================================
-  // CATEGORY TAG
-  // ============================================================
-
-  Widget _buildCategoryTag(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F0FF),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 8,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
+  Widget _buildContent() {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 80),
+        child: Center(
+          child: CircularProgressIndicator(),
         ),
-      ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return _buildErrorState();
+    }
+
+    if (_filteredModules.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return Column(
+      children: _filteredModules
+          .map((module) => _buildModuleCard(module))
+          .toList(),
     );
   }
-
-  // ============================================================
-  // ACTION BUTTON
-  // ============================================================
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(7),
-      onTap: onTap,
-      child: Container(
-        width: 29,
-        height: 29,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(7),
-        ),
-        child: Icon(icon, size: 15, color: color),
-      ),
-    );
-  }
-
-  // ============================================================
-  // EMPTY
-  // ============================================================
 
   Widget _buildEmptyState() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 45),
-      child: const Column(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 24,
+        vertical: 50,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Column(
         children: [
-          Icon(
-            Icons.search_off_outlined,
-            size: 42,
-            color: AppColors.textSecondary,
-          ),
-          SizedBox(height: 10),
-          Text(
-            'Modul tidak ditemukan',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(20),
             ),
+            child: const Icon(
+              Icons.menu_book_outlined,
+              size: 32,
+              color: Color(0xFF2563EB),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          const Text(
+            'Belum ada modul',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'Data modul dari database belum tersedia.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          OutlinedButton.icon(
+            onPressed: _loadModules,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Muat Ulang'),
           ),
         ],
       ),
     );
   }
 
-  // ============================================================
-  // FILTER DATA
-  // ============================================================
+  Widget _buildErrorState() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 48,
+            color: Colors.red,
+          ),
 
-  List<_ModuleData> _getFilteredModules() {
-    return _modules.where((module) {
-      final matchesFilter =
-          _selectedFilter == 0 || module.category == _filters[_selectedFilter];
+          const SizedBox(height: 12),
 
-      final query = _searchQuery.trim();
+          const Text(
+            'Gagal mengambil data modul',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
 
-      final matchesSearch =
-          query.isEmpty ||
-          module.title.toLowerCase().contains(query) ||
-          module.category.toLowerCase().contains(query) ||
-          module.teacher.toLowerCase().contains(query) ||
-          module.className.toLowerCase().contains(query);
+          const SizedBox(height: 8),
 
-      return matchesFilter && matchesSearch;
-    }).toList();
+          Text(
+            _errorMessage ?? 'Terjadi kesalahan.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade600,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          ElevatedButton(
+            onPressed: _loadModules,
+            child: const Text('Coba Lagi'),
+          ),
+        ],
+      ),
+    );
   }
-}
 
-// ================================================================
-// MODEL
-// ================================================================
+  Widget _buildModuleCard(Module module) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (module.fotoModul != null &&
+              module.fotoModul!.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                module.fotoModul!,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) {
+                  return _buildCoverPlaceholder();
+                },
+              ),
+            )
+          else
+            _buildCoverPlaceholder(),
 
-class _ModuleData {
-  final String category;
-  final String title;
-  final String description;
-  final String className;
-  final String students;
-  final String teacher;
-  final String imageUrl;
+          const SizedBox(height: 14),
 
-  const _ModuleData({
-    required this.category,
-    required this.title,
-    required this.description,
-    required this.className,
-    required this.students,
-    required this.teacher,
-    required this.imageUrl,
-  });
+          Row(
+            children: [
+              _buildStatusBadge(
+                module.progressModul ?? 'Tersedia',
+              ),
+
+              const Spacer(),
+
+              if (module.tipeFile != null)
+                Text(
+                  module.tipeFile!.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          Text(
+            module.judulModul,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Row(
+            children: [
+              Icon(
+                Icons.tag,
+                size: 16,
+                color: Colors.grey.shade500,
+              ),
+
+              const SizedBox(width: 5),
+
+              Text(
+                'ID Modul: ${module.idModul}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoverPlaceholder() {
+    return Container(
+      height: 150,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.menu_book_outlined,
+          size: 48,
+          color: Color(0xFF2563EB),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 9,
+        vertical: 5,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECFDF5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        status,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF047857),
+        ),
+      ),
+    );
+  }
 }
