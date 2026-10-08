@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../screens/dashboard_screen.dart';
-// import '../admin/dashboard/admin_dashboard_page.dart';
+//import '../screens/dashboard_screen.dart';
+import '../admin/dashboard/admin_dashboard_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()), 
+        MaterialPageRoute(builder: (context) => const AdminDashboardPage()), 
         //biby: AdminDashboardPage, DashboardScreen
       );
     });
