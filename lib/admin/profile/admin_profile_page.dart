@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/app_header.dart';
+import 'change_password_page.dart';
 
 class AdminProfilePage extends StatelessWidget {
   const AdminProfilePage({super.key});
@@ -286,7 +287,12 @@ class AdminProfilePage extends StatelessWidget {
             title: 'Ubah Password',
             subtitle: 'Perbarui password akun',
             onTap: () {
-              // TODO: Ubah password
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChangePasswordPage(),
+                ),
+              );
             },
           ),
 
