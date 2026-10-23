@@ -15,10 +15,10 @@ class QuizAnswerItem extends StatelessWidget {
   });
 
   static const List<Color> _colors = [
-    Color(0xFFE5254A),
-    Color(0xFF1368CE),
-    Color(0xFFD89E00),
-    Color(0xFF26890C),
+    Color(0xFFE21B3C), // Kahoot Red
+    Color(0xFF1368CE), // Kahoot Blue
+    Color(0xFFD89E00), // Kahoot Yellow
+    Color(0xFF26890C), // Kahoot Green
   ];
 
   static const List<IconData> _icons = [
@@ -43,10 +43,23 @@ class QuizAnswerItem extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(8, 5, 7, 5),
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: isCorrect ? const Color(0xFF26890C) : Colors.transparent,
+          width: isCorrect ? 2 : 1,
+        ),
+        boxShadow: isCorrect
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF26890C).withValues(alpha: 0.18),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [

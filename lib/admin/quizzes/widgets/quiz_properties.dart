@@ -101,7 +101,7 @@ class QuizProperties extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: selectedLevel,
+          initialValue: selectedLevel,
           isExpanded: true,
           decoration: InputDecoration(
             filled: true,
@@ -188,7 +188,7 @@ class QuizProperties extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: selected
-                          ? selectedColor.withOpacity(0.08)
+                          ? selectedColor.withValues(alpha: 0.08)
                           : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
@@ -292,7 +292,7 @@ class QuizProperties extends StatelessWidget {
     final safeValue = items.contains(value) ? value : items.first;
 
     return DropdownButtonFormField<T>(
-      value: safeValue,
+      initialValue: safeValue,
       isExpanded: true,
       decoration: InputDecoration(
         filled: true,
@@ -362,7 +362,7 @@ class QuizProperties extends StatelessWidget {
           Switch(
             value: question.neverExpire,
             onChanged: onChangedNeverExpire,
-            activeColor: const Color(0xFF2563EB),
+            activeThumbColor: const Color(0xFF2563EB),
           ),
         ],
       ),

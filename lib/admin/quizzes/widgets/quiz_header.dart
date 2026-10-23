@@ -16,13 +16,13 @@ class QuizHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: AppColors.border)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -30,71 +30,115 @@ class QuizHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: IconButton(
-              onPressed: onBackPressed ?? () => Navigator.pop(context),
-              padding: EdgeInsets.zero,
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF475569)),
+          // Logo Arrava 360 Style Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFF46178F), // Kahoot purple
+              borderRadius: BorderRadius.circular(8),
             ),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Column(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Buat Kuis Baru',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  'Arrava',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: const [
-                    Icon(
-                      Icons.check_circle,
-                      size: 13,
-                      color: Color(0xFF059669),
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFACC15), // Yellow
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    '360',
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF0F172A),
                     ),
-                    SizedBox(width: 4),
-                    Text(
-                      'Draf tersimpan',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF047857),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
+
           const SizedBox(width: 8),
+
+          // Draft Saved Indicator
+          Expanded(
+            child: Row(
+              children: const [
+                Icon(
+                  Icons.check_circle,
+                  size: 13,
+                  color: Color(0xFF059669),
+                ),
+                SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    'Draf tersimpan',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF047857),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Exit Button (Red style from elearning web)
           SizedBox(
-            width: 88,
-            height: 40,
+            height: 36,
+            child: OutlinedButton(
+              onPressed: onBackPressed ?? () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFDC2626),
+                backgroundColor: const Color(0xFFFEF2F2),
+                side: const BorderSide(color: Color(0xFFFECACA)),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9),
+                ),
+              ),
+              child: const Text(
+                'Keluar',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 6),
+
+          // Save Button (Blue style with check icon from elearning web)
+          SizedBox(
+            height: 36,
             child: ElevatedButton.icon(
               onPressed: onSave,
-              icon: const Icon(Icons.check, size: 15),
+              icon: const Icon(Icons.check, size: 14),
               label: const Text(
-                'Simpan',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                'Simpan Quiz',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
+                backgroundColor: const Color(0xFF1368CE), // Kahoot Blue
                 foregroundColor: Colors.white,
                 elevation: 2,
-                padding: const EdgeInsets.symmetric(horizontal: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(9),
                 ),
               ),
             ),

@@ -27,7 +27,7 @@ class QuizQuestionEditor extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E3A8A).withOpacity(0.15),
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -154,9 +154,9 @@ class QuizQuestionEditor extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.10),
+          color: Colors.white.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.45)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
         ),
         child: Column(
           children: [
@@ -164,7 +164,7 @@ class QuizQuestionEditor extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
