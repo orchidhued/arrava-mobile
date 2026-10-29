@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/widgets/app_header.dart';
+import '../../shared/widgets/tween_float_background.dart';
+import '../../shared/utils/logout_dialog.dart';
 import '../modules/module_page.dart';
 
 class AdminDashboardPage extends StatelessWidget {
@@ -17,18 +19,20 @@ class AdminDashboardPage extends StatelessWidget {
           children: [
             AppHeader(
               title: 'Beranda',
+              onLogoutTap: () => showLogoutConfirmationDialog(context),
               onNotificationTap: () {
                 // TODO: halaman notifikasi
               },
             ),
 
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWelcomeCard(),
+              child: TweenFloatBackground(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildWelcomeCard(context),
 
                     const SizedBox(height: 20),
 
@@ -88,6 +92,7 @@ class AdminDashboardPage extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ],
         ),
       ),
@@ -98,7 +103,7 @@ class AdminDashboardPage extends StatelessWidget {
   // WELCOME CARD
   // ============================================================
 
-  Widget _buildWelcomeCard() {
+  Widget _buildWelcomeCard(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
@@ -117,24 +122,63 @@ class AdminDashboardPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Halo,',
-            style: TextStyle(
-              fontSize: 23,
-              height: 1.1,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-
-          const Text(
-            'Administrator',
-            style: TextStyle(
-              fontSize: 24,
-              height: 1.2,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Halo,',
+                    style: TextStyle(
+                      fontSize: 23,
+                      height: 1.1,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Administrator',
+                    style: TextStyle(
+                      fontSize: 24,
+                      height: 1.2,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () => showLogoutConfirmationDialog(context),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.20),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.logout_rounded, color: AppColors.error, size: 15),
+                      SizedBox(width: 5),
+                      Text(
+                        'Keluar',
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 5),

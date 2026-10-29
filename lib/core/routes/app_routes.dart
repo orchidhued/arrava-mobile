@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../admin/admin_shell.dart';
-import '../../admin/profile/admin_profile_page.dart';
-import '../../admin/quizzes/manage_quiz_page.dart';
-import '../../auth/login.dart';
-import '../../screens/dashboard_screen.dart';
-import '../../screens/quizzes/student_quiz_list_page.dart';
+import 'package:arrava_mobile/admin/admin_shell.dart';
+import 'package:arrava_mobile/admin/profile/admin_profile_page.dart';
+import 'package:arrava_mobile/admin/quizzes/manage_quiz_page.dart';
+import 'package:arrava_mobile/auth/login.dart';
+import 'package:arrava_mobile/screens/dashboard_screen.dart';
+import 'package:arrava_mobile/screens/quizzes/student_quiz_list_page.dart';
 
 class AppRoutes {
   static const String login = '/login';

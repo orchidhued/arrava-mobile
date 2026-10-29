@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../shared/utils/logout_dialog.dart';
+import '../shared/widgets/tween_float_background.dart';
 import 'quizzes/student_quiz_list_page.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -10,6 +12,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
+  final ScrollController _scrollController = ScrollController();
 
   static const _blue = Color(0xFF3B82F6);
   static const _green = Color(0xFF10B981);
@@ -48,6 +51,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   ];
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_currentIndex == 2) {
       return Scaffold(
@@ -60,57 +69,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            int jumlahKolom;
+      backgroundColor: Colors.transparent,
+      body: TweenFloatBackground(
+        scrollController: _scrollController,
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              int jumlahKolom;
 
-            if (constraints.maxWidth < 500) {
-              jumlahKolom = 2;
-            } else if (constraints.maxWidth < 900) {
-              jumlahKolom = 3;
-            } else {
-              jumlahKolom = 4;
-            }
+              if (constraints.maxWidth < 500) {
+                jumlahKolom = 2;
+              } else if (constraints.maxWidth < 900) {
+                jumlahKolom = 3;
+              } else {
+                jumlahKolom = 4;
+              }
 
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.05,
-                vertical: 16,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 22,
-                        backgroundColor: Color(0xFFDCE3FF),
-                        child: Icon(Icons.person, color: _blue),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Halo, Siswa Arrava! 👋',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Siap belajar apa hari ini?',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+              return SingleChildScrollView(
+                controller: _scrollController,
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: 16,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Color(0xFFDCE3FF),
+                          child: Icon(Icons.person, color: _blue),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Halo, Siswa Arrava! 👋',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0B2A6B),
+                                ),
+                              ),
+                              Text(
+                                'Siap belajar apa hari ini?',
+                                style: TextStyle(
+                                  color: const Color(0xFF3A5AA8),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -126,6 +140,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: _green,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Tombol Logout di Beranda Siswa
+                      InkWell(
+                        onTap: () => showLogoutConfirmationDialog(context),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.20),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.logout_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 18,
                           ),
                         ),
                       ),
@@ -233,8 +268,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   Text(
                     'Lanjutkan Belajar',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0B2A6B),
+                        ),
                   ),
 
                   const SizedBox(height: 12),
@@ -351,8 +388,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   Text(
                     'Materi Hari Ini',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0B2A6B),
+                        ),
                   ),
 
                   const SizedBox(height: 12),
@@ -381,8 +420,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   Text(
                     'Riwayat Belajar',
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0B2A6B),
+                        ),
                   ),
 
                   const SizedBox(height: 12),
@@ -420,32 +461,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      selectedItemColor: _blue,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      onTap: (index) {
-        setState(() => _currentIndex = index);
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          label: 'Beranda',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book_outlined),
-          label: 'Belajar',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.edit_outlined),
-          label: 'Latihan / Kuis',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          label: 'Profil',
-        ),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0A1E5A).withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        currentIndex: _currentIndex,
+        selectedItemColor: _blue,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Beranda',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book_outlined),
+            label: 'Belajar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.edit_outlined),
+            label: 'Latihan / Kuis',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Profil',
+          ),
+        ],
+      ),
     );
   }
 }

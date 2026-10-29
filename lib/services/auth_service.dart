@@ -57,11 +57,19 @@ class AuthService {
   }
 
   static Future<void> logout() async {
+    final rememberMe = await SecureStorage.read('remember_me');
+    final savedEmail = await SecureStorage.read('saved_email');
+
     try {
       await ApiClient.post(ApiConstants.logout);
     } catch (_) {
-      // Tetap hapus session lokal
+      // Tetap hapus session lokal jika gagal menghubungi server
     }
     await SecureStorage.deleteAll();
+
+    if (rememberMe == 'true' && savedEmail != null && savedEmail.isNotEmpty) {
+      await SecureStorage.write('remember_me', 'true');
+      await SecureStorage.write('saved_email', savedEmail);
+    }
   }
 }

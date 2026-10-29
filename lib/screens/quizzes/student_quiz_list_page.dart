@@ -37,8 +37,9 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     final selJenjang = _selectedJenjang.toLowerCase().trim();
 
     return list.where((quiz) {
-      if (quiz.isDraft)
+      if (quiz.isDraft) {
         return false; // Siswa hanya melihat kuis yang sudah dipublikasikan
+      }
 
       final matchQuery =
           query.isEmpty ||
@@ -274,7 +275,6 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                   });
 
                                   final provider = context.read<QuizProvider>();
-                                  final navigator = Navigator.of(context);
                                   final valid = await provider.verifyToken(
                                     quiz.idQuiz,
                                     entered,
@@ -290,8 +290,10 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                     return;
                                   }
 
+                                  if (!ctx.mounted || !context.mounted) return;
                                   Navigator.pop(ctx); // Close sheet
-                                  navigator.push(
+                                  Navigator.push(
+                                    context,
                                     MaterialPageRoute(
                                       builder: (_) =>
                                           StudentQuizPlayerPage(quiz: quiz),

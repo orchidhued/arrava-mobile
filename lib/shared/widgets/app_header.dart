@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 
 class AppHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onLogoutTap;
 
   // true  = profile bisa diklik
   // false = sedang berada di halaman profile
@@ -15,6 +15,7 @@ class AppHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.onNotificationTap,
+    this.onLogoutTap,
     this.profileEnabled = true,
   });
 
@@ -129,7 +130,7 @@ class AppHeader extends StatelessWidget {
           GestureDetector(
             onTap: profileEnabled
                 ? () {
-                    Navigator.pushNamed(context, AppRoutes.adminProfile);
+                    Navigator.pushNamed(context, '/admin/profile');
                   }
                 : null,
             child: Opacity(
@@ -163,6 +164,32 @@ class AppHeader extends StatelessWidget {
               ),
             ),
           ),
+
+          // ============================================================
+          // LOGOUT
+          // ============================================================
+          if (onLogoutTap != null) ...[
+            const SizedBox(width: 6),
+            GestureDetector(
+              onTap: onLogoutTap,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.20),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  size: 20,
+                  color: AppColors.error,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
