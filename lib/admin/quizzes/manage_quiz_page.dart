@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../shared/widgets/app_header.dart';
 import 'create_quiz_page.dart';
 import 'quiz_preview_player_page.dart';
-
+import 'package:provider/provider.dart';
+import 'models/quiz_model.dart';
+import 'providers/quiz_provider.dart';
 class ManageQuizPage extends StatefulWidget {
   const ManageQuizPage({super.key});
 
@@ -18,120 +20,41 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
   String _selectedDifficulty = 'Semua';
   String _selectedSort = 'terbaru';
 
-  final List<_QuizItem> _allQuizzes = [
-    _QuizItem(
-      id: 1,
-      title: 'Evaluasi Algoritma & Logika Pemrograman',
-      module: 'Modul 1: Pengantar Algoritma & Flowchart',
-      description:
-          'Kuis interaktif untuk menguji pemahaman konsep percabangan, perulangan, dan analisis algoritma dasar.',
-      jenjang: 'SMA / MA / SMK Sederajat',
-      difficulty: 'Mudah',
-      mode: 'Wayground',
-      durationSeconds: 20,
-      questionsCount: 20,
-      totalPoints: 100,
-      participantsCount: 128,
-      requiresToken: false,
-      isExpired: false,
-      status: 'Tersedia',
-      coverGradient: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-    ),
-    _QuizItem(
-      id: 2,
-      title: 'UI/UX Design System Mastery 360',
-      module: 'Modul 2: Design Token & Atomic Components',
-      description:
-          'Evaluasi pemahaman design system, typography scale, color contrast, serta aksesibilitas antarmuka pengguna.',
-      jenjang: 'Perguruan Tinggi / Umum',
-      difficulty: 'Sedang',
-      mode: 'Wayground',
-      durationSeconds: 30,
-      questionsCount: 25,
-      totalPoints: 125,
-      participantsCount: 96,
-      requiresToken: true,
-      tokenCode: 'UX2026',
-      isExpired: false,
-      status: 'Tersedia',
-      coverGradient: [Color(0xFF46178F), Color(0xFF7C3AED)],
-    ),
-    _QuizItem(
-      id: 3,
-      title: 'Fullstack React & Node.js API Integration',
-      module: 'Modul 3: REST API & State Management',
-      description:
-          'Uji pemahaman arsitektur REST, async-await, authentication JWT, dan pengelolaan state global.',
-      jenjang: 'Perguruan Tinggi / Umum',
-      difficulty: 'Sulit',
-      mode: 'Kuis Biasa',
-      durationSeconds: 45 * 60,
-      questionsCount: 30,
-      totalPoints: 150,
-      participantsCount: 84,
-      requiresToken: true,
-      tokenCode: 'REACT99',
-      isExpired: false,
-      status: 'Tersedia',
-      coverGradient: [Color(0xFF0F172A), Color(0xFF2563EB)],
-    ),
-    _QuizItem(
-      id: 4,
-      title: 'Dasar Logika Matematika & Algoritma',
-      module: 'Modul Dasar: Logika Proposisi & Tabel Kebenaran',
-      description:
-          'Latihan soal pengantar logika dasar dan penalaran analitis untuk siswa sekolah menengah.',
-      jenjang: 'SMP / MTs',
-      difficulty: 'Mudah',
-      mode: 'Wayground',
-      durationSeconds: 20,
-      questionsCount: 15,
-      totalPoints: 75,
-      participantsCount: 62,
-      requiresToken: false,
-      isExpired: false,
-      status: 'Tersedia',
-      coverGradient: [Color(0xFF065F46), Color(0xFF10B981)],
-    ),
-    _QuizItem(
-      id: 5,
-      title: 'Data Analytics dengan Python & SQL',
-      module: 'Modul 4: Data Wrangling & Query Analysis',
-      description:
-          'Evaluasi pembersihan data menggunakan pandas, agregasi database SQL, dan visualisasi dasar.',
-      jenjang: 'Perguruan Tinggi / Umum',
-      difficulty: 'Sedang',
-      mode: 'Wayground',
-      durationSeconds: 25,
-      questionsCount: 25,
-      totalPoints: 100,
-      participantsCount: 0,
-      requiresToken: false,
-      isExpired: true,
-      status: 'Kadaluarsa',
-      coverGradient: [Color(0xFF7C2D12), Color(0xFFEA580C)],
-    ),
-  ];
-
+   @override
+  void initState() {
+    super.initState();
+    // Memuat data kuis dari database Laragon saat halaman dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<QuizProvider>().fetchQuizzes();
+    });
+  }
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  List<_QuizItem> get _filteredQuizzes {
+  List<QuizModel> _filterQuizzes(List<QuizModel> allQuizzes) {
     final query = _searchController.text.toLowerCase().trim();
+    final selJenjang = _selectedJenjang.toLowerCase().trim();
+    final selDiff = _selectedDifficulty.toLowerCase().trim();
 
-    var list = _allQuizzes.where((quiz) {
+    var list = allQuizzes.where((quiz) {
       final matchQuery = query.isEmpty ||
-          quiz.title.toLowerCase().contains(query) ||
-          quiz.module.toLowerCase().contains(query);
+          quiz.judul.toLowerCase().contains(query) ||
+          (quiz.deskripsi?.toLowerCase().contains(query) ?? false) ||
+          (quiz.kodeQuiz?.toLowerCase().contains(query) ?? false);
 
-      final matchJenjang =
-          _selectedJenjang == 'Semua' || quiz.jenjang == _selectedJenjang;
+      final quizJenjang = (quiz.namaJenjang ?? '').toLowerCase().trim();
+      final matchJenjang = _selectedJenjang == 'Semua' ||
+          quizJenjang == selJenjang ||
+          selJenjang.contains(quizJenjang) ||
+          quizJenjang.contains(selJenjang);
 
+      final quizDiff = (quiz.namaTingkat ?? '').toLowerCase().trim();
       final matchDifficulty = _selectedDifficulty == 'Semua' ||
-          quiz.difficulty == _selectedDifficulty;
+          quizDiff == selDiff ||
+          (quizDiff.isEmpty && selDiff == 'mudah');
 
       return matchQuery && matchJenjang && matchDifficulty;
     }).toList();
@@ -145,8 +68,8 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredQuizzes;
-
+    final quizProvider = context.watch<QuizProvider>();
+    final filtered = _filterQuizzes(quizProvider.quizzes);
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       body: SafeArea(
@@ -156,10 +79,42 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
               title: 'Kelola Kuis Pembelajaran',
               onNotificationTap: () {},
             ),
-
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              child: quizProvider.isLoading && quizProvider.quizzes.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : quizProvider.error != null && quizProvider.quizzes.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.cloud_off, size: 48, color: Color(0xFF94A3B8)),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Gagal Memuat Kuis',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A)),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  quizProvider.error!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: () => context.read<QuizProvider>().fetchQuizzes(),
+                                  icon: const Icon(Icons.refresh, size: 16),
+                                  label: const Text('Coba Lagi'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: () => context.read<QuizProvider>().fetchQuizzes(),
+                          child: ListView(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
                   // Header Title & Create Button
                   Row(
@@ -286,6 +241,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 ],
               ),
             ),
+          ),
           ],
         ),
       ),
@@ -591,7 +547,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
-          initialValue: value,
+          value: value,
           isExpanded: true,
           decoration: InputDecoration(
             filled: true,
@@ -635,14 +591,16 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
     );
   }
 
-  // 3. Quiz Card Kahoot 360 Style
-  Widget _buildQuizCard(_QuizItem quiz) {
+  // 3. Quiz Card Kahoot 360 Style (Menggunakan QuizModel)
+  Widget _buildQuizCard(QuizModel quiz) {
+    final difficulty = quiz.namaTingkat ?? 'Mudah';
+
     Color difficultyColor;
     Color difficultyBg;
-    if (quiz.difficulty == 'Mudah') {
+    if (difficulty == 'Mudah') {
       difficultyColor = const Color(0xFF047857);
       difficultyBg = const Color(0xFFD1FAE5);
-    } else if (quiz.difficulty == 'Sedang') {
+    } else if (difficulty == 'Sedang') {
       difficultyColor = const Color(0xFFB45309);
       difficultyBg = const Color(0xFFFEF3C7);
     } else {
@@ -650,16 +608,28 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
       difficultyBg = const Color(0xFFFFE4E6);
     }
 
-    final bool isWayground = quiz.mode == 'Wayground';
+    // Warna gradasi cover berdasarkan tingkat kesulitan
+    List<Color> coverGradient;
+    if (difficulty == 'Mudah') {
+      coverGradient = const [Color(0xFF065F46), Color(0xFF10B981)];
+    } else if (difficulty == 'Sedang') {
+      coverGradient = const [Color(0xFF46178F), Color(0xFF7C3AED)];
+    } else {
+      coverGradient = const [Color(0xFF1E3A8A), Color(0xFF3B82F6)];
+    }
+
+    final bool isWayground = quiz.modePengerjaan.toLowerCase() == 'wayground';
+    final String statusText = quiz.isDraft ? 'Draft' : (quiz.isExpired ? 'Kadaluarsa' : 'Tersedia');
+    final Color statusColor = quiz.isDraft
+        ? const Color(0xFFD97706)
+        : (quiz.isExpired ? const Color(0xFFBE123C) : const Color(0xFF059669));
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: quiz.isExpired
-              ? const Color(0xFFE2E8F0)
-              : const Color(0xFFCBD5E1),
+          color: quiz.isExpired ? const Color(0xFFE2E8F0) : const Color(0xFFCBD5E1),
         ),
         boxShadow: const [
           BoxShadow(
@@ -672,12 +642,12 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card Header with Cover Gradient & Badges
+          // Card Header with Cover Gradient / Image & Badges
           Container(
             height: 88,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: quiz.coverGradient,
+                colors: coverGradient,
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -695,16 +665,13 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '🎓 ${quiz.jenjang}',
+                        '🎓 ${quiz.namaJenjang ?? "Umum"}',
                         style: const TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
@@ -714,18 +681,13 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: quiz.isExpired
-                            ? const Color(0xFFBE123C)
-                            : const Color(0xFF059669),
+                        color: statusColor,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        quiz.isExpired ? 'Kadaluarsa' : 'Tersedia',
+                        statusText,
                         style: const TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
@@ -740,10 +702,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2.5,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                       decoration: BoxDecoration(
                         color: isWayground
                             ? const Color(0xFFFACC15)
@@ -761,10 +720,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2.5,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                       decoration: BoxDecoration(
                         color: quiz.requiresToken
                             ? const Color(0xFFEDE9FE)
@@ -799,7 +755,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        quiz.title,
+                        quiz.judul,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -812,16 +768,13 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
                         color: difficultyBg,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        quiz.difficulty,
+                        difficulty,
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
@@ -835,7 +788,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 const SizedBox(height: 6),
 
                 Text(
-                  quiz.module,
+                  quiz.kodeQuiz ?? 'Kuis Pembelajaran',
                   style: const TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
@@ -846,7 +799,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 const SizedBox(height: 4),
 
                 Text(
-                  quiz.description,
+                  quiz.deskripsi ?? 'Tidak ada deskripsi',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -857,22 +810,19 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 ),
 
                 const SizedBox(height: 12),
-                Divider(height: 1, color: const Color(0xFFF1F5F9)),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
                 const SizedBox(height: 12),
 
                 // Statistics Row
                 Row(
                   children: [
-                    _buildMetaPill(
-                      Icons.help_outline,
-                      '${quiz.questionsCount} Soal',
-                    ),
+                    _buildMetaPill(Icons.help_outline, '${quiz.questionsCount} Soal'),
                     const SizedBox(width: 12),
                     _buildMetaPill(
                       Icons.timer_outlined,
                       isWayground
-                          ? '${quiz.durationSeconds}s/Soal'
-                          : '${(quiz.durationSeconds / 60).round()}m Total',
+                          ? '20s/Soal'
+                          : '${quiz.durasiTotalMenit ?? 30}m Total',
                     ),
                     const SizedBox(width: 12),
                     _buildMetaPill(
@@ -881,10 +831,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                       color: const Color(0xFFD97706),
                     ),
                     const Spacer(),
-                    _buildMetaPill(
-                      Icons.group_outlined,
-                      '${quiz.participantsCount}',
-                    ),
+                    _buildMetaPill(Icons.group_outlined, '${quiz.participantsCount}'),
                   ],
                 ),
 
@@ -893,22 +840,16 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 // Action Buttons Row
                 Row(
                   children: [
-                    // Preview Button (Kahoot interactive play preview)
+                    // Tombol Pratinjau
                     Expanded(
                       child: SizedBox(
                         height: 38,
                         child: OutlinedButton.icon(
                           onPressed: () => _showPreviewSheet(quiz),
-                          icon: const Icon(
-                            Icons.visibility_outlined,
-                            size: 15,
-                          ),
+                          icon: const Icon(Icons.visibility_outlined, size: 15),
                           label: const Text(
                             'Pratinjau Kuis',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                           ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF46178F),
@@ -924,7 +865,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
 
                     const SizedBox(width: 8),
 
-                    // Edit Button
+                    // Tombol Edit
                     Container(
                       width: 38,
                       height: 38,
@@ -938,23 +879,19 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const CreateQuizPage(),
+                              builder: (_) => CreateQuizPage(quizToEdit: quiz),
                             ),
                           );
                         },
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
-                          Icons.edit_outlined,
-                          size: 17,
-                          color: Color(0xFF1D4ED8),
-                        ),
+                        icon: const Icon(Icons.edit_outlined, size: 17, color: Color(0xFF1D4ED8)),
                         tooltip: 'Edit Quiz',
                       ),
                     ),
 
                     const SizedBox(width: 6),
 
-                    // Delete Button
+                    // Tombol Hapus (Terhubung ke API Laravel)
                     Container(
                       width: 38,
                       height: 38,
@@ -966,11 +903,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                       child: IconButton(
                         onPressed: () => _confirmDelete(quiz),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          size: 17,
-                          color: Color(0xFFE11D48),
-                        ),
+                        icon: const Icon(Icons.delete_outline, size: 17, color: Color(0xFFE11D48)),
                         tooltip: 'Hapus Quiz',
                       ),
                     ),
@@ -1045,12 +978,17 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
   }
 
   // Preview BottomSheet similar to quiz-detail.blade.php
-  void _showPreviewSheet(_QuizItem quiz) {
+  void _showPreviewSheet(QuizModel quiz) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        final isWayground = quiz.modePengerjaan.toLowerCase() == 'wayground';
+        final durationText = isWayground
+            ? '20 Detik/Soal'
+            : '${quiz.durasiTotalMenit ?? 30} Menit Total';
+
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -1090,7 +1028,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          quiz.title,
+                          quiz.judul,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -1100,7 +1038,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                           ),
                         ),
                         Text(
-                          quiz.module,
+                          quiz.kodeQuiz ?? 'Kuis Pembelajaran',
                           style: const TextStyle(
                             fontSize: 11,
                             color: Color(0xFF64748B),
@@ -1124,16 +1062,11 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 childAspectRatio: 2.2,
                 children: [
                   _buildSpecBox('📋 JUMLAH SOAL', '${quiz.questionsCount} Soal'),
-                  _buildSpecBox(
-                    '⏱️ WAKTU KUIS',
-                    quiz.mode == 'Wayground'
-                        ? '${quiz.durationSeconds} Detik/Soal'
-                        : '${(quiz.durationSeconds / 60).round()} Menit Total',
-                  ),
+                  _buildSpecBox('⏱️ WAKTU KUIS', durationText),
                   _buildSpecBox('🏆 MAKSIMAL POIN', '${quiz.totalPoints} Poin'),
                   _buildSpecBox(
                     '⚡ MODE SISTEM',
-                    quiz.mode == 'Wayground' ? 'Wayground' : 'Kuis Biasa',
+                    isWayground ? 'Wayground' : 'Kuis Biasa',
                   ),
                 ],
               ),
@@ -1149,7 +1082,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Text(
-                  quiz.description,
+                  quiz.deskripsi ?? 'Tidak ada deskripsi',
                   style: const TextStyle(
                     fontSize: 11.5,
                     color: Color(0xFF475569),
@@ -1171,13 +1104,15 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => QuizPreviewPlayerPage(
-                          title: quiz.title,
-                          jenjang: quiz.jenjang,
-                          difficulty: quiz.difficulty,
-                          mode: quiz.mode,
+                          quizId: quiz.idQuiz,
+                          title: quiz.judul,
+                          jenjang: quiz.namaJenjang ?? 'Umum',
+                          difficulty: quiz.namaTingkat ?? 'Mudah',
+                          mode: quiz.modePengerjaan,
                           totalQuestions: quiz.questionsCount,
                           totalPoints: quiz.totalPoints,
-                          timeLimitPerQuestion: quiz.durationSeconds,
+                          timeLimitPerQuestion: 20,
+                          initialQuestions: quiz.soal,
                         ),
                       ),
                     );
@@ -1240,7 +1175,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
     );
   }
 
-  void _confirmDelete(_QuizItem quiz) {
+  void _confirmDelete(QuizModel quiz) {
     showDialog(
       context: context,
       builder: (context) {
@@ -1250,7 +1185,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           content: Text(
-            'Apakah Anda yakin ingin menghapus kuis "${quiz.title}"? Tindakan ini tidak dapat dibatalkan.',
+            'Apakah Anda yakin ingin menghapus kuis "${quiz.judul}"? Tindakan ini tidak dapat dibatalkan.',
             style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
           ),
           actions: [
@@ -1259,14 +1194,18 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
               child: const Text('Batal'),
             ),
             ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _allQuizzes.removeWhere((item) => item.id == quiz.id);
-                });
+              onPressed: () async {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
+                final provider = context.read<QuizProvider>();
+                final messenger = ScaffoldMessenger.of(context);
+                final success = await provider.deleteQuiz(quiz.idQuiz);
+                messenger.showSnackBar(
                   SnackBar(
-                    content: Text('Kuis "${quiz.title}" berhasil dihapus.'),
+                    content: Text(
+                      success
+                          ? 'Kuis "${quiz.judul}" berhasil dihapus.'
+                          : 'Gagal menghapus kuis: ${provider.error ?? ""}',
+                    ),
                   ),
                 );
               },
@@ -1281,42 +1220,4 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
       },
     );
   }
-}
-
-class _QuizItem {
-  final int id;
-  final String title;
-  final String module;
-  final String description;
-  final String jenjang;
-  final String difficulty;
-  final String mode;
-  final int durationSeconds;
-  final int questionsCount;
-  final int totalPoints;
-  final int participantsCount;
-  final bool requiresToken;
-  final String? tokenCode;
-  final bool isExpired;
-  final String status;
-  final List<Color> coverGradient;
-
-  _QuizItem({
-    required this.id,
-    required this.title,
-    required this.module,
-    required this.description,
-    required this.jenjang,
-    required this.difficulty,
-    required this.mode,
-    required this.durationSeconds,
-    required this.questionsCount,
-    required this.totalPoints,
-    required this.participantsCount,
-    required this.requiresToken,
-    this.tokenCode,
-    required this.isExpired,
-    required this.status,
-    required this.coverGradient,
-  });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'quizzes/student_quiz_list_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -48,31 +49,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ambil lebar layar buat ngatur jarak kiri-kanan & jumlah kolom grid
+    if (_currentIndex == 2) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: const StudentQuizListPage(),
+        bottomNavigationBar: _buildBottomNav(),
+      );
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7FB),
-
-      // biar isi ga nabrak sm status bar HP
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             int jumlahKolom;
 
-            // HP kecil = 2 kolom
             if (constraints.maxWidth < 500) {
               jumlahKolom = 2;
-
-              // kalau agak lebar = 3 kolom
             } else if (constraints.maxWidth < 900) {
               jumlahKolom = 3;
-
-              // kalau layarnya gede = 4 kolom
             } else {
               jumlahKolom = 4;
             }
-            
+
             return SingleChildScrollView(
               padding: EdgeInsets.symmetric(
                 horizontal: screenWidth * 0.05,
@@ -93,16 +94,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Halo, Eve!',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            const Text(
+                              'Halo, Siswa Arrava! 👋',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
-                              'Semangat terus belajarnya!',
+                              'Siap belajar apa hari ini?',
                               style: TextStyle(
                                 color: Colors.grey[600],
-                                fontSize: 13,
+                                fontSize: 12,
                               ),
                             ),
                           ],
@@ -111,10 +114,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
-                          vertical: 6,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _green.withOpacity(0.1),
+                          color: _green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
@@ -161,6 +164,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   const SizedBox(height: 24),
 
+                  // Kahoot 360 Interactive Banner
+                  InkWell(
+                    onTap: () {
+                      setState(() => _currentIndex = 2);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF46178F), Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF46178F).withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text('⚡', style: TextStyle(fontSize: 24)),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Kuis Interaktif 360',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Asah kemampuanmu dan raih poin XP!',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
                   Text(
                     'Lanjutkan Belajar',
                     style: Theme.of(context).textTheme.titleMedium
@@ -177,9 +247,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withValues(alpha: 0.04),
                           blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -191,10 +261,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: _blue.withOpacity(0.1),
+                                color: _blue.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.menu_book, color: _blue),
+                              child: const Icon(
+                                Icons.calculate,
+                                color: _blue,
+                                size: 24,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             const Expanded(
@@ -255,7 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: ElevatedButton(
                             onPressed: () {},
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _blue.withOpacity(0.1),
+                              backgroundColor: _blue.withValues(alpha: 0.1),
                               foregroundColor: _blue,
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -287,7 +361,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      // jumlah kolom ngikut hasil hitungan LayoutBuilder di atas
                       crossAxisCount: jumlahKolom,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
@@ -314,9 +387,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   const SizedBox(height: 12),
 
-                  // shrinkWrap + physics sama alasannya kaya di GridView:
-                  // biar ListView ini nggak ikut discroll sendiri, karena
-                  // udah ada scroll global dari SingleChildScrollView di atas
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -345,40 +415,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
       ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
 
-      // BottomNavigationBar itu widget bawaan Flutter, tinggal kasih daftar item.
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: _blue,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_outlined),
-            label: 'Belajar',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit_outlined),
-            label: 'Latihan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
-          ),
-        ],
-      ),
+  Widget _buildBottomNav() {
+    return BottomNavigationBar(
+      currentIndex: _currentIndex,
+      selectedItemColor: _blue,
+      unselectedItemColor: Colors.grey,
+      type: BottomNavigationBarType.fixed,
+      onTap: (index) {
+        setState(() => _currentIndex = index);
+      },
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          label: 'Beranda',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.menu_book_outlined),
+          label: 'Belajar',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.edit_outlined),
+          label: 'Latihan / Kuis',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'Profil',
+        ),
+      ],
     );
   }
 }
 
-// kartu kecil buat nampilin satu angka statistik (dipake 3x di atas)
 class _StatCard extends StatelessWidget {
   final String value;
   final String label;
@@ -399,7 +470,7 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -427,7 +498,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// baris kecil buat satu item di ListView "Riwayat Belajar"
 class _RiwayatItem extends StatelessWidget {
   final String judul;
   final String tanggal;
@@ -452,7 +522,7 @@ class _RiwayatItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -463,22 +533,19 @@ class _RiwayatItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   judul,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -488,12 +555,19 @@ class _RiwayatItem extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            'Skor $skor',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              skor,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
           ),
         ],
@@ -502,7 +576,6 @@ class _RiwayatItem extends StatelessWidget {
   }
 }
 
-// card kecil buat satu mata pelajaran di grid "Materi Hari Ini"
 class _MateriCard extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -523,7 +596,7 @@ class _MateriCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -534,7 +607,7 @@ class _MateriCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20),

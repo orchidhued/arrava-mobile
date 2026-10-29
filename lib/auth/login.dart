@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../admin/admin_shell.dart';
 import '../screens/dashboard_screen.dart';
 import '../services/auth_service.dart';
+import '../core/storage/secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,6 +22,25 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
   static const _blue = Color(0xFF2563EB);
   static const _green = Color(0xFF059669);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedEmail();
+  }
+
+  Future<void> _loadRememberedEmail() async {
+    final rememberMe = await SecureStorage.read('remember_me');
+    if (rememberMe == 'true') {
+      final savedEmail = await SecureStorage.read('saved_email');
+      if (savedEmail != null && savedEmail.isNotEmpty && mounted) {
+        setState(() {
+          _emailController.text = savedEmail;
+          _rememberMe = true;
+        });
+      }
+    }
+  }
 
   String? _validateEmailOrPhone(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -53,6 +73,14 @@ class _LoginScreenState extends State<LoginScreen> {
       final user = result['user'];
 
       final int role = int.tryParse(user['id_tipeuser'].toString()) ?? 0;
+
+      if (_rememberMe) {
+        await SecureStorage.write('saved_email', _emailController.text.trim());
+        await SecureStorage.write('remember_me', 'true');
+      } else {
+        await SecureStorage.delete('saved_email');
+        await SecureStorage.delete('remember_me');
+      }
 
       if (role == 1) {
         // ADMIN

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'models/quiz_model.dart';
 
 class QuizPreviewPlayerPage extends StatefulWidget {
+  final int? quizId;
   final String title;
   final String jenjang;
   final String difficulty;
@@ -9,9 +11,11 @@ class QuizPreviewPlayerPage extends StatefulWidget {
   final int totalQuestions;
   final int totalPoints;
   final int timeLimitPerQuestion;
+  final List<QuestionModel>? initialQuestions;
 
   const QuizPreviewPlayerPage({
     super.key,
+    this.quizId,
     required this.title,
     required this.jenjang,
     required this.difficulty,
@@ -19,6 +23,7 @@ class QuizPreviewPlayerPage extends StatefulWidget {
     this.totalQuestions = 5,
     this.totalPoints = 100,
     this.timeLimitPerQuestion = 20,
+    this.initialQuestions,
   });
 
   @override
@@ -33,6 +38,10 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
   int _correctCount = 0;
   late int _remainingSeconds;
   Timer? _timer;
+
+  List<_SampleQuestion> _activeQuestions = [];
+  List<_SampleQuestion> get _questions =>
+      _activeQuestions.isNotEmpty ? _activeQuestions : _sampleQuestions;
 
   // Mock sample questions in Kahoot style
   final List<_SampleQuestion> _sampleQuestions = [
@@ -110,6 +119,20 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialQuestions != null && widget.initialQuestions!.isNotEmpty) {
+      _activeQuestions = widget.initialQuestions!.map((q) {
+        final answers = q.pilihan.map((p) => p.teksPilihan).toList();
+        while (answers.length < 4) {
+          answers.add('');
+        }
+        return _SampleQuestion(
+          question: q.pertanyaan,
+          answers: answers,
+          correctAnswerIndex: q.correctAnswerIndex >= 0 ? q.correctAnswerIndex : 0,
+          points: q.poin,
+        );
+      }).toList();
+    }
     _startTimer();
   }
 
@@ -144,7 +167,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
       _selectedAnswerIndex = answerIndex;
       _isAnswerSubmitted = true;
 
-      final currentQ = _sampleQuestions[_currentIndex];
+      final currentQ = _questions[_currentIndex];
       if (answerIndex == currentQ.correctAnswerIndex) {
         _correctCount++;
         _score += currentQ.points;
@@ -153,7 +176,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
 
     Future.delayed(const Duration(milliseconds: 1400), () {
       if (!mounted) return;
-      if (_currentIndex < _sampleQuestions.length - 1) {
+      if (_currentIndex < _questions.length - 1) {
         setState(() {
           _currentIndex++;
           _selectedAnswerIndex = null;
@@ -167,7 +190,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
   }
 
   void _showResultDialog() {
-    final bool isLulus = _correctCount >= (_sampleQuestions.length / 2);
+    final bool isLulus = _correctCount >= (_questions.length / 2);
 
     showDialog(
       context: context,
@@ -266,7 +289,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '$_correctCount / ${_sampleQuestions.length}',
+                              '$_correctCount / ${_questions.length}',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
@@ -355,7 +378,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentQ = _sampleQuestions[_currentIndex];
+    final currentQ = _questions[_currentIndex];
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B4FB3),
@@ -428,7 +451,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          'Soal ${_currentIndex + 1} / ${_sampleQuestions.length}',
+                          'Soal ${_currentIndex + 1} / ${_questions.length}',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -497,7 +520,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: LinearProgressIndicator(
-                      value: (_currentIndex + 1) / _sampleQuestions.length,
+                      value: (_currentIndex + 1) / _questions.length,
                       backgroundColor: Colors.white.withValues(alpha: 0.2),
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         Color(0xFFFBBF24),

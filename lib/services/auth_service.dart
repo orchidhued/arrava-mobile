@@ -1,4 +1,3 @@
-
 import '../core/network/api_client.dart';
 import '../core/constants/api_constants.dart';
 import '../core/storage/secure_storage.dart';
@@ -41,6 +40,20 @@ class AuthService {
 
   static Future<String?> getRole() async {
     return SecureStorage.read('user_role');
+  }
+
+  static Future<bool> isLoggedIn() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  static Future<Map<String, String?>> getSavedUser() async {
+    return {
+      'id': await SecureStorage.read('user_id'),
+      'name': await SecureStorage.read('user_name'),
+      'email': await SecureStorage.read('user_email'),
+      'role': await SecureStorage.read('user_role'),
+    };
   }
 
   static Future<void> logout() async {
