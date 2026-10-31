@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import '../../shared/widgets/app_header.dart';
 import 'create_quiz_page.dart';
 import 'quiz_preview_player_page.dart';
+
 import 'package:provider/provider.dart';
+
 import 'models/quiz_model.dart';
 import 'providers/quiz_provider.dart';
+
 class ManageQuizPage extends StatefulWidget {
   const ManageQuizPage({super.key});
 
@@ -20,7 +23,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
   String _selectedDifficulty = 'Semua';
   String _selectedSort = 'terbaru';
 
-   @override
+  @override
   void initState() {
     super.initState();
     // Memuat data kuis dari database Laragon saat halaman dibuka
@@ -28,6 +31,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
       context.read<QuizProvider>().fetchQuizzes();
     });
   }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -40,19 +44,22 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
     final selDiff = _selectedDifficulty.toLowerCase().trim();
 
     var list = allQuizzes.where((quiz) {
-      final matchQuery = query.isEmpty ||
+      final matchQuery =
+          query.isEmpty ||
           quiz.judul.toLowerCase().contains(query) ||
           (quiz.deskripsi?.toLowerCase().contains(query) ?? false) ||
           (quiz.kodeQuiz?.toLowerCase().contains(query) ?? false);
 
       final quizJenjang = (quiz.namaJenjang ?? '').toLowerCase().trim();
-      final matchJenjang = _selectedJenjang == 'Semua' ||
+      final matchJenjang =
+          _selectedJenjang == 'Semua' ||
           quizJenjang == selJenjang ||
           selJenjang.contains(quizJenjang) ||
           quizJenjang.contains(selJenjang);
 
       final quizDiff = (quiz.namaTingkat ?? '').toLowerCase().trim();
-      final matchDifficulty = _selectedDifficulty == 'Semua' ||
+      final matchDifficulty =
+          _selectedDifficulty == 'Semua' ||
           quizDiff == selDiff ||
           (quizDiff.isEmpty && selDiff == 'mudah');
 
@@ -83,165 +90,178 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
               child: quizProvider.isLoading && quizProvider.quizzes.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : quizProvider.error != null && quizProvider.quizzes.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.cloud_off, size: 48, color: Color(0xFF94A3B8)),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  'Gagal Memuat Kuis',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A)),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  quizProvider.error!,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton.icon(
-                                  onPressed: () => context.read<QuizProvider>().fetchQuizzes(),
-                                  icon: const Icon(Icons.refresh, size: 16),
-                                  label: const Text('Coba Lagi'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: () => context.read<QuizProvider>().fetchQuizzes(),
-                          child: ListView(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                children: [
-                  // Header Title & Create Button
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Expanded(
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Kelola Kuis Pembelajaran',
+                            const Icon(
+                              Icons.cloud_off,
+                              size: 48,
+                              color: Color(0xFF94A3B8),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Gagal Memuat Kuis',
                               style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                                 color: Color(0xFF0F172A),
                               ),
                             ),
-                            SizedBox(height: 3),
+                            const SizedBox(height: 6),
                             Text(
-                              'Daftar kuis interaktif yang tersedia di platform',
-                              style: TextStyle(
+                              quizProvider.error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF64748B),
                               ),
                             ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () =>
+                                  context.read<QuizProvider>().fetchQuizzes(),
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: const Text('Coba Lagi'),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const CreateQuizPage(),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () =>
+                          context.read<QuizProvider>().fetchQuizzes(),
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                        children: [
+                          // Header Title & Create Button
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Kelola Kuis Pembelajaran',
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    SizedBox(height: 3),
+                                    Text(
+                                      'Daftar kuis interaktif yang tersedia di platform',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const CreateQuizPage(),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text(
+                                  'Buat Quiz',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  foregroundColor: Colors.white,
+                                  elevation: 2,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Kahoot 360 Style Hero Banner
+                          _buildHeroBanner(),
+
+                          const SizedBox(height: 16),
+
+                          // Filter & Search Section
+                          _buildFilterSection(),
+
+                          const SizedBox(height: 16),
+
+                          // Count indicator
+                          Row(
+                            children: [
+                              Text(
+                                'Semua Quiz (${filtered.length})',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              const Spacer(),
+                              if (_selectedJenjang != 'Semua' ||
+                                  _selectedDifficulty != 'Semua' ||
+                                  _searchController.text.isNotEmpty)
+                                TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      _selectedJenjang = 'Semua';
+                                      _selectedDifficulty = 'Semua';
+                                      _selectedSort = 'terbaru';
+                                    });
+                                  },
+                                  icon: const Icon(Icons.refresh, size: 14),
+                                  label: const Text(
+                                    'Reset Filter',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF64748B),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // List of Cards or Empty State
+                          if (filtered.isEmpty)
+                            _buildEmptyState()
+                          else
+                            ...filtered.map(
+                              (quiz) => Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: _buildQuizCard(quiz),
+                              ),
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.add, size: 16),
-                        label: const Text(
-                          'Buat Quiz',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          foregroundColor: Colors.white,
-                          elevation: 2,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Kahoot 360 Style Hero Banner
-                  _buildHeroBanner(),
-
-                  const SizedBox(height: 16),
-
-                  // Filter & Search Section
-                  _buildFilterSection(),
-
-                  const SizedBox(height: 16),
-
-                  // Count indicator
-                  Row(
-                    children: [
-                      Text(
-                        'Semua Quiz (${filtered.length})',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_selectedJenjang != 'Semua' ||
-                          _selectedDifficulty != 'Semua' ||
-                          _searchController.text.isNotEmpty)
-                        TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                              _selectedJenjang = 'Semua';
-                              _selectedDifficulty = 'Semua';
-                              _selectedSort = 'terbaru';
-                            });
-                          },
-                          icon: const Icon(Icons.refresh, size: 14),
-                          label: const Text(
-                            'Reset Filter',
-                            style: TextStyle(fontSize: 11),
-                          ),
-                          style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF64748B),
-                            padding: EdgeInsets.zero,
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // List of Cards or Empty State
-                  if (filtered.isEmpty)
-                    _buildEmptyState()
-                  else
-                    ...filtered.map(
-                      (quiz) => Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: _buildQuizCard(quiz),
+                        ],
                       ),
                     ),
-                ],
-              ),
             ),
-          ),
           ],
         ),
       ),
@@ -279,11 +299,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
             bottom: -20,
             child: Opacity(
               opacity: 0.12,
-              child: Icon(
-                Icons.change_history,
-                size: 160,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.change_history, size: 160, color: Colors.white),
             ),
           ),
           Positioned(
@@ -320,10 +336,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '✨',
-                        style: TextStyle(fontSize: 11),
-                      ),
+                      Text('✨', style: TextStyle(fontSize: 11)),
                       SizedBox(width: 5),
                       Text(
                         'EDITOR INTERAKTIF KAHOOT! 360 STYLE',
@@ -367,9 +380,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const CreateQuizPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const CreateQuizPage()),
                     );
                   },
                   icon: const Icon(
@@ -547,7 +558,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           isExpanded: true,
           decoration: InputDecoration(
             filled: true,
@@ -619,7 +630,9 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
     }
 
     final bool isWayground = quiz.modePengerjaan.toLowerCase() == 'wayground';
-    final String statusText = quiz.isDraft ? 'Draft' : (quiz.isExpired ? 'Kadaluarsa' : 'Tersedia');
+    final String statusText = quiz.isDraft
+        ? 'Draft'
+        : (quiz.isExpired ? 'Kadaluarsa' : 'Tersedia');
     final Color statusColor = quiz.isDraft
         ? const Color(0xFFD97706)
         : (quiz.isExpired ? const Color(0xFFBE123C) : const Color(0xFF059669));
@@ -629,7 +642,9 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: quiz.isExpired ? const Color(0xFFE2E8F0) : const Color(0xFFCBD5E1),
+          color: quiz.isExpired
+              ? const Color(0xFFE2E8F0)
+              : const Color(0xFFCBD5E1),
         ),
         boxShadow: const [
           BoxShadow(
@@ -665,7 +680,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(12),
@@ -681,7 +699,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor,
                         borderRadius: BorderRadius.circular(10),
@@ -702,7 +723,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2.5,
+                      ),
                       decoration: BoxDecoration(
                         color: isWayground
                             ? const Color(0xFFFACC15)
@@ -720,7 +744,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2.5,
+                      ),
                       decoration: BoxDecoration(
                         color: quiz.requiresToken
                             ? const Color(0xFFEDE9FE)
@@ -768,7 +795,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: difficultyBg,
                         borderRadius: BorderRadius.circular(8),
@@ -816,7 +846,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 // Statistics Row
                 Row(
                   children: [
-                    _buildMetaPill(Icons.help_outline, '${quiz.questionsCount} Soal'),
+                    _buildMetaPill(
+                      Icons.help_outline,
+                      '${quiz.questionsCount} Soal',
+                    ),
                     const SizedBox(width: 12),
                     _buildMetaPill(
                       Icons.timer_outlined,
@@ -831,7 +864,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                       color: const Color(0xFFD97706),
                     ),
                     const Spacer(),
-                    _buildMetaPill(Icons.group_outlined, '${quiz.participantsCount}'),
+                    _buildMetaPill(
+                      Icons.group_outlined,
+                      '${quiz.participantsCount}',
+                    ),
                   ],
                 ),
 
@@ -849,7 +885,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                           icon: const Icon(Icons.visibility_outlined, size: 15),
                           label: const Text(
                             'Pratinjau Kuis',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF46178F),
@@ -884,7 +923,11 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                           );
                         },
                         padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.edit_outlined, size: 17, color: Color(0xFF1D4ED8)),
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          size: 17,
+                          color: Color(0xFF1D4ED8),
+                        ),
                         tooltip: 'Edit Quiz',
                       ),
                     ),
@@ -903,7 +946,11 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                       child: IconButton(
                         onPressed: () => _confirmDelete(quiz),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.delete_outline, size: 17, color: Color(0xFFE11D48)),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 17,
+                          color: Color(0xFFE11D48),
+                        ),
                         tooltip: 'Hapus Quiz',
                       ),
                     ),
@@ -1061,7 +1108,10 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                 crossAxisSpacing: 8,
                 childAspectRatio: 2.2,
                 children: [
-                  _buildSpecBox('📋 JUMLAH SOAL', '${quiz.questionsCount} Soal'),
+                  _buildSpecBox(
+                    '📋 JUMLAH SOAL',
+                    '${quiz.questionsCount} Soal',
+                  ),
                   _buildSpecBox('⏱️ WAKTU KUIS', durationText),
                   _buildSpecBox('🏆 MAKSIMAL POIN', '${quiz.totalPoints} Poin'),
                   _buildSpecBox(
@@ -1120,10 +1170,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                   icon: const Icon(Icons.play_arrow, size: 20),
                   label: const Text(
                     'Mulai Pratinjau Kuis Interaktif ⚡',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF46178F), // Kahoot purple

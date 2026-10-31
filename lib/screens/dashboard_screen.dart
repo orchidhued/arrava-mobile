@@ -456,9 +456,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
+    ),
+    bottomNavigationBar: _buildBottomNav(),
+  );
+}
 
   Widget _buildBottomNav() {
     return Container(

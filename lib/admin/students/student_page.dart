@@ -247,7 +247,7 @@ class _StudentPageState extends State<StudentPage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final selected = _selectedFilter == index;
 
@@ -544,7 +544,7 @@ class _StudentPageState extends State<StudentPage> {
           width: 58,
           height: 58,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) {
+          errorBuilder: (_, _, _) {
             return _buildInitialAvatar(student);
           },
         ),

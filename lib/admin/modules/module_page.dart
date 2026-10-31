@@ -24,7 +24,6 @@ class _ModulePageContent extends StatefulWidget {
 }
 
 class _ModulePageContentState extends State<_ModulePageContent> {
-
   String _selectedFilter = 'Semua';
 
   final List<String> _filters = [
@@ -100,10 +99,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
         Text(
           'Kelola modul pembelajaran yang tersedia.',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
       ],
     );
@@ -127,8 +123,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
             title: 'Modul Aktif',
             value: modules
                 .where(
-                  (module) =>
-                      module.progressModul?.toLowerCase() == 'tersedia',
+                  (module) => module.progressModul?.toLowerCase() == 'tersedia',
                 )
                 .length
                 .toString(),
@@ -149,9 +144,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -176,10 +169,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
 
                 const SizedBox(height: 4),
@@ -205,7 +195,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final filter = _filters[index];
           final isSelected = filter == _selectedFilter;
@@ -235,13 +225,14 @@ class _ModulePageContentState extends State<_ModulePageContent> {
     );
   }
 
-  Widget _buildContent(ModuleProvider provider, List<ModuleModel> filteredModules) {
+  Widget _buildContent(
+    ModuleProvider provider,
+    List<ModuleModel> filteredModules,
+  ) {
     if (provider.isLoading) {
       return const Padding(
         padding: EdgeInsets.only(top: 80),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -262,16 +253,11 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 50,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 50),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         children: [
@@ -293,10 +279,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
           const Text(
             'Belum ada modul',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
 
           const SizedBox(height: 8),
@@ -304,10 +287,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
           Text(
             'Data modul dari database belum tersedia.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
 
           const SizedBox(height: 20),
@@ -328,26 +308,17 @@ class _ModulePageContentState extends State<_ModulePageContent> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 48,
-            color: Colors.red,
-          ),
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
 
           const SizedBox(height: 12),
 
           const Text(
             'Gagal mengambil data modul',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
 
           const SizedBox(height: 8),
@@ -355,10 +326,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
           Text(
             error,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
 
           const SizedBox(height: 16),
@@ -379,15 +347,12 @@ class _ModulePageContentState extends State<_ModulePageContent> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (module.fotoModul != null &&
-              module.fotoModul!.isNotEmpty)
+          if (module.fotoModul != null && module.fotoModul!.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
               child: Image.network(
@@ -395,7 +360,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) {
+                errorBuilder: (_, _, _) {
                   return _buildCoverPlaceholder();
                 },
               ),
@@ -407,9 +372,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
           Row(
             children: [
-              _buildStatusBadge(
-                module.progressModul ?? 'Tersedia',
-              ),
+              _buildStatusBadge(module.progressModul ?? 'Tersedia'),
 
               const Spacer(),
 
@@ -440,20 +403,13 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
           Row(
             children: [
-              Icon(
-                Icons.tag,
-                size: 16,
-                color: Colors.grey.shade500,
-              ),
+              Icon(Icons.tag, size: 16, color: Colors.grey.shade500),
 
               const SizedBox(width: 5),
 
               Text(
                 'ID Modul: ${module.idModul}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ),
@@ -482,10 +438,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
   Widget _buildStatusBadge(String status) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: const Color(0xFFECFDF5),
         borderRadius: BorderRadius.circular(8),

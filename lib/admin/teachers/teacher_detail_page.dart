@@ -32,10 +32,7 @@ class TeacherDetailPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppHeader(
-                title: 'Detail Guru',
-                onNotificationTap: () {},
-              ),
+              AppHeader(title: 'Detail Guru', onNotificationTap: () {}),
 
               const SizedBox(height: 20),
 
@@ -94,9 +91,7 @@ class TeacherDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -125,17 +120,11 @@ class TeacherDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: AppTextStyles.heading3,
-                ),
+                Text(name, style: AppTextStyles.heading3),
 
                 const SizedBox(height: 5),
 
-                Text(
-                  nip,
-                  style: AppTextStyles.bodySecondary,
-                ),
+                Text(nip, style: AppTextStyles.bodySecondary),
 
                 const SizedBox(height: 8),
 
@@ -145,9 +134,7 @@ class TeacherDetailPage extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.success
-                            : AppColors.error,
+                        color: isActive ? AppColors.success : AppColors.error,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -159,9 +146,7 @@ class TeacherDetailPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: isActive
-                            ? AppColors.success
-                            : AppColors.error,
+                        color: isActive ? AppColors.success : AppColors.error,
                       ),
                     ),
                   ],
@@ -177,10 +162,7 @@ class TeacherDetailPage extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Text(
-        title,
-        style: AppTextStyles.heading3,
-      ),
+      child: Text(title, style: AppTextStyles.heading3),
     );
   }
 
@@ -195,9 +177,7 @@ class TeacherDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -208,11 +188,7 @@ class TeacherDetailPage extends StatelessWidget {
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 21,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 21),
           ),
 
           const SizedBox(width: 13),
@@ -221,10 +197,7 @@ class TeacherDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: AppTextStyles.caption,
-                ),
+                Text(title, style: AppTextStyles.caption),
 
                 const SizedBox(height: 4),
 
@@ -256,9 +229,7 @@ class TeacherDetailPage extends StatelessWidget {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text(
-                      'Form edit guru akan dibuat berikutnya.',
-                    ),
+                    content: Text('Form edit guru akan dibuat berikutnya.'),
                   ),
                 );
               },
@@ -276,20 +247,13 @@ class TeacherDetailPage extends StatelessWidget {
               onPressed: () {
                 _showDeleteDialog(context);
               },
-              icon: Icon(
-                Icons.delete_outline,
-                color: AppColors.error,
-              ),
+              icon: Icon(Icons.delete_outline, color: AppColors.error),
               label: Text(
                 'Hapus Guru',
-                style: TextStyle(
-                  color: AppColors.error,
-                ),
+                style: TextStyle(color: AppColors.error),
               ),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                  color: AppColors.error.withOpacity(0.4),
-                ),
+                side: BorderSide(color: AppColors.error.withValues(alpha: 0.4)),
               ),
             ),
           ),
@@ -304,9 +268,7 @@ class TeacherDetailPage extends StatelessWidget {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Hapus Guru'),
-          content: Text(
-            'Apakah Anda yakin ingin menghapus data "$name"?',
-          ),
+          content: Text('Apakah Anda yakin ingin menghapus data "$name"?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -327,12 +289,7 @@ class TeacherDetailPage extends StatelessWidget {
                   ),
                 );
               },
-              child: Text(
-                'Hapus',
-                style: TextStyle(
-                  color: AppColors.error,
-                ),
-              ),
+              child: Text('Hapus', style: TextStyle(color: AppColors.error)),
             ),
           ],
         );
@@ -352,7 +309,7 @@ class TeacherDetailPage extends StatelessWidget {
     }
 
     return '${parts.first.substring(0, 1)}'
-        '${parts.last.substring(0, 1)}'
+            '${parts.last.substring(0, 1)}'
         .toUpperCase();
   }
 }

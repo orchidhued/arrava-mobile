@@ -100,9 +100,7 @@ class ModuleDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,10 +125,7 @@ class ModuleDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  moduleName,
-                  style: AppTextStyles.heading3,
-                ),
+                Text(moduleName, style: AppTextStyles.heading3),
 
                 const SizedBox(height: 7),
 
@@ -161,9 +156,7 @@ class ModuleDetailPage extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.success
-                            : AppColors.error,
+                        color: isActive ? AppColors.success : AppColors.error,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -173,9 +166,7 @@ class ModuleDetailPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: isActive
-                            ? AppColors.success
-                            : AppColors.error,
+                        color: isActive ? AppColors.success : AppColors.error,
                       ),
                     ),
                   ],
@@ -191,10 +182,7 @@ class ModuleDetailPage extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Text(
-        title,
-        style: AppTextStyles.heading3,
-      ),
+      child: Text(title, style: AppTextStyles.heading3),
     );
   }
 
@@ -209,9 +197,7 @@ class ModuleDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -222,11 +208,7 @@ class ModuleDetailPage extends StatelessWidget {
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 21,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 21),
           ),
 
           const SizedBox(width: 13),
@@ -235,10 +217,7 @@ class ModuleDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: AppTextStyles.caption,
-                ),
+                Text(title, style: AppTextStyles.caption),
                 const SizedBox(height: 4),
                 Text(
                   value,
@@ -264,9 +243,7 @@ class ModuleDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Text(
         description,
@@ -291,9 +268,7 @@ class ModuleDetailPage extends StatelessWidget {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text(
-                      'Form edit modul akan dibuat berikutnya.',
-                    ),
+                    content: Text('Form edit modul akan dibuat berikutnya.'),
                   ),
                 );
               },
@@ -311,20 +286,13 @@ class ModuleDetailPage extends StatelessWidget {
               onPressed: () {
                 _showDeleteDialog(context);
               },
-              icon: Icon(
-                Icons.delete_outline,
-                color: AppColors.error,
-              ),
+              icon: Icon(Icons.delete_outline, color: AppColors.error),
               label: Text(
                 'Hapus Modul',
-                style: TextStyle(
-                  color: AppColors.error,
-                ),
+                style: TextStyle(color: AppColors.error),
               ),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                  color: AppColors.error.withOpacity(0.4),
-                ),
+                side: BorderSide(color: AppColors.error.withValues(alpha: 0.4)),
               ),
             ),
           ),
@@ -339,9 +307,7 @@ class ModuleDetailPage extends StatelessWidget {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Hapus Modul'),
-          content: Text(
-            'Apakah Anda yakin ingin menghapus "$moduleName"?',
-          ),
+          content: Text('Apakah Anda yakin ingin menghapus "$moduleName"?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -361,12 +327,7 @@ class ModuleDetailPage extends StatelessWidget {
                   ),
                 );
               },
-              child: Text(
-                'Hapus',
-                style: TextStyle(
-                  color: AppColors.error,
-                ),
-              ),
+              child: Text('Hapus', style: TextStyle(color: AppColors.error)),
             ),
           ],
         );
