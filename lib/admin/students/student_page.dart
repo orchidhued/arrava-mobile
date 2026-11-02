@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../services/dashboard_service.dart';
 import '../../shared/widgets/app_header.dart';
 
 class StudentPage extends StatefulWidget {
@@ -12,58 +13,67 @@ class StudentPage extends StatefulWidget {
 
 class _StudentPageState extends State<StudentPage> {
   int _selectedFilter = 0;
-
   final List<String> _filters = ['Semua', 'SD', 'SMP', 'SMA'];
 
-  final List<_StudentData> _students = [
-    _StudentData(
-      name: 'Muhammad Rizky Pratama',
-      nisn: '0068192301',
-      className: 'XII-IPA 1',
-      classLabel: '12 IPA 1',
-      initials: 'MR',
-      status: 'Aktif',
-      image: 'assets/images/students/rizky.jpg',
-    ),
-    _StudentData(
-      name: 'Siti Aisyah Rahmadani',
-      nisn: '0074819204',
-      className: 'XI-RPL 2',
-      classLabel: '11 RPL',
-      initials: 'SA',
-      status: 'Aktif',
-      image: 'assets/images/students/aisyah.jpg',
-    ),
-    _StudentData(
-      name: 'Bima Arya Wijaya',
-      nisn: '0081290382',
-      className: 'X-MIPA 3',
-      classLabel: '10 MIPA',
-      initials: 'BA',
-      status: 'Aktif',
-      image: 'assets/images/students/bima.jpg',
-    ),
-    _StudentData(
-      name: 'Nabila Putri Maharani',
-      nisn: '0069912048',
-      className: 'XII-IPS 1',
-      classLabel: '12 IPS 1',
-      initials: 'NP',
-      status: 'Aktif',
-    ),
-    _StudentData(
-      name: 'Farhan Maulana',
-      nisn: '0057218399',
-      className: 'XII-IPA 2',
-      classLabel: '12 IPA 2',
-      initials: 'FM',
-      status: 'Aktif',
-    ),
-  ];
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _students = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStudents();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadStudents() async {
+    try {
+      final list = await DashboardService.fetchStudents(search: _searchQuery);
+      if (mounted) {
+        setState(() {
+          _students = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return 'S';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  List<Map<String, dynamic>> _getFilteredStudents() {
+    var result = _students;
+
+    if (_selectedFilter > 0) {
+      final selectedJenjang = _filters[_selectedFilter].toLowerCase();
+      result = result.where((s) {
+        final j = (s['jenjang'] ?? '').toString().toLowerCase();
+        return j == selectedJenjang;
+      }).toList();
+    }
+
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final students = _getFilteredStudents();
+    final filtered = _getFilteredStudents();
 
     return SafeArea(
       child: Column(
@@ -71,42 +81,74 @@ class _StudentPageState extends State<StudentPage> {
           AppHeader(title: 'Manajemen Siswa', onNotificationTap: () {}),
 
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPageTitle(),
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: _loadStudents,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPageTitle(),
 
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                  _buildSearch(),
+                    _buildSearch(),
 
-                  const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                  _buildFilters(),
+                    _buildFilters(),
 
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                  _buildStatistics(),
+                    _buildStatistics(),
 
-                  const SizedBox(height: 22),
+                    const SizedBox(height: 22),
 
-                  _buildListHeader(students.length),
+                    _buildListHeader(filtered.length),
 
-                  const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                  ...students.map(
-                    (student) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _buildStudentCard(student),
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  _buildLoadMore(),
-                ],
+                    if (_isLoading && _students.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(color: AppColors.primary),
+                        ),
+                      )
+                    else if (filtered.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.person_off_outlined, size: 40, color: Colors.grey[400]),
+                            const SizedBox(height: 10),
+                            Text(
+                              _searchQuery.isNotEmpty
+                                  ? 'Tidak ada siswa yang cocok dengan "$_searchQuery"'
+                                  : 'Belum ada data siswa di database',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ...filtered.map(
+                        (student) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildStudentCard(student),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -123,11 +165,11 @@ class _StudentPageState extends State<StudentPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Daftar Siswa',
                 style: TextStyle(
                   fontSize: 27,
@@ -135,58 +177,16 @@ class _StudentPageState extends State<StudentPage> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
-                'Kelola data & rekam akademik',
-                style: TextStyle(
+                'Kelola data & siswa terdaftar (${_students.length} Siswa)',
+                style: const TextStyle(
                   fontSize: 12,
                   height: 1.35,
                   color: AppColors.textSecondary,
                 ),
               ),
             ],
-          ),
-        ),
-
-        // Import
-        Material(
-          color: AppColors.primaryLight,
-          shape: const CircleBorder(),
-          child: InkWell(
-            onTap: () {
-              // TODO: Import siswa
-            },
-            customBorder: const CircleBorder(),
-            child: const SizedBox(
-              width: 46,
-              height: 46,
-              child: Icon(
-                Icons.upload_file_outlined,
-                color: AppColors.primary,
-                size: 21,
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
-        // Tambah siswa
-        ElevatedButton.icon(
-          onPressed: () {
-            // TODO: Tambah siswa
-          },
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text(
-            'Siswa',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(96, 44),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-            ),
           ),
         ),
       ],
@@ -199,6 +199,11 @@ class _StudentPageState extends State<StudentPage> {
 
   Widget _buildSearch() {
     return TextField(
+      controller: _searchController,
+      onSubmitted: (val) {
+        _searchQuery = val.trim();
+        _loadStudents();
+      },
       decoration: InputDecoration(
         hintText: 'Cari nama atau NISN siswa...',
         hintStyle: const TextStyle(
@@ -210,11 +215,16 @@ class _StudentPageState extends State<StudentPage> {
           size: 21,
           color: AppColors.textSecondary,
         ),
-        suffixIcon: const Icon(
-          Icons.tune,
-          size: 21,
-          color: AppColors.textSecondary,
-        ),
+        suffixIcon: _searchQuery.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear, size: 18),
+                onPressed: () {
+                  _searchController.clear();
+                  _searchQuery = '';
+                  _loadStudents();
+                },
+              )
+            : null,
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
@@ -287,7 +297,6 @@ class _StudentPageState extends State<StudentPage> {
   Widget _buildStatistics() {
     return Container(
       width: double.infinity,
-      height: 145,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -300,7 +309,7 @@ class _StudentPageState extends State<StudentPage> {
           Row(
             children: [
               const Text(
-                'Total Siswa',
+                'Total Siswa Terdaftar',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -326,11 +335,11 @@ class _StudentPageState extends State<StudentPage> {
             ],
           ),
 
-          const Spacer(),
+          const SizedBox(height: 12),
 
-          const Text(
-            '864',
-            style: TextStyle(
+          Text(
+            '${_students.length}',
+            style: const TextStyle(
               fontSize: 30,
               height: 1,
               fontWeight: FontWeight.w700,
@@ -338,7 +347,7 @@ class _StudentPageState extends State<StudentPage> {
             ),
           ),
 
-          const SizedBox(height: 5),
+          const SizedBox(height: 8),
 
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -349,10 +358,10 @@ class _StudentPageState extends State<StudentPage> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.trending_up, size: 13, color: AppColors.primary),
+                Icon(Icons.check_circle_outline, size: 13, color: AppColors.primary),
                 SizedBox(width: 4),
                 Text(
-                  '+18 semester ini',
+                  'Data terhubung dari database',
                   style: TextStyle(
                     fontSize: 10,
                     color: AppColors.primary,
@@ -378,14 +387,14 @@ class _StudentPageState extends State<StudentPage> {
           child: Text(
             'Daftar Profil Siswa',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
         ),
         Text(
-          'Menampilkan ${count > 5 ? 5 : count} dari 864',
+          'Menampilkan $count siswa',
           style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
         ),
       ],
@@ -396,7 +405,14 @@ class _StudentPageState extends State<StudentPage> {
   // STUDENT CARD
   // ============================================================
 
-  Widget _buildStudentCard(_StudentData student) {
+  Widget _buildStudentCard(Map<String, dynamic> student) {
+    final name = student['nama']?.toString() ?? 'Siswa';
+    final nisn = student['nisn']?.toString() ?? '-';
+    final jenjang = student['jenjang']?.toString() ?? 'Umum';
+    final status = student['status']?.toString() ?? 'Aktif';
+    final totalPoin = student['total_poin'] ?? 0;
+    final initials = _getInitials(name);
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -411,7 +427,7 @@ class _StudentPageState extends State<StudentPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStudentAvatar(student),
+                _buildStudentAvatar(initials),
 
                 const SizedBox(width: 11),
 
@@ -423,11 +439,11 @@ class _StudentPageState extends State<StudentPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              student.name,
+                              name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
@@ -436,14 +452,14 @@ class _StudentPageState extends State<StudentPage> {
 
                           const SizedBox(width: 7),
 
-                          _buildStatus(student.status),
+                          _buildStatus(status),
                         ],
                       ),
 
                       const SizedBox(height: 4),
 
                       Text(
-                        'NISN: ${student.nisn} • Kelas ${student.className}',
+                        'NISN: $nisn • Jenjang $jenjang',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -454,23 +470,46 @@ class _StudentPageState extends State<StudentPage> {
 
                       const SizedBox(height: 6),
 
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          student.classLabel,
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.primaryDark,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              jenjang,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.primaryDark,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '⭐ $totalPoin XP',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD97706),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -480,7 +519,7 @@ class _StudentPageState extends State<StudentPage> {
           ),
 
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: const BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.only(
@@ -488,45 +527,23 @@ class _StudentPageState extends State<StudentPage> {
                 bottomRight: Radius.circular(14),
               ),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.badge_outlined,
-                  size: 17,
+                  size: 15,
                   color: AppColors.textSecondary,
                 ),
 
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
 
-                const Text(
+                Text(
                   'Siswa Terdaftar',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: AppColors.textSecondary,
                   ),
                 ),
-
-                const Spacer(),
-
-                // _buildActionButton(
-                //   icon: Icons.edit_outlined,
-                //   background: AppColors.primaryLight,
-                //   foreground: AppColors.primary,
-                //   onTap: () {
-                //     // TODO: Edit siswa
-                //   },
-                // ),
-
-                // const SizedBox(width: 7),
-
-                // _buildActionButton(
-                //   icon: Icons.delete_outline,
-                //   background: const Color(0xFFFFD9D5),
-                //   foreground: AppColors.error,
-                //   onTap: () {
-                //     // TODO: Hapus siswa
-                //   },
-                // ),
               ],
             ),
           ),
@@ -535,39 +552,20 @@ class _StudentPageState extends State<StudentPage> {
     );
   }
 
-  Widget _buildStudentAvatar(_StudentData student) {
-    if (student.image != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(11),
-        child: Image.asset(
-          student.image!,
-          width: 58,
-          height: 58,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) {
-            return _buildInitialAvatar(student);
-          },
-        ),
-      );
-    }
-
-    return _buildInitialAvatar(student);
-  }
-
-  Widget _buildInitialAvatar(_StudentData student) {
+  Widget _buildStudentAvatar(String initials) {
     return Container(
-      width: 58,
-      height: 58,
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
         color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
       child: Text(
-        student.initials,
+        initials,
         style: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
           color: AppColors.primary,
         ),
       ),
@@ -575,10 +573,12 @@ class _StudentPageState extends State<StudentPage> {
   }
 
   Widget _buildStatus(String status) {
+    final bool active = status.toLowerCase() == 'aktif';
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF63E6B2),
+        color: active ? const Color(0xFF63E6B2) : const Color(0xFFE5EAF3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -587,116 +587,22 @@ class _StudentPageState extends State<StudentPage> {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: Color(0xFF00875A),
+            decoration: BoxDecoration(
+              color: active ? const Color(0xFF00875A) : AppColors.textSecondary,
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 4),
-          const Text(
-            'Aktif',
+          Text(
+            status,
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF006B4A),
+              color: active ? const Color(0xFF006B4A) : AppColors.textSecondary,
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color background,
-    required Color foreground,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: background,
-      borderRadius: BorderRadius.circular(9),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(9),
-        child: SizedBox(
-          width: 46,
-          height: 40,
-          child: Icon(icon, size: 18, color: foreground),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // LOAD MORE
-  // ============================================================
-
-  Widget _buildLoadMore() {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: () {
-          // TODO: Load more
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryLight,
-          foregroundColor: AppColors.primaryDark,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.keyboard_arrow_down, size: 20),
-            SizedBox(width: 6),
-            Text(
-              'Muat Lebih Banyak Siswa',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<_StudentData> _getFilteredStudents() {
-    if (_selectedFilter == 0) {
-      return _students;
-    }
-
-    final filter = _filters[_selectedFilter];
-
-    if (filter == 'Alumni') {
-      return [];
-    }
-
-    final classNumber = filter.replaceAll('Kelas ', '');
-
-    return _students.where((student) {
-      return student.className.startsWith(classNumber);
-    }).toList();
-  }
-}
-
-class _StudentData {
-  final String name;
-  final String nisn;
-  final String className;
-  final String classLabel;
-  final String initials;
-  final String status;
-  final String? image;
-
-  const _StudentData({
-    required this.name,
-    required this.nisn,
-    required this.className,
-    required this.classLabel,
-    required this.initials,
-    required this.status,
-    this.image,
-  });
 }

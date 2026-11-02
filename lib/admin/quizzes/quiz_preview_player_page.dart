@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'models/quiz_model.dart';
+import 'repositories/quiz_repository.dart';
 
 class QuizPreviewPlayerPage extends StatefulWidget {
   final int? quizId;
@@ -40,72 +41,8 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
   Timer? _timer;
 
   List<_SampleQuestion> _activeQuestions = [];
-  List<_SampleQuestion> get _questions =>
-      _activeQuestions.isNotEmpty ? _activeQuestions : _sampleQuestions;
-
-  // Mock sample questions in Kahoot style
-  final List<_SampleQuestion> _sampleQuestions = [
-    _SampleQuestion(
-      question:
-          'Manakah dari berikut ini yang merupakan karakteristik utama dari algoritma Greedy?',
-      answers: [
-        'Memilih langkah terbaik pada setiap langkah lokal',
-        'Mengeksplorasi seluruh kemungkinan cabang pohon',
-        'Menggunakan tabel lookup dinamis secara rekursif',
-        'Mengacak urutan input secara acak berulang kali',
-      ],
-      correctAnswerIndex: 0,
-      points: 20,
-    ),
-    _SampleQuestion(
-      question:
-          'Struktur data mana yang paling efisien untuk operasi First-In First-Out (FIFO)?',
-      answers: [
-        'Stack (Tumpukan)',
-        'Queue (Antrean)',
-        'Binary Search Tree',
-        'Hash Table Terbuka',
-      ],
-      correctAnswerIndex: 1,
-      points: 20,
-    ),
-    _SampleQuestion(
-      question:
-          'Dalam pemrograman berorientasi objek, apa arti dari konsep Polymorphism?',
-      answers: [
-        'Menyembunyikan detail implementasi data pribadi',
-        'Mewariskan properti dari class induk ke anak',
-        'Kemampuan objek memiliki banyak bentuk implementasi',
-        'Menggabungkan baris kode menjadi satu modul tunggal',
-      ],
-      correctAnswerIndex: 2,
-      points: 20,
-    ),
-    _SampleQuestion(
-      question:
-          'Manakah yang BUKAN merupakan prinsip dasar dalam UI/UX Design System?',
-      answers: [
-        'Konsistensi Visual dan Komponen',
-        'Aksesibilitas Warna dan Kontras',
-        'Reusabilitas Elemen Desain',
-        'Menggunakan font yang berbeda di setiap halaman',
-      ],
-      correctAnswerIndex: 3,
-      points: 20,
-    ),
-    _SampleQuestion(
-      question:
-          'Protokol HTTP status code manakah yang menandakan permintaan berhasil (OK)?',
-      answers: [
-        '200 OK',
-        '404 Not Found',
-        '500 Internal Server Error',
-        '301 Moved Permanently',
-      ],
-      correctAnswerIndex: 0,
-      points: 20,
-    ),
-  ];
+  List<_SampleQuestion> get _questions => _activeQuestions;
+  bool _isLoadingQuestions = false;
 
   static const List<Color> _kahootColors = [
     Color(0xFFE21B3C), // Red
@@ -120,20 +57,44 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
   void initState() {
     super.initState();
     if (widget.initialQuestions != null && widget.initialQuestions!.isNotEmpty) {
-      _activeQuestions = widget.initialQuestions!.map((q) {
-        final answers = q.pilihan.map((p) => p.teksPilihan).toList();
-        while (answers.length < 4) {
-          answers.add('');
-        }
-        return _SampleQuestion(
-          question: q.pertanyaan,
-          answers: answers,
-          correctAnswerIndex: q.correctAnswerIndex >= 0 ? q.correctAnswerIndex : 0,
-          points: q.poin,
-        );
-      }).toList();
+      _loadFromInitial(widget.initialQuestions!);
+      _startTimer();
+    } else if (widget.quizId != null) {
+      _fetchRealQuestions(widget.quizId!);
     }
-    _startTimer();
+  }
+
+  void _loadFromInitial(List<QuestionModel> questions) {
+    _activeQuestions = questions.map((q) {
+      final answers = q.pilihan.map((p) => p.teksPilihan).toList();
+      while (answers.length < 4) {
+        answers.add('');
+      }
+      return _SampleQuestion(
+        question: q.pertanyaan,
+        answers: answers,
+        correctAnswerIndex: q.correctAnswerIndex >= 0 ? q.correctAnswerIndex : 0,
+        points: q.poin,
+      );
+    }).toList();
+  }
+
+  Future<void> _fetchRealQuestions(int quizId) async {
+    setState(() => _isLoadingQuestions = true);
+    try {
+      final quiz = await QuizRepository().getQuizById(quizId);
+      if (mounted) {
+        setState(() {
+          _loadFromInitial(quiz.soal);
+          _isLoadingQuestions = false;
+        });
+        if (_activeQuestions.isNotEmpty) {
+          _startTimer();
+        }
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingQuestions = false);
+    }
   }
 
   @override
@@ -378,6 +339,32 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingQuestions) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0B4FB3),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    if (_questions.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF0B4FB3),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF0A3875),
+          foregroundColor: Colors.white,
+          title: Text(widget.title),
+        ),
+        body: const Center(
+          child: Text(
+            'Kuis ini belum memiliki soal di database.',
+            style: TextStyle(color: Colors.white70, fontSize: 15),
+          ),
+        ),
+      );
+    }
+
     final currentQ = _questions[_currentIndex];
 
     return Scaffold(

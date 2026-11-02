@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../services/dashboard_service.dart';
 import '../../shared/widgets/app_header.dart';
 import 'teacher_detail_page.dart';
 
@@ -12,98 +13,129 @@ class TeacherPage extends StatefulWidget {
 }
 
 class _TeacherPageState extends State<TeacherPage> {
-  int _selectedFilter = 0;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _teachers = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
-  final List<String> _filters = [
-    'Semua',
-    'Wali Kelas',
-    'Guru Mapel',
-    'Guru BK',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadTeachers();
+  }
 
-  final List<_TeacherData> _teachers = [
-    _TeacherData(
-      name: 'Drs. Bambang Haryanto, M.',
-      nip: '19750812 199903 1004',
-      subject: 'Matematika Wajib & Peminatan',
-      role: 'Wali Kelas XII-IPA 1',
-      status: 'Aktif',
-      initials: 'BH',
-    ),
-    _TeacherData(
-      name: 'Siti Nurhaliza, S.Kom., M.T.',
-      nip: '19880415 201402 2 003',
-      subject: 'Informatika & Pemrograman Web',
-      role: 'Guru Mapel',
-      status: 'Aktif',
-      initials: 'SN',
-    ),
-    _TeacherData(
-      name: 'Ahmad Fauzi, S.Pd.',
-      nip: '19910220 201801 1 007',
-      subject: 'Bahasa Inggris & Komunikasi Bisnis',
-      role: 'Wali Kelas XI-IPS 2',
-      status: 'Aktif',
-      initials: 'AF',
-    ),
-    _TeacherData(
-      name: 'Ratna Kusuma Dewi, S.Psi.',
-      nip: '19851109 201012 2 005',
-      subject: 'Bimbingan Konseling (BK)',
-      role: 'Guru BK Tingkat Akhir',
-      status: 'Aktif',
-      initials: 'RK',
-    ),
-    _TeacherData(
-      name: 'Hendro Wijaya, M.Si.',
-      nip: '19790623 200501 1 002',
-      subject: 'Fisika Terapan',
-      role: 'Guru Mapel',
-      status: 'Cuti',
-      initials: 'HW',
-    ),
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTeachers() async {
+    try {
+      final list = await DashboardService.fetchTeachers();
+      if (mounted) {
+        setState(() {
+          _teachers = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return 'G';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  List<Map<String, dynamic>> _getFilteredTeachers() {
+    if (_searchQuery.isEmpty) return _teachers;
+    final q = _searchQuery.toLowerCase();
+    return _teachers.where((t) {
+      final name = (t['nama'] ?? '').toString().toLowerCase();
+      final nik = (t['nik'] ?? '').toString().toLowerCase();
+      final phone = (t['no_telepon'] ?? '').toString().toLowerCase();
+      return name.contains(q) || nik.contains(q) || phone.contains(q);
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final filtered = _getFilteredTeachers();
+
     return SafeArea(
       child: Column(
         children: [
           AppHeader(title: 'Manajemen Guru', onNotificationTap: () {}),
 
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPageTitle(),
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: _loadTeachers,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPageTitle(),
 
-                  const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-                  _buildStatistics(),
+                    _buildStatistics(),
 
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  _buildSearchField(),
+                    _buildSearchField(),
 
-                  const SizedBox(height: 10),
+                    const SizedBox(height: 18),
 
-                  _buildFilters(),
-
-                  const SizedBox(height: 18),
-
-                  ..._getFilteredTeachers().map(
-                    (teacher) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _buildTeacherCard(teacher),
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  _buildLoadMore(),
-                ],
+                    if (_isLoading && _teachers.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(color: AppColors.primary),
+                        ),
+                      )
+                    else if (filtered.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.person_off_outlined, size: 40, color: Colors.grey[400]),
+                            const SizedBox(height: 10),
+                            Text(
+                              _searchQuery.isNotEmpty
+                                  ? 'Tidak ada guru yang cocok dengan "$_searchQuery"'
+                                  : 'Belum ada data guru di database',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ...filtered.map(
+                        (teacher) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildTeacherCard(teacher),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -120,11 +152,11 @@ class _TeacherPageState extends State<TeacherPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Daftar Guru',
                 style: TextStyle(
                   fontSize: 27,
@@ -132,34 +164,16 @@ class _TeacherPageState extends State<TeacherPage> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
-                'Kelola tenaga pendidik & staf\npengajar (28 Guru Aktif)',
-                style: TextStyle(
+                'Kelola tenaga pendidik (${_teachers.length} Guru Terdaftar)',
+                style: const TextStyle(
                   fontSize: 12,
                   height: 1.35,
                   color: AppColors.textSecondary,
                 ),
               ),
             ],
-          ),
-        ),
-
-        ElevatedButton.icon(
-          onPressed: () {
-            // TODO: Tambah guru
-          },
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text(
-            'Guru',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(102, 44),
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-            ),
           ),
         ),
       ],
@@ -171,6 +185,9 @@ class _TeacherPageState extends State<TeacherPage> {
   // ============================================================
 
   Widget _buildStatistics() {
+    final total = _teachers.length;
+    final withNik = _teachers.where((t) => (t['nik'] ?? '').toString().isNotEmpty).length;
+
     return Row(
       children: [
         Expanded(
@@ -178,9 +195,9 @@ class _TeacherPageState extends State<TeacherPage> {
             icon: Icons.groups_outlined,
             iconBackground: AppColors.primaryLight,
             iconColor: AppColors.primary,
-            value: '32',
+            value: '$total',
             label: 'Total Guru',
-            badge: '+2 bln ini',
+            badge: 'Database',
             badgeColor: const Color(0xFFE5EAF8),
             badgeTextColor: AppColors.textSecondary,
           ),
@@ -191,9 +208,9 @@ class _TeacherPageState extends State<TeacherPage> {
             icon: Icons.verified_outlined,
             iconBackground: const Color(0xFFD9FBEA),
             iconColor: AppColors.success,
-            value: '28',
-            label: 'Guru Aktif',
-            badge: '92% Mengajar',
+            value: '$withNik',
+            label: 'Dengan NIK/NIP',
+            badge: 'Terverifikasi',
             badgeColor: const Color(0xFF63E6B2),
             badgeTextColor: const Color(0xFF006B4A),
           ),
@@ -285,8 +302,14 @@ class _TeacherPageState extends State<TeacherPage> {
 
   Widget _buildSearchField() {
     return TextField(
+      controller: _searchController,
+      onChanged: (val) {
+        setState(() {
+          _searchQuery = val.trim();
+        });
+      },
       decoration: InputDecoration(
-        hintText: 'Cari nama atau NIP guru...',
+        hintText: 'Cari nama atau NIK guru...',
         hintStyle: const TextStyle(
           fontSize: 13,
           color: AppColors.textSecondary,
@@ -296,6 +319,15 @@ class _TeacherPageState extends State<TeacherPage> {
           size: 21,
           color: AppColors.textSecondary,
         ),
+        suffixIcon: _searchQuery.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear, size: 18),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+              )
+            : null,
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
@@ -319,54 +351,14 @@ class _TeacherPageState extends State<TeacherPage> {
   }
 
   // ============================================================
-  // FILTER
-  // ============================================================
-
-  Widget _buildFilters() {
-    return SizedBox(
-      height: 34,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final selected = _selectedFilter == index;
-
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedFilter = index;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primary : AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: selected ? null : Border.all(color: AppColors.border),
-              ),
-              child: Text(
-                _filters[index],
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected ? Colors.white : AppColors.textSecondary,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ============================================================
   // TEACHER CARD
   // ============================================================
 
-  Widget _buildTeacherCard(_TeacherData teacher) {
-    final bool active = teacher.status == 'Aktif';
+  Widget _buildTeacherCard(Map<String, dynamic> teacher) {
+    final name = teacher['nama']?.toString() ?? 'Guru';
+    final nik = teacher['nik']?.toString() ?? '-';
+    final phone = teacher['no_telepon']?.toString() ?? '-';
+    final initials = _getInitials(name);
 
     return InkWell(
       onTap: () {
@@ -374,11 +366,11 @@ class _TeacherPageState extends State<TeacherPage> {
           context,
           MaterialPageRoute(
             builder: (_) => TeacherDetailPage(
-              name: teacher.name,
-              nip: teacher.nip,
-              subject: teacher.subject,
-              role: teacher.role,
-              status: teacher.status,
+              name: name,
+              nip: nik,
+              subject: phone != '-' ? 'Telp: $phone' : 'Guru Pendidik',
+              role: 'Tenaga Pendidik',
+              status: 'Aktif',
             ),
           ),
         );
@@ -398,7 +390,7 @@ class _TeacherPageState extends State<TeacherPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildAvatar(teacher),
+                _buildAvatar(initials),
 
                 const SizedBox(width: 11),
 
@@ -410,11 +402,11 @@ class _TeacherPageState extends State<TeacherPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              teacher.name,
+                              name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
@@ -423,14 +415,14 @@ class _TeacherPageState extends State<TeacherPage> {
 
                           const SizedBox(width: 6),
 
-                          _buildStatus(teacher.status),
+                          _buildStatus('Aktif'),
                         ],
                       ),
 
                       const SizedBox(height: 3),
 
                       Text(
-                        'NIP: ${teacher.nip}',
+                        'NIK / NIP: $nik',
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.textSecondary,
@@ -442,63 +434,35 @@ class _TeacherPageState extends State<TeacherPage> {
               ],
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 12),
 
             Row(
               children: [
-                Flexible(child: _buildTag(teacher.subject, primary: true)),
-
+                Flexible(child: _buildTag('Tenaga Pengajar', primary: true)),
                 const SizedBox(width: 7),
-
-                Flexible(child: _buildTag(teacher.role, primary: false)),
+                if (phone != '-')
+                  Flexible(child: _buildTag('📞 $phone', primary: false)),
               ],
             ),
-
-            const SizedBox(height: 13),
-
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.end,
-            //   children: [
-            //     _buildActionButton(
-            //       icon: Icons.edit_outlined,
-            //       background: AppColors.primaryLight,
-            //       foreground: AppColors.primary,
-            //       onTap: () {
-            //         // TODO: Edit guru
-            //       },
-            //     ),
-
-            //     const SizedBox(width: 7),
-
-            //     _buildActionButton(
-            //       icon: Icons.delete_outline,
-            //       background: const Color(0xFFFFD9D5),
-            //       foreground: AppColors.error,
-            //       onTap: () {
-            //         // TODO: Hapus guru
-            //       },
-            //     ),
-            //   ],
-            // ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAvatar(_TeacherData teacher) {
+  Widget _buildAvatar(String initials) {
     return Container(
-      width: 57,
-      height: 57,
-      decoration: BoxDecoration(
+      width: 50,
+      height: 50,
+      decoration: const BoxDecoration(
         color: AppColors.primaryLight,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Text(
-        teacher.initials,
+        initials,
         style: const TextStyle(
-          fontSize: 17,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: AppColors.primary,
         ),
@@ -507,12 +471,10 @@ class _TeacherPageState extends State<TeacherPage> {
   }
 
   Widget _buildStatus(String status) {
-    final bool active = status == 'Aktif';
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: active ? const Color(0xFF63E6B2) : const Color(0xFFE5EAF3),
+        color: const Color(0xFF63E6B2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -521,18 +483,18 @@ class _TeacherPageState extends State<TeacherPage> {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: active ? const Color(0xFF00875A) : AppColors.textSecondary,
+            decoration: const BoxDecoration(
+              color: Color(0xFF00875A),
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 4),
           Text(
             status,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w600,
-              color: active ? const Color(0xFF006B4A) : AppColors.textSecondary,
+              color: Color(0xFF006B4A),
             ),
           ),
         ],
@@ -552,97 +514,11 @@ class _TeacherPageState extends State<TeacherPage> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          fontSize: 9,
+          fontSize: 10,
           color: primary ? AppColors.primaryDark : AppColors.textSecondary,
           fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color background,
-    required Color foreground,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: background,
-      borderRadius: BorderRadius.circular(9),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(9),
-        child: SizedBox(
-          width: 46,
-          height: 42,
-          child: Icon(icon, size: 19, color: foreground),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // LOAD MORE
-  // ============================================================
-
-  Widget _buildLoadMore() {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: () {
-          // TODO: Load more
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryLight,
-          foregroundColor: AppColors.primaryDark,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Muat Lebih Banyak',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(width: 7),
-            Icon(Icons.keyboard_arrow_down, size: 19),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<_TeacherData> _getFilteredTeachers() {
-    if (_selectedFilter == 0) {
-      return _teachers;
-    }
-
-    final filter = _filters[_selectedFilter];
-
-    return _teachers.where((teacher) {
-      return teacher.role == filter;
-    }).toList();
-  }
-}
-
-class _TeacherData {
-  final String name;
-  final String nip;
-  final String subject;
-  final String role;
-  final String status;
-  final String initials;
-
-  const _TeacherData({
-    required this.name,
-    required this.nip,
-    required this.subject,
-    required this.role,
-    required this.status,
-    required this.initials,
-  });
 }

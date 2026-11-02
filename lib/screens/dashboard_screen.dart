@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/dashboard_service.dart';
 import '../shared/utils/logout_dialog.dart';
 import '../shared/widgets/tween_float_background.dart';
 import 'quizzes/student_quiz_list_page.dart';
@@ -19,36 +20,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const _orange = Color(0xFFF59E0B);
   static const _purple = Color(0xFF8B5CF6);
 
-  static const List<Map<String, dynamic>> _materiHariIni = [
-    {'label': 'Matematika', 'icon': Icons.calculate, 'color': _blue},
-    {'label': 'B. Inggris', 'icon': Icons.language, 'color': _purple},
-    {'label': 'IPAS', 'icon': Icons.public, 'color': _green},
-    {'label': 'Seni Musik', 'icon': Icons.star_border, 'color': _orange},
-  ];
+  bool _isLoading = true;
+  Map<String, dynamic>? _dashboardData;
 
-  static const List<Map<String, dynamic>> _riwayatBelajar = [
-    {
-      'judul': 'Matematika - Bab 1',
-      'tanggal': '2 hari lalu',
-      'skor': '90',
-      'icon': Icons.calculate,
-      'color': _blue,
-    },
-    {
-      'judul': 'B. Inggris - Vocabulary',
-      'tanggal': '3 hari lalu',
-      'skor': '85',
-      'icon': Icons.language,
-      'color': _purple,
-    },
-    {
-      'judul': 'IPAS - Ekosistem',
-      'tanggal': '5 hari lalu',
-      'skor': '78',
-      'icon': Icons.public,
-      'color': _green,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboard();
+  }
+
+  Future<void> _loadDashboard() async {
+    try {
+      final data = await DashboardService.fetchStudentDashboard();
+      if (mounted) {
+        setState(() {
+          _dashboardData = data;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -68,398 +63,376 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final user = _dashboardData?['user'] as Map<String, dynamic>?;
+    final stats = _dashboardData?['stats'] as Map<String, dynamic>?;
+    final materiList = (_dashboardData?['materi_terbaru'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final riwayatList = (_dashboardData?['riwayat_belajar'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: TweenFloatBackground(
         scrollController: _scrollController,
         child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              int jumlahKolom;
+          child: RefreshIndicator(
+            color: _blue,
+            onRefresh: _loadDashboard,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                int jumlahKolom;
 
-              if (constraints.maxWidth < 500) {
-                jumlahKolom = 2;
-              } else if (constraints.maxWidth < 900) {
-                jumlahKolom = 3;
-              } else {
-                jumlahKolom = 4;
-              }
+                if (constraints.maxWidth < 500) {
+                  jumlahKolom = 2;
+                } else if (constraints.maxWidth < 900) {
+                  jumlahKolom = 3;
+                } else {
+                  jumlahKolom = 4;
+                }
 
-              return SingleChildScrollView(
-                controller: _scrollController,
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.05,
-                  vertical: 16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 22,
-                          backgroundColor: Color(0xFFDCE3FF),
-                          child: Icon(Icons.person, color: _blue),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Halo, Siswa Arrava! 👋',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0B2A6B),
-                                ),
-                              ),
-                              Text(
-                                'Siap belajar apa hari ini?',
-                                style: TextStyle(
-                                  color: const Color(0xFF3A5AA8),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          '🔥 7 Hari',
-                          style: TextStyle(
-                            color: _green,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Tombol Logout di Beranda Siswa
-                      InkWell(
-                        onTap: () => showLogoutConfirmationDialog(context),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEF4444).withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFFEF4444).withValues(alpha: 0.20),
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.logout_rounded,
-                            color: Color(0xFFEF4444),
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
+                if (_isLoading && _dashboardData == null) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40.0),
+                      child: CircularProgressIndicator(color: _blue),
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: 16,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: _StatCard(
-                          value: '12',
-                          label: 'Kursus Aktif',
-                          color: _blue,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _StatCard(
-                          value: '87%',
-                          label: 'Progress',
-                          color: _green,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _StatCard(
-                          value: '1,250',
-                          label: 'Total XP',
-                          color: _orange,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Kahoot 360 Interactive Banner
-                  InkWell(
-                    onTap: () {
-                      setState(() => _currentIndex = 2);
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF46178F), Color(0xFF2563EB), Color(0xFF1D4ED8)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF46178F).withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
+                      Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text('⚡', style: TextStyle(fontSize: 24)),
+                          CircleAvatar(
+                            radius: 22,
+                            backgroundColor: const Color(0xFFDCE3FF),
+                            backgroundImage: (user?['foto_profil'] != null &&
+                                    user!['foto_profil'].toString().isNotEmpty)
+                                ? NetworkImage(user['foto_profil'] as String)
+                                : null,
+                            child: (user?['foto_profil'] == null ||
+                                    user!['foto_profil'].toString().isEmpty)
+                                ? const Icon(Icons.person, color: _blue)
+                                : null,
                           ),
-                          const SizedBox(width: 14),
-                          const Expanded(
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Kuis Interaktif 360',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 15,
+                                  user != null && user['nama'] != null
+                                      ? 'Halo, ${user['nama']}! 👋'
+                                      : 'Halo, Siswa Arrava! 👋',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0B2A6B),
                                   ),
                                 ),
-                                SizedBox(height: 2),
                                 Text(
-                                  'Asah kemampuanmu dan raih poin XP!',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
+                                  user != null && user['jenjang'] != null
+                                      ? 'Jenjang ${user['jenjang']} • Siap belajar?'
+                                      : 'Siap belajar apa hari ini?',
+                                  style: const TextStyle(
+                                    color: Color(0xFF3A5AA8),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Text(
-                    'Lanjutkan Belajar',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0B2A6B),
-                        ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '⭐ ${user?['total_xp'] ?? 0} XP',
+                              style: const TextStyle(
+                                color: _green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Tombol Logout di Beranda Siswa
+                          InkWell(
+                            onTap: () => showLogoutConfirmationDialog(context),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.all(7),
                               decoration: BoxDecoration(
-                                color: _blue.withValues(alpha: 0.1),
+                                color: const Color(0xFFEF4444).withValues(alpha: 0.10),
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFFEF4444).withValues(alpha: 0.20),
+                                ),
                               ),
                               child: const Icon(
-                                Icons.calculate,
-                                color: _blue,
-                                size: 24,
+                                Icons.logout_rounded,
+                                color: Color(0xFFEF4444),
+                                size: 18,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Matematika - Kelas 4',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Bab 2: Penjumlahan & Pengurangan',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Progres Belajar',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            Text(
-                              '65%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: 0.65,
-                            minHeight: 8,
-                            backgroundColor: Colors.grey[200],
-                            color: _blue,
                           ),
-                        ),
+                        ],
+                      ),
 
-                        const SizedBox(height: 16),
-                        SizedBox(
+                      const SizedBox(height: 20),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              value: '${stats?['kursus_aktif'] ?? 0}',
+                              label: 'Modul Aktif',
+                              color: _blue,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _StatCard(
+                              value: '${stats?['progress_percent'] ?? 0}%',
+                              label: 'Kuis Lulus',
+                              color: _green,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _StatCard(
+                              value: '${user?['total_xp'] ?? stats?['total_xp'] ?? 0}',
+                              label: 'Total XP',
+                              color: _orange,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Kahoot 360 Interactive Banner
+                      InkWell(
+                        onTap: () {
+                          setState(() => _currentIndex = 2);
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
                           width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _blue.withValues(alpha: 0.1),
-                              foregroundColor: _blue,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF46178F), Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF46178F).withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
-                            child: const Text(
-                              'Lanjutkan Belajar',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text('⚡', style: TextStyle(fontSize: 24)),
+                              ),
+                              const SizedBox(width: 14),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Kuis Interaktif 360',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Asah kemampuanmu dan raih poin XP!',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                  Text(
-                    'Materi Hari Ini',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0B2A6B),
+                      Text(
+                        'Materi Modul Pembelajaran',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0B2A6B),
+                            ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      if (materiList.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(Icons.menu_book_outlined, size: 36, color: Colors.grey[400]),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Belum ada modul materi tersedia',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: jumlahKolom,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 2.2,
+                          ),
+                          itemCount: materiList.length,
+                          itemBuilder: (context, index) {
+                            final materi = materiList[index];
+                            final colors = [_blue, _purple, _green, _orange];
+                            final color = colors[index % colors.length];
+
+                            return _MateriCard(
+                              label: materi['judul_modul']?.toString() ?? 'Modul',
+                              subtitle: materi['tipe']?.toString() ?? 'Materi',
+                              icon: Icons.menu_book_rounded,
+                              color: color,
+                            );
+                          },
                         ),
-                  ),
 
-                  const SizedBox(height: 12),
+                      const SizedBox(height: 24),
 
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: jumlahKolom,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 2.4,
-                    ),
-                    itemCount: _materiHariIni.length,
-                    itemBuilder: (context, index) {
-                      final materi = _materiHariIni[index];
-                      return _MateriCard(
-                        label: materi['label'] as String,
-                        icon: materi['icon'] as IconData,
-                        color: materi['color'] as Color,
-                      );
-                    },
-                  ),
+                      Text(
+                        'Riwayat Belajar & Kuis',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0B2A6B),
+                            ),
+                      ),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 12),
 
-                  Text(
-                    'Riwayat Belajar',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0B2A6B),
+                      if (riwayatList.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(Icons.quiz_outlined, size: 36, color: Colors.grey[400]),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Belum ada riwayat pengerjaan kuis',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Selesaikan kuis untuk melihat riwayat dan XP yang didapat di sini.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: riwayatList.length,
+                          itemBuilder: (context, index) {
+                            final riwayat = riwayatList[index];
+                            final isLulus = riwayat['is_lulus'] == true;
+                            final color = isLulus ? _green : _orange;
+
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index == riwayatList.length - 1 ? 0 : 10,
+                              ),
+                              child: _RiwayatItem(
+                                judul: riwayat['judul']?.toString() ?? 'Kuis Pembelajaran',
+                                tanggal: riwayat['tanggal']?.toString() ?? 'Baru saja',
+                                skor: '${riwayat['skor'] ?? 0}%',
+                                icon: isLulus ? Icons.check_circle_outline : Icons.history,
+                                color: color,
+                              ),
+                            );
+                          },
                         ),
+
+                      const SizedBox(height: 16),
+                    ],
                   ),
-
-                  const SizedBox(height: 12),
-
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _riwayatBelajar.length,
-                    itemBuilder: (context, index) {
-                      final riwayat = _riwayatBelajar[index];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index == _riwayatBelajar.length - 1 ? 0 : 10,
-                        ),
-                        child: _RiwayatItem(
-                          judul: riwayat['judul'] as String,
-                          tanggal: riwayat['tanggal'] as String,
-                          skor: riwayat['skor'] as String,
-                          icon: riwayat['icon'] as IconData,
-                          color: riwayat['color'] as Color,
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 12),
-                ],
-              ),
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
-    ),
-    bottomNavigationBar: _buildBottomNav(),
-  );
-}
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
 
   Widget _buildBottomNav() {
     return Container(
@@ -634,11 +607,13 @@ class _RiwayatItem extends StatelessWidget {
 
 class _MateriCard extends StatelessWidget {
   final String label;
+  final String subtitle;
   final IconData icon;
   final Color color;
 
   const _MateriCard({
     required this.label,
+    required this.subtitle,
     required this.icon,
     required this.color,
   });
@@ -670,10 +645,28 @@ class _MateriCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],

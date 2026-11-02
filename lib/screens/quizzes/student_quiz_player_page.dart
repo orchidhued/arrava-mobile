@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../admin/quizzes/models/quiz_model.dart';
 import '../../admin/quizzes/providers/quiz_provider.dart';
+import '../../admin/quizzes/repositories/quiz_repository.dart';
 
 class StudentQuizPlayerPage extends StatefulWidget {
   final QuizModel quiz;
@@ -28,6 +29,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   int? _totalRemainingSeconds;
   Timer? _totalTimer;
 
+  // Soal state
+  List<QuestionModel> _questions = [];
+  bool _isLoadingQuestions = false;
+  final TextEditingController _essayController = TextEditingController();
+
   static const List<Color> _kahootColors = [
     Color(0xFFE21B3C), // A - Red
     Color(0xFF1368CE), // B - Blue
@@ -37,8 +43,6 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
 
   static const List<String> _kahootSymbols = ['▲', '◆', '●', '■'];
   static const List<String> _kahootLabels = ['A', 'B', 'C', 'D'];
-
-  List<QuestionModel> get _questions => widget.quiz.soal;
 
   QuestionModel get _currentQ {
     if (_questions.isEmpty) {
@@ -52,12 +56,40 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   @override
   void initState() {
     super.initState();
-    if (_questions.isNotEmpty) {
-      if (_isWayground) {
-        _startQuestionTimer();
-      } else {
-        _startTotalTimer();
+    _questions = widget.quiz.soal;
+    if (_questions.isEmpty) {
+      _loadQuestionsFromApi();
+    } else {
+      _startQuizTimers();
+    }
+  }
+
+  Future<void> _loadQuestionsFromApi() async {
+    setState(() => _isLoadingQuestions = true);
+    try {
+      final freshQuiz = await QuizRepository().getQuizById(widget.quiz.idQuiz);
+      if (mounted) {
+        setState(() {
+          _questions = freshQuiz.soal;
+          _isLoadingQuestions = false;
+        });
+        if (_questions.isNotEmpty) {
+          _startQuizTimers();
+        }
       }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingQuestions = false);
+      }
+    }
+  }
+
+  void _startQuizTimers() {
+    if (_questions.isEmpty) return;
+    if (_isWayground) {
+      _startQuestionTimer();
+    } else {
+      _startTotalTimer();
     }
   }
 
@@ -65,6 +97,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   void dispose() {
     _timer?.cancel();
     _totalTimer?.cancel();
+    _essayController.dispose();
     super.dispose();
   }
 
@@ -73,7 +106,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     _remainingSeconds = _currentQ.durasiDetik > 0 ? _currentQ.durasiDetik : 20;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
-        setState(() => _remainingSeconds--);
+        if (mounted) setState(() => _remainingSeconds--);
       } else {
         _timer?.cancel();
         if (!_isAnswerSubmittedForCurrentQ) {
@@ -88,7 +121,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     _totalRemainingSeconds = menit * 60;
     _totalTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_totalRemainingSeconds! > 0) {
-        setState(() => _totalRemainingSeconds = _totalRemainingSeconds! - 1);
+        if (mounted) setState(() => _totalRemainingSeconds = _totalRemainingSeconds! - 1);
       } else {
         _totalTimer?.cancel();
         _finishAndSubmitQuiz();
@@ -106,10 +139,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     });
   }
 
-  void _selectAnswer(int choiceIndex) {
+  void _selectAnswer(int choiceIndex, {String? customLabel}) {
     if (_isAnswerSubmittedForCurrentQ || _isSubmittingFinal) return;
 
-    final label = choiceIndex < _kahootLabels.length ? _kahootLabels[choiceIndex] : 'A';
+    final choices = _currentQ.pilihan;
+    final label = customLabel ?? (choiceIndex < choices.length ? choices[choiceIndex].label : (choiceIndex < _kahootLabels.length ? _kahootLabels[choiceIndex] : 'A'));
     _studentAnswers[_currentQ.idSoal ?? _currentIndex] = label;
 
     setState(() {
@@ -126,12 +160,33 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     }
   }
 
+  void _submitEssayAnswer() {
+    if (_isAnswerSubmittedForCurrentQ || _isSubmittingFinal) return;
+    final answerText = _essayController.text.trim();
+    if (answerText.isEmpty) return;
+
+    _studentAnswers[_currentQ.idSoal ?? _currentIndex] = answerText;
+
+    setState(() {
+      _isAnswerSubmittedForCurrentQ = true;
+    });
+
+    if (_isWayground) {
+      _timer?.cancel();
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (!mounted) return;
+        _advanceToNext();
+      });
+    }
+  }
+
   void _advanceToNext() {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
         _currentIndex++;
         _selectedChoiceIndex = null;
         _isAnswerSubmittedForCurrentQ = false;
+        _essayController.clear();
       });
       if (_isWayground) {
         _startQuestionTimer();
@@ -178,16 +233,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
 
     if (mounted) {
       Navigator.pop(context); // Close loading dialog
-      setState(() => _isSubmittingFinal = false);
-
       if (result != null) {
         _showResultDialog(result);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mengirim kuis: ${provider.error ?? "Terjadi kesalahan"}'),
-            backgroundColor: const Color(0xFFE11D48),
-          ),
+          const SnackBar(content: Text('Gagal mengirim jawaban ke server.')),
         );
       }
     }
@@ -315,10 +365,39 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingQuestions) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0A2540),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text(
+                'Memuat butir soal dari database...',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (_questions.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Kuis Kosong')),
-        body: const Center(child: Text('Kuis ini belum memiliki butir soal.')),
+        backgroundColor: const Color(0xFF0A2540),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF071C33),
+          foregroundColor: Colors.white,
+          title: const Text('Kuis Kosong'),
+        ),
+        body: const Center(
+          child: Text(
+            'Kuis ini belum memiliki butir soal di database.',
+            style: TextStyle(color: Colors.white70, fontSize: 15),
+          ),
+        ),
       );
     }
 
@@ -351,8 +430,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                   Expanded(
                     child: Text(
                       widget.quiz.judul,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ),
                   IconButton(
@@ -362,11 +442,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                         context: context,
                         builder: (_) => AlertDialog(
                           title: const Text('Keluar dari Kuis?'),
-                          content: const Text('Progres pengerjaan Anda akan hilang jika keluar sebelum selesai.'),
+                          content: const Text('Progres pengerjaan saat ini tidak akan disimpan jika kamu keluar.'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('Batal'),
+                              child: const Text('Lanjutkan'),
                             ),
                             ElevatedButton(
                               onPressed: () {
@@ -480,92 +560,12 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               ),
             ),
 
-            // 4 Kahoot Answer Tiles
+            // Interactive Answer Area (Dynamic based on Question Type)
             Expanded(
               flex: 5,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.35,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: List.generate(4, (index) {
-                    final color = _kahootColors[index % _kahootColors.length];
-                    final symbol = _kahootSymbols[index % _kahootSymbols.length];
-                    final label = _kahootLabels[index % _kahootLabels.length];
-                    final choiceText = index < choices.length ? choices[index].teksPilihan : '';
-                    final bool isSelected = _selectedChoiceIndex == index;
-
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _selectAnswer(index),
-                        borderRadius: BorderRadius.circular(16),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(16),
-                            border: isSelected
-                                ? Border.all(color: Colors.white, width: 3.5)
-                                : null,
-                            boxShadow: [
-                              BoxShadow(
-                                color: color.withValues(alpha: 0.45),
-                                blurRadius: isSelected ? 12 : 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    symbol,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    label,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  if (isSelected)
-                                    const Icon(Icons.check_circle, color: Colors.white, size: 16),
-                                ],
-                              ),
-                              const Spacer(),
-                              Text(
-                                choiceText.isEmpty ? 'Pilihan $label' : choiceText,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.25,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
+                child: _buildAnswerArea(currentQ, choices),
               ),
             ),
           ],
@@ -573,5 +573,185 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
       ),
     );
   }
-}
 
+  Widget _buildAnswerArea(QuestionModel currentQ, List<OptionModel> choices) {
+    // 1. Isian Singkat
+    if (currentQ.jenisSoal == JenisSoal.isianSingkat || choices.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0E3259),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _essayController,
+              enabled: !_isAnswerSubmittedForCurrentQ,
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                hintText: 'Ketik jawaban singkat di sini...',
+                hintStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF38BDF8)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _isAnswerSubmittedForCurrentQ ? null : _submitEssayAnswer,
+                icon: const Icon(Icons.send_rounded, size: 18),
+                label: Text(
+                  _isAnswerSubmittedForCurrentQ ? 'Jawaban Terkirim ✓' : 'Kirim Jawaban',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 2. Benar / Salah (True / False)
+    if (currentQ.jenisSoal == JenisSoal.trueFalse || choices.length == 2) {
+      final optA = choices.isNotEmpty ? choices[0] : const OptionModel(label: 'A', teksPilihan: 'Benar', isCorrect: true);
+      final optB = choices.length > 1 ? choices[1] : const OptionModel(label: 'B', teksPilihan: 'Salah', isCorrect: false);
+
+      return Row(
+        children: [
+          Expanded(
+            child: _buildChoiceTile(
+              index: 0,
+              label: optA.label,
+              symbol: '▲',
+              text: optA.teksPilihan,
+              color: const Color(0xFF10B981), // Green for Benar
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildChoiceTile(
+              index: 1,
+              label: optB.label,
+              symbol: '◆',
+              text: optB.teksPilihan,
+              color: const Color(0xFFE21B3C), // Red for Salah
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 3. Pilihan Ganda (Kuis 3-4 opsi)
+    final itemCount = choices.length;
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 1.35,
+      physics: const NeverScrollableScrollPhysics(),
+      children: List.generate(itemCount, (index) {
+        final opt = choices[index];
+        final color = _kahootColors[index % _kahootColors.length];
+        final symbol = _kahootSymbols[index % _kahootSymbols.length];
+
+        return _buildChoiceTile(
+          index: index,
+          label: opt.label,
+          symbol: symbol,
+          text: opt.teksPilihan,
+          color: color,
+        );
+      }),
+    );
+  }
+
+  Widget _buildChoiceTile({
+    required int index,
+    required String label,
+    required String symbol,
+    required String text,
+    required Color color,
+  }) {
+    final bool isSelected = _selectedChoiceIndex == index;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _selectAnswer(index, customLabel: label),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            border: isSelected
+                ? Border.all(color: Colors.white, width: 3.5)
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.45),
+                blurRadius: isSelected ? 12 : 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    symbol,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (isSelected)
+                    const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                text.isEmpty ? 'Pilihan $label' : text,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

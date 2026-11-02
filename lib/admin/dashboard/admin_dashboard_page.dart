@@ -2,97 +2,153 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../services/dashboard_service.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/tween_float_background.dart';
 import '../../shared/utils/logout_dialog.dart';
 import '../modules/module_page.dart';
 
-class AdminDashboardPage extends StatelessWidget {
+class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
 
   @override
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _adminData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboard();
+  }
+
+  Future<void> _loadDashboard() async {
+    try {
+      final data = await DashboardService.fetchAdminDashboard();
+      if (mounted) {
+        setState(() {
+          _adminData = data;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final dayName = days[now.weekday - 1];
+    final monthName = months[now.month - 1];
+    return '$dayName, ${now.day} $monthName ${now.year}';
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final stats = (_adminData?['stats'] as Map<String, dynamic>?) ?? {};
+    final recentModules = (_adminData?['recent_modules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
     return Material(
       color: AppColors.background,
       child: SafeArea(
         child: Column(
           children: [
             AppHeader(
-              title: 'Beranda',
+              title: 'Beranda Admin',
               onLogoutTap: () => showLogoutConfirmationDialog(context),
-              onNotificationTap: () {
-                // TODO: halaman notifikasi
-              },
+              onNotificationTap: () {},
             ),
 
             Expanded(
-              child: TweenFloatBackground(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildWelcomeCard(context),
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: _loadDashboard,
+                child: TweenFloatBackground(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildWelcomeCard(context),
 
-                    const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                    _buildSectionTitle(
-                      title: 'Aksi Cepat',
-                      trailing: '4 Pintasan',
-                    ),
+                        _buildSectionTitle(
+                          title: 'Aksi Cepat',
+                          trailing: 'Pintasan',
+                        ),
 
-                    const SizedBox(height: 10),
+                        const SizedBox(height: 10),
 
-                    _buildQuickActions(context),
+                        _buildQuickActions(context),
 
-                    const SizedBox(height: 28),
+                        const SizedBox(height: 28),
 
-                    _buildSectionTitle(
-                      title: 'Ringkasan Statistik',
-                      trailingWidget: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: const BoxDecoration(
-                              color: AppColors.success,
-                              shape: BoxShape.circle,
-                            ),
+                        _buildSectionTitle(
+                          title: 'Ringkasan Statistik',
+                          trailingWidget: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.success,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              const Text(
+                                'Real-time Database',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.success,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 5),
-                          const Text(
-                            'Real-time',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w500,
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        if (_isLoading && _adminData == null)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: CircularProgressIndicator(color: AppColors.primary),
                             ),
-                          ),
-                        ],
-                      ),
+                          )
+                        else
+                          _buildStatisticsGrid(stats),
+
+                        const SizedBox(height: 26),
+
+                        _buildSectionTitle(
+                          title: 'Modul Terbaru',
+                          subtitle: 'Terhubung dengan database modul',
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        _buildPopularModules(recentModules),
+                      ],
                     ),
-
-                    const SizedBox(height: 10),
-
-                    _buildStatisticsGrid(),
-
-                    const SizedBox(height: 26),
-
-                    _buildSectionTitle(
-                      title: 'Modul Terbaru',
-                      subtitle: 'Aktivitas pembelajaran tertinggi',
-                      trailing: 'Lihat Semua ›',
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    _buildPopularModules(),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
           ],
         ),
       ),
@@ -181,7 +237,7 @@ class AdminDashboardPage extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 5),
+          const SizedBox(height: 8),
 
           Row(
             children: [
@@ -193,9 +249,9 @@ class AdminDashboardPage extends StatelessWidget {
 
               const SizedBox(width: 6),
 
-              const Text(
-                'Kamis, 24 September 2026',
-                style: TextStyle(
+              Text(
+                _getFormattedDate(),
+                style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
                 ),
@@ -203,7 +259,7 @@ class AdminDashboardPage extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 6),
         ],
       ),
     );
@@ -273,28 +329,8 @@ class AdminDashboardPage extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         children: [
           _buildQuickAction(
-            icon: Icons.person_add_alt_1_outlined,
-            label: 'Tambah Siswa',
-            onTap: () {
-              // TODO
-            },
-          ),
-
-          const SizedBox(width: 8),
-
-          _buildQuickAction(
-            icon: Icons.person_add_alt_1_outlined,
-            label: 'Tambah Guru',
-            onTap: () {
-              // TODO
-            },
-          ),
-
-          const SizedBox(width: 8),
-
-          _buildQuickAction(
-            icon: Icons.upload_file_outlined,
-            label: 'Unggah Modul',
+            icon: Icons.menu_book_outlined,
+            label: 'Kelola Modul',
             onTap: () {
               Navigator.push(
                 context,
@@ -302,16 +338,6 @@ class AdminDashboardPage extends StatelessWidget {
                   builder: (context) => const ModulePage(),
                 ),
               );
-            },
-          ),
-
-          const SizedBox(width: 8),
-
-          _buildQuickAction(
-            icon: Icons.analytics_outlined,
-            label: 'Lihat Laporan',
-            onTap: () {
-              // TODO
             },
           ),
         ],
@@ -332,7 +358,7 @@ class AdminDashboardPage extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: primary
@@ -354,7 +380,7 @@ class AdminDashboardPage extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: primary
                       ? Colors.white
@@ -372,7 +398,12 @@ class AdminDashboardPage extends StatelessWidget {
   // STATISTICS
   // ============================================================
 
-  Widget _buildStatisticsGrid() {
+  Widget _buildStatisticsGrid(Map<String, dynamic> stats) {
+    final totalSiswa = stats['total_siswa'] ?? 0;
+    final totalModul = stats['total_modul'] ?? 0;
+    final totalGuru = stats['total_guru'] ?? 0;
+    final totalQuiz = stats['total_quiz'] ?? 0;
+
     return GridView.count(
       crossAxisCount: 2,
       crossAxisSpacing: 8,
@@ -383,41 +414,38 @@ class AdminDashboardPage extends StatelessWidget {
       children: [
         _buildStatisticCard(
           icon: Icons.groups_outlined,
-          title: 'Siswa Aktif',
-          value: '1,428',
-          badge: '+12%',
-          footerIcon: Icons.trending_up,
-          footer: 'Bulan ini',
+          title: 'Total Siswa',
+          value: '$totalSiswa',
+          badge: 'Aktif',
+          footerIcon: Icons.check_circle_outline,
+          footer: 'Terdaftar di database',
         ),
 
         _buildStatisticCard(
           icon: Icons.menu_book_outlined,
           title: 'Total Modul',
-          value: '36 Modul',
-          badge: '4 Revisi',
-          badgeError: true,
-          footerIcon: Icons.assignment_late_outlined,
-          footer: 'Perlu tinjauan',
-          footerError: true,
+          value: '$totalModul Modul',
+          badge: 'Tersedia',
+          footerIcon: Icons.library_books_outlined,
+          footer: 'Modul pembelajaran',
         ),
 
         _buildStatisticCard(
           icon: Icons.person_outline,
           title: 'Total Guru',
-          value: '32 Guru',
-          badge: '+2 bln ini',
-          footerIcon: Icons.check_circle_outline,
-          footer: '28 Guru Aktif',
+          value: '$totalGuru Guru',
+          badge: 'Pendidik',
+          footerIcon: Icons.verified_user_outlined,
+          footer: 'Tenaga pengajar',
         ),
 
         _buildStatisticCard(
-          icon: Icons.person_outline,
+          icon: Icons.quiz_outlined,
           title: 'Total Quiz',
-          value: '80 Quiz',
-          badge: 'Stabil',
-          badgeNeutral: true,
-          footerIcon: Icons.remove,
-          footer: 'Konsisten minggu ini',
+          value: '$totalQuiz Quiz',
+          badge: 'Interaktif',
+          footerIcon: Icons.bolt_outlined,
+          footer: 'Kuis evaluasi',
         ),
       ],
     );
@@ -506,7 +534,7 @@ class AdminDashboardPage extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              fontSize: 23,
+              fontSize: 22,
               height: 1.1,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -550,56 +578,50 @@ class AdminDashboardPage extends StatelessWidget {
   // POPULAR MODULES
   // ============================================================
 
-  Widget _buildPopularModules() {
+  Widget _buildPopularModules(List<Map<String, dynamic>> modules) {
+    if (modules.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Center(
+          child: Text(
+            'Belum ada modul di database.',
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+        ),
+      );
+    }
+
     return Column(
-      children: [
-        _buildModuleCard(
-          icon: Icons.edit_outlined,
-          title: 'UI/UX Design Fundamental',
-          students: '340 siswa aktif',
-          progress: 0.92,
-          progressText: '92%',
-          status: 'Aktif',
-          iconColor: AppColors.primary,
-        ),
-
-        const SizedBox(height: 9),
-
-        _buildModuleCard(
-          icon: Icons.code_outlined,
-          title: 'Fullstack Web Development',
-          students: '285 siswa aktif',
-          progress: 0.78,
-          progressText: '78%',
-          status: 'Aktif',
-          iconColor: AppColors.primary,
-        ),
-
-        const SizedBox(height: 9),
-
-        _buildModuleCard(
-          icon: Icons.analytics_outlined,
-          title: 'Data Analytics with Python',
-          students: '190 siswa aktif',
-          progress: 0.64,
-          progressText: '64%',
-          status: 'Review',
-          review: true,
-          iconColor: AppColors.textSecondary,
-        ),
-      ],
+      children: modules.map((m) {
+        final isDraft = m['status'] == 'Draft';
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 9),
+          child: _buildModuleCard(
+            icon: Icons.menu_book_outlined,
+            title: m['judul_modul']?.toString() ?? 'Modul',
+            subtitle: '${m['tipe'] ?? 'Materi'} • Jenjang ${m['jenjang'] ?? 'Semua'}',
+            status: m['status']?.toString() ?? 'Tersedia',
+            isDraft: isDraft,
+            iconColor: isDraft ? AppColors.textSecondary : AppColors.primary,
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildModuleCard({
     required IconData icon,
     required String title,
-    required String students,
-    required double progress,
-    required String progressText,
+    required String subtitle,
     required String status,
     required Color iconColor,
-    bool review = false,
+    bool isDraft = false,
   }) {
     return Container(
       width: double.infinity,
@@ -609,116 +631,71 @@ class AdminDashboardPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(13),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: iconColor,
-                ),
-              ),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: iconColor,
+            ),
+          ),
 
-              const SizedBox(width: 10),
+          const SizedBox(width: 10),
 
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    Text(
-                      students,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 7,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: review
-                      ? const Color(0xFFEFF1F7)
-                      : const Color(0xFFD9FBEA),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 9,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: review
-                        ? AppColors.textSecondary
-                        : AppColors.success,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 2),
+
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          const SizedBox(height: 9),
-
-          Row(
-            children: [
-              const Text(
-                'Tingkat Progres',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-
-              const Spacer(),
-
-              Text(
-                progressText,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 4),
-
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 5,
-              backgroundColor: AppColors.primaryLight,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                review
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: isDraft
+                  ? const Color(0xFFEFF1F7)
+                  : const Color(0xFFD9FBEA),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isDraft
                     ? AppColors.textSecondary
-                    : AppColors.primary,
+                    : AppColors.success,
               ),
             ),
           ),

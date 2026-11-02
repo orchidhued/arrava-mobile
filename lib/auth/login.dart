@@ -597,35 +597,45 @@ class _LoginScreenState extends State<LoginScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Checkbox(
-                              value: _rememberMe,
-                              onChanged: (val) {
-                                setState(() => _rememberMe = val ?? false);
-                              },
-                              activeColor: LoginEffectCfg.accent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                onChanged: (val) {
+                                  setState(() => _rememberMe = val ?? false);
+                                },
+                                activeColor: LoginEffectCfg.accent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'Ingat saya',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: LoginEffectCfg.sub,
+                            const SizedBox(width: 6),
+                            const Flexible(
+                              child: Text(
+                                'Ingat saya',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: LoginEffectCfg.sub,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       TextButton(
                         onPressed: () {},
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: const Text(
                           'Lupa Password?',
                           style: TextStyle(
