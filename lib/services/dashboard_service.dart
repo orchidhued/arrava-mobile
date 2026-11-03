@@ -10,6 +10,22 @@ class DashboardService {
     return {};
   }
 
+  static Future<Map<String, dynamic>> fetchStudentProfile() async {
+    final response = await ApiClient.get('/student/profile');
+    if (response is Map && response['success'] == true && response['data'] != null) {
+      return Map<String, dynamic>.from(response['data']);
+    }
+    return {};
+  }
+
+  static Future<Map<String, dynamic>> updateStudentProfile(Map<String, dynamic> data) async {
+    final response = await ApiClient.put('/student/profile', body: data);
+    if (response is Map && response['success'] == true) {
+      return Map<String, dynamic>.from(response);
+    }
+    throw Exception(response['message'] ?? 'Gagal memperbarui profil.');
+  }
+
   static Future<Map<String, dynamic>> fetchAdminDashboard() async {
     final response = await ApiClient.get(ApiConstants.adminDashboard);
     if (response is Map && response['success'] == true && response['data'] != null) {
@@ -35,4 +51,3 @@ class DashboardService {
     return [];
   }
 }
-

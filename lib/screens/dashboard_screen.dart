@@ -3,6 +3,7 @@ import '../services/dashboard_service.dart';
 import '../shared/utils/logout_dialog.dart';
 import '../shared/widgets/tween_float_background.dart';
 import 'modules/student_module_list_page.dart';
+import 'profile/student_profile_page.dart';
 import 'quizzes/student_quiz_list_page.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -70,6 +71,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+    if (_currentIndex == 3) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: const StudentProfilePage(),
+        bottomNavigationBar: _buildBottomNav(),
+      );
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
 
     final user = _dashboardData?['user'] as Map<String, dynamic>?;
@@ -118,46 +127,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 22,
-                            backgroundColor: const Color(0xFFDCE3FF),
-                            backgroundImage: (user?['foto_profil'] != null &&
-                                    user!['foto_profil'].toString().isNotEmpty)
-                                ? NetworkImage(user['foto_profil'] as String)
-                                : null,
-                            child: (user?['foto_profil'] == null ||
-                                    user!['foto_profil'].toString().isEmpty)
-                                ? const Icon(Icons.person, color: _blue)
-                                : null,
+                          GestureDetector(
+                            onTap: () => setState(() => _currentIndex = 3),
+                            child: CircleAvatar(
+                              radius: 22,
+                              backgroundColor: const Color(0xFFDCE3FF),
+                              backgroundImage: (user?['foto_profil'] != null &&
+                                      user!['foto_profil'].toString().isNotEmpty)
+                                  ? NetworkImage(user['foto_profil'] as String)
+                                  : null,
+                              child: (user?['foto_profil'] == null ||
+                                      user!['foto_profil'].toString().isEmpty)
+                                  ? const Icon(Icons.person, color: _blue)
+                                  : null,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user != null && user['nama'] != null
-                                      ? 'Halo, ${user['nama']}! 👋'
-                                      : 'Halo, Siswa Arrava! 👋',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0B2A6B),
+                            child: GestureDetector(
+                              onTap: () => setState(() => _currentIndex = 3),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user != null && user['nama'] != null
+                                        ? 'Halo, ${user['nama']}! 👋'
+                                        : 'Halo, Siswa Arrava! 👋',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0B2A6B),
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  user != null && user['jenjang'] != null
-                                      ? 'Jenjang ${user['jenjang']} • Siap belajar?'
-                                      : 'Siap belajar apa hari ini?',
-                                  style: const TextStyle(
-                                    color: Color(0xFF3A5AA8),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                  Text(
+                                    user != null && user['jenjang'] != null
+                                        ? 'Jenjang ${user['jenjang']} • Siap belajar?'
+                                        : 'Siap belajar apa hari ini?',
+                                    style: const TextStyle(
+                                      color: Color(0xFF3A5AA8),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                           Container(
