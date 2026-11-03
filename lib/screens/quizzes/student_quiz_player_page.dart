@@ -6,6 +6,8 @@ import '../../admin/quizzes/models/quiz_model.dart';
 import '../../admin/quizzes/providers/quiz_provider.dart';
 import '../../admin/quizzes/repositories/quiz_repository.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/services/audio_service.dart';
+import '../../core/storage/preferences_service.dart';
 
 class StudentQuizPlayerPage extends StatefulWidget {
   final QuizModel quiz;
@@ -57,11 +59,14 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   @override
   void initState() {
     super.initState();
+    AudioService.syncPreferences();
     _questions = widget.quiz.soal;
     if (_questions.isEmpty) {
       _loadQuestionsFromApi();
     } else {
-      _startQuizTimers();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkAndPromptDraft();
+      });
     }
   }
 
@@ -75,7 +80,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
           _isLoadingQuestions = false;
         });
         if (_questions.isNotEmpty) {
-          _startQuizTimers();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _checkAndPromptDraft();
+          });
         }
       }
     } catch (_) {
@@ -83,6 +90,122 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
         setState(() => _isLoadingQuestions = false);
       }
     }
+  }
+
+  Future<void> _checkAndPromptDraft() async {
+    final draft = await PreferencesService.getQuizDraft(widget.quiz.idQuiz);
+    if (!mounted) return;
+
+    if (draft != null && draft['answers'] != null) {
+      final answers = draft['answers'] as Map<int, String>;
+      if (answers.isNotEmpty) {
+        final int draftIndex = (draft['currentIndex'] as int? ?? 0).clamp(0, _questions.length - 1);
+        final int? savedRemaining = draft['remainingSeconds'] as int?;
+
+        final restore = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.history_rounded, color: Color(0xFF2563EB), size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Lanjutkan Kuis?',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'Ditemukan draft pengerjaan sebelumnya (${answers.length} soal sudah dijawab).\n\nApakah Anda ingin melanjutkan pengerjaan atau mulai ulang dari awal?',
+              style: const TextStyle(fontSize: 13.5, color: Color(0xFF475569), height: 1.45),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Mulai Ulang', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
+                ),
+                child: const Text('Lanjutkan', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        );
+
+        if (!mounted) return;
+
+        if (restore == true) {
+          setState(() {
+            _studentAnswers.addAll(answers);
+            _currentIndex = draftIndex;
+            if (!_isWayground && savedRemaining != null && savedRemaining > 0) {
+              _totalRemainingSeconds = savedRemaining;
+            }
+          });
+          _syncCurrentQuestionState();
+          _startQuizTimers();
+          return;
+        } else {
+          await PreferencesService.clearQuizDraft(widget.quiz.idQuiz);
+        }
+      }
+    }
+
+    _startQuizTimers();
+  }
+
+  void _syncCurrentQuestionState() {
+    final existingAnswer = _studentAnswers[_currentQ.idSoal ?? _currentIndex];
+    if (existingAnswer != null && existingAnswer.isNotEmpty) {
+      if (_currentQ.jenisSoal == JenisSoal.isianSingkat) {
+        _essayController.text = existingAnswer;
+      } else {
+        final choices = _currentQ.pilihan;
+        int foundIdx = -1;
+        for (int i = 0; i < choices.length; i++) {
+          if (choices[i].label.toUpperCase() == existingAnswer.toUpperCase()) {
+            foundIdx = i;
+            break;
+          }
+        }
+        if (foundIdx == -1) {
+          final lIdx = _kahootLabels.indexOf(existingAnswer.toUpperCase());
+          if (lIdx != -1) foundIdx = lIdx;
+        }
+        _selectedChoiceIndex = foundIdx != -1 ? foundIdx : null;
+      }
+    } else {
+      _selectedChoiceIndex = null;
+      _essayController.clear();
+      _isAnswerSubmittedForCurrentQ = false;
+    }
+  }
+
+  void _saveDraft() {
+    PreferencesService.saveQuizDraft(
+      quizId: widget.quiz.idQuiz,
+      answers: _studentAnswers,
+      currentIndex: _currentIndex,
+      remainingSeconds: _totalRemainingSeconds,
+    );
   }
 
   void _startQuizTimers() {
@@ -118,11 +241,18 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   }
 
   void _startTotalTimer() {
-    final menit = widget.quiz.durasiTotalMenit ?? 30;
-    _totalRemainingSeconds = menit * 60;
+    if (_totalRemainingSeconds == null) {
+      final menit = widget.quiz.durasiTotalMenit ?? 30;
+      _totalRemainingSeconds = menit * 60;
+    }
     _totalTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_totalRemainingSeconds! > 0) {
-        if (mounted) setState(() => _totalRemainingSeconds = _totalRemainingSeconds! - 1);
+        if (mounted) {
+          setState(() => _totalRemainingSeconds = _totalRemainingSeconds! - 1);
+          if (_totalRemainingSeconds! % 10 == 0) {
+            _saveDraft();
+          }
+        }
       } else {
         _totalTimer?.cancel();
         _finishAndSubmitQuiz();
@@ -131,8 +261,12 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   }
 
   void _handleTimeOut() {
+    AudioService.playErrorSound();
+    AudioService.triggerHaptic();
+
     _isAnswerSubmittedForCurrentQ = true;
     _studentAnswers[_currentQ.idSoal ?? _currentIndex] = '';
+    _saveDraft();
 
     Future.delayed(const Duration(milliseconds: 1000), () {
       if (!mounted) return;
@@ -143,9 +277,13 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   void _selectAnswer(int choiceIndex, {String? customLabel}) {
     if (_isAnswerSubmittedForCurrentQ || _isSubmittingFinal) return;
 
+    AudioService.playTapSound();
+    AudioService.triggerHaptic();
+
     final choices = _currentQ.pilihan;
     final label = customLabel ?? (choiceIndex < choices.length ? choices[choiceIndex].label : (choiceIndex < _kahootLabels.length ? _kahootLabels[choiceIndex] : 'A'));
     _studentAnswers[_currentQ.idSoal ?? _currentIndex] = label;
+    _saveDraft();
 
     setState(() {
       _selectedChoiceIndex = choiceIndex;
@@ -166,7 +304,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     final answerText = _essayController.text.trim();
     if (answerText.isEmpty) return;
 
+    AudioService.playTapSound();
+    AudioService.triggerHaptic();
+
     _studentAnswers[_currentQ.idSoal ?? _currentIndex] = answerText;
+    _saveDraft();
 
     setState(() {
       _isAnswerSubmittedForCurrentQ = true;
@@ -189,6 +331,8 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
         _isAnswerSubmittedForCurrentQ = false;
         _essayController.clear();
       });
+      _syncCurrentQuestionState();
+      _saveDraft();
       if (_isWayground) {
         _startQuestionTimer();
       }
@@ -235,10 +379,12 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     if (mounted) {
       Navigator.pop(context); // Close loading dialog
       if (result != null) {
+        await PreferencesService.clearQuizDraft(widget.quiz.idQuiz);
+        AudioService.playCompletionSound();
         _showResultDialog(result);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mengirim jawaban ke server.')),
+          const SnackBar(content: Text('Gagal mengirim jawaban ke server. Draft pengerjaan tetap tersimpan aman.')),
         );
       }
     }
@@ -364,6 +510,154 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     );
   }
 
+  void _showAudioSettingsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.tune_rounded, color: Color(0xFF2563EB), size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Pengaturan Kuis',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                FutureBuilder<bool>(
+                  future: PreferencesService.isSoundEnabled(),
+                  builder: (context, snapshot) {
+                    final isSound = snapshot.data ?? true;
+                    return SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB)),
+                      title: const Text('Efek Suara (SFX)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      subtitle: const Text('Suara tombol dan notifikasi kuis', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      value: isSound,
+                      activeThumbColor: const Color(0xFF2563EB),
+                      onChanged: (val) async {
+                        await PreferencesService.setSoundEnabled(val);
+                        await AudioService.syncPreferences();
+                        setSheetState(() {});
+                      },
+                    );
+                  },
+                ),
+                const Divider(),
+                FutureBuilder<bool>(
+                  future: PreferencesService.isHapticEnabled(),
+                  builder: (context, snapshot) {
+                    final isHaptic = snapshot.data ?? true;
+                    return SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: const Icon(Icons.vibration_rounded, color: Color(0xFF10B981)),
+                      title: const Text('Getaran (Haptic Feedback)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      subtitle: const Text('Getar lembut saat memilih opsi jawaban', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      value: isHaptic,
+                      activeThumbColor: const Color(0xFF10B981),
+                      onChanged: (val) async {
+                        await PreferencesService.setHapticEnabled(val);
+                        await AudioService.syncPreferences();
+                        if (val) AudioService.triggerHaptic();
+                        setSheetState(() {});
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cloud_done_rounded, size: 18, color: Color(0xFF059669)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${_studentAnswers.length} dari ${_questions.length} soal tersimpan otomatis.',
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF334155), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showExitConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('Keluar dari Kuis?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        content: Text(
+          'Progres pengerjaanmu (${_studentAnswers.length} dari ${_questions.length} soal) tersimpan otomatis sebagai draft.\n\nKamu dapat melanjutkannya kapan saja.',
+          style: const TextStyle(fontSize: 13.5, color: Color(0xFF475569), height: 1.4),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Lanjutkan Kuis', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+            child: const Text('Keluar (Simpan Draft)', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoadingQuestions) {
@@ -437,30 +731,14 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                     ),
                   ),
                   IconButton(
+                    icon: const Icon(Icons.volume_up_rounded, color: Colors.white70, size: 20),
+                    tooltip: 'Pengaturan Suara',
+                    onPressed: _showAudioSettingsSheet,
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.close, color: Colors.white70, size: 20),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('Keluar dari Kuis?'),
-                          content: const Text('Progres pengerjaan saat ini tidak akan disimpan jika kamu keluar.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Lanjutkan'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                Navigator.pop(context);
-                              },
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                              child: const Text('Keluar', style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    tooltip: 'Keluar',
+                    onPressed: _showExitConfirmationDialog,
                   ),
                 ],
               ),

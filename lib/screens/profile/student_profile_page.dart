@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../core/constants/api_constants.dart';
+import '../../core/services/audio_service.dart';
+import '../../core/storage/preferences_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../shared/utils/logout_dialog.dart';
 
@@ -16,6 +18,8 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   bool _isLoading = true;
   String? _error;
   Map<String, dynamic>? _profileData;
+  bool _isSoundEnabled = true;
+  bool _isHapticEnabled = true;
 
   @override
   void initState() {
@@ -30,9 +34,13 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     });
 
     try {
+      final sound = await PreferencesService.isSoundEnabled();
+      final haptic = await PreferencesService.isHapticEnabled();
       final data = await DashboardService.fetchStudentProfile();
       if (mounted) {
         setState(() {
+          _isSoundEnabled = sound;
+          _isHapticEnabled = haptic;
           _profileData = data;
           _isLoading = false;
         });
@@ -784,7 +792,57 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                 ),
               const SizedBox(height: 24),
 
-              // 8. Logout Button
+              // 8. Pengaturan Aplikasi (SharedPreferences)
+              const Text('Pengaturan Aplikasi', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF0F172A))),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB), size: 20),
+                      ),
+                      title: const Text('Efek Suara Kuis', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF0F172A))),
+                      subtitle: const Text('Suara tombol dan chime notifikasi kuis', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                      value: _isSoundEnabled,
+                      activeThumbColor: const Color(0xFF2563EB),
+                      onChanged: (val) async {
+                        await PreferencesService.setSoundEnabled(val);
+                        await AudioService.syncPreferences();
+                        setState(() => _isSoundEnabled = val);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.vibration_rounded, color: Color(0xFF059669), size: 20),
+                      ),
+                      title: const Text('Getaran (Haptic Feedback)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF0F172A))),
+                      subtitle: const Text('Getar lembut saat memilih jawaban kuis', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                      value: _isHapticEnabled,
+                      activeThumbColor: const Color(0xFF059669),
+                      onChanged: (val) async {
+                        await PreferencesService.setHapticEnabled(val);
+                        await AudioService.syncPreferences();
+                        if (val) AudioService.triggerHaptic();
+                        setState(() => _isHapticEnabled = val);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 9. Logout Button
               SizedBox(
                 width: double.infinity,
                 height: 48,
