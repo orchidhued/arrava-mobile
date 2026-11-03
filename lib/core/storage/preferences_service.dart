@@ -126,3 +126,4 @@ class PreferencesService {
     } catch (_) {}
   }
 }
+
