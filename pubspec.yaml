@@ -63,8 +63,13 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/backgorund1.png
-    - assets/backgorund3.png
+    - assets/
+    - assets/images/auth/
+    - assets/badges/
+    - assets/karakter/
+    - assets/karakter/quiz/
+    - assets/karakter/membacaDokumen/
+    - assets/sounds/widgets/
 
 
 

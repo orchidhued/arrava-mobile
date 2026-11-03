@@ -6,8 +6,16 @@ class ModuleRepository {
 
   ModuleRepository({ModuleService? service}) : _service = service ?? ModuleService();
 
-  Future<List<ModuleModel>> getModules() async {
-    final response = await _service.fetchModules();
+  Future<List<ModuleModel>> getModules({
+    String? search,
+    String? status,
+    int? jenjang,
+  }) async {
+    final response = await _service.fetchModules(
+      search: search,
+      status: status,
+      jenjang: jenjang,
+    );
     final data = response['data'] as List?;
     if (data == null) return [];
     return data.map((e) => ModuleModel.fromJson(e)).toList();
@@ -16,6 +24,11 @@ class ModuleRepository {
   Future<ModuleModel> getModuleById(int id) async {
     final response = await _service.fetchModuleById(id);
     return ModuleModel.fromJson(response['data']);
+  }
+
+  Future<Map<String, dynamic>> completeModule(int id) async {
+    final response = await _service.completeModule(id);
+    return response as Map<String, dynamic>;
   }
 
   Future<ModuleModel> createModule(Map<String, dynamic> data) async {

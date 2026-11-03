@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../admin/quizzes/models/quiz_model.dart';
 import '../../admin/quizzes/providers/quiz_provider.dart';
+import '../../services/auth_service.dart';
+import '../../core/constants/api_constants.dart';
 import 'student_quiz_player_page.dart';
 
 class StudentQuizListPage extends StatefulWidget {
@@ -17,13 +19,27 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
   String _selectedStatusFilter =
       'Semua'; // 'Semua', 'Belum Dikerjakan', 'Lulus', 'Belum Lulus'
   final String _selectedJenjang = 'Semua';
+  int? _userJenjangId;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<QuizProvider>().fetchQuizzes(status: 'tersedia');
+      _loadQuizzes();
     });
+  }
+
+  Future<void> _loadQuizzes() async {
+    final jenjangStr = await AuthService.getJenjang();
+    if (mounted) {
+      setState(() {
+        _userJenjangId = int.tryParse(jenjangStr ?? '');
+      });
+      context.read<QuizProvider>().fetchQuizzes(
+        status: 'tersedia',
+        jenjang: _userJenjangId,
+      );
+    }
   }
 
   @override
@@ -495,9 +511,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            onPressed: () => context
-                                .read<QuizProvider>()
-                                .fetchQuizzes(status: 'tersedia'),
+                            onPressed: _loadQuizzes,
                             icon: const Icon(Icons.refresh, size: 16),
                             label: const Text('Coba Lagi'),
                           ),
@@ -534,9 +548,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                         ),
                         const SizedBox(height: 14),
                         ElevatedButton.icon(
-                          onPressed: () => context
-                              .read<QuizProvider>()
-                              .fetchQuizzes(status: 'tersedia'),
+                          onPressed: _loadQuizzes,
                           icon: const Icon(Icons.refresh, size: 16),
                           label: const Text('Refresh'),
                         ),
@@ -544,9 +556,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                     ),
                   )
                 : RefreshIndicator(
-                    onRefresh: () => context.read<QuizProvider>().fetchQuizzes(
-                      status: 'tersedia',
-                    ),
+                    onRefresh: _loadQuizzes,
                     child: ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: quizzes.length,
@@ -563,190 +573,219 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
   }
 
   Widget _buildQuizCard(QuizModel quiz) {
+    final String? resolvedCoverUrl = ApiConstants.resolveMediaUrl(quiz.coverUrl ?? quiz.fotoQuiz);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gradient Header
-          Container(
-            height: 70,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: quiz.isWayground
-                    ? [
-                        const Color(0xFF2563EB),
-                        const Color(0xFF1D4ED8),
-                        const Color(0xFF46178F),
-                      ]
-                    : [
-                        const Color(0xFF059669),
-                        const Color(0xFF047857),
-                        const Color(0xFF065F46),
-                      ],
-              ),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(18),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Header with Cover Image or Gradient
+          SizedBox(
+            height: 115,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
+                // Background image or gradient
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: resolvedCoverUrl != null
+                      ? Image.network(
+                          resolvedCoverUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: quiz.isWayground
+                                    ? [const Color(0xFF1E3A8A), const Color(0xFF3B82F6)]
+                                    : [const Color(0xFF065F46), const Color(0xFF10B981)],
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: quiz.isWayground
+                                  ? [const Color(0xFF1E3A8A), const Color(0xFF3B82F6)]
+                                  : [const Color(0xFF065F46), const Color(0xFF10B981)],
+                            ),
+                          ),
+                        ),
+                ),
+
+                // Dark gradient overlay to ensure text and badges pop
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    quiz.isWayground ? '⚡ Wayground 360' : '⏱️ Kuis Biasa',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.35),
+                        Colors.black.withValues(alpha: 0.75),
+                      ],
                     ),
                   ),
                 ),
-                if (quiz.hasTaken)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: quiz.isPassed
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFFF59E0B),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      quiz.isPassed ? '🎉 Lulus' : '💪 Belum Lulus',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
+
+                // Badges in Header
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              quiz.isWayground ? '⚡ Wayground 360' : '⏱️ Kuis Biasa',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: quiz.hasTaken
+                                  ? (quiz.isPassed ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
+                                  : Colors.black.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              quiz.hasTaken
+                                  ? (quiz.isPassed ? '🎉 Lulus' : '💪 Belum Lulus')
+                                  : 'Belum Dikerjakan',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black26,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'Belum Dikerjakan',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                      if (quiz.namaJenjang != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Jenjang ${quiz.namaJenjang}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
 
           // Body Content
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   quiz.judul,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
+                    height: 1.3,
                   ),
                 ),
                 if (quiz.deskripsi != null && quiz.deskripsi!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     quiz.deskripsi!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: Color(0xFF64748B),
+                      height: 1.35,
                     ),
                   ),
                 ],
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
                   children: [
-                    _buildBadge(
-                      Icons.help_outline,
-                      '${quiz.questionsCount} Soal',
-                    ),
-                    const SizedBox(width: 8),
-                    _buildBadge(Icons.star_outline, '${quiz.totalPoints} Poin'),
-                    const Spacer(),
+                    _buildBadge(Icons.quiz_outlined, '${quiz.questionsCount} Soal'),
+                    _buildBadge(Icons.bolt, '${quiz.totalPoints} Poin'),
+                    if (quiz.durasiTotalMenit != null)
+                      _buildBadge(Icons.schedule_rounded, '${quiz.durasiTotalMenit} Menit'),
                     if (quiz.requiresToken)
-                      const Row(
-                        children: [
-                          Icon(Icons.lock, size: 13, color: Color(0xFFD97706)),
-                          SizedBox(width: 3),
-                          Text(
-                            'Token',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Color(0xFFD97706),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildBadge(Icons.lock_rounded, 'Perlu Token', color: const Color(0xFFD97706)),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,
-                  height: 40,
+                  height: 44,
                   child: ElevatedButton(
                     onPressed: () => _showQuizDetailSheet(quiz),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: quiz.hasTaken
-                          ? const Color(0xFFF1F5F9)
+                          ? const Color(0xFF0F172A)
                           : const Color(0xFF2563EB),
-                      foregroundColor: quiz.hasTaken
-                          ? const Color(0xFF1E293B)
-                          : Colors.white,
-                      elevation: quiz.hasTaken ? 0 : 2,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      quiz.hasTaken
-                          ? 'Kerjakan Ulang Kuis'
-                          : 'Mulai Kerjakan Kuis ⚡',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          quiz.hasTaken ? Icons.replay_rounded : Icons.play_arrow_rounded,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          quiz.hasTaken
+                              ? 'Kerjakan Ulang Kuis'
+                              : 'Mulai Kerjakan Kuis ⚡',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -758,24 +797,27 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     );
   }
 
-  Widget _buildBadge(IconData icon, String label) {
+  Widget _buildBadge(IconData icon, String label, {Color? color}) {
+    final effectiveColor = color ?? const Color(0xFF64748B);
+    final bgColor = color != null ? color.withValues(alpha: 0.1) : const Color(0xFFF1F5F9);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: bgColor,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: const Color(0xFF64748B)),
+          Icon(icon, size: 12, color: effectiveColor),
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
+            style: TextStyle(
+              fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF475569),
+              color: effectiveColor,
             ),
           ),
         ],

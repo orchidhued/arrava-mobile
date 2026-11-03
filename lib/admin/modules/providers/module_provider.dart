@@ -19,13 +19,21 @@ class ModuleProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  Future<void> fetchModules() async {
+  Future<void> fetchModules({
+    String? search,
+    String? status,
+    int? jenjang,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _modules = await _repository.getModules();
+      _modules = await _repository.getModules(
+        search: search,
+        status: status,
+        jenjang: jenjang,
+      );
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
     } finally {
@@ -43,6 +51,50 @@ class ModuleProvider with ChangeNotifier {
       _selectedModule = await _repository.getModuleById(id);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> completeModule(int id) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.completeModule(id);
+      final index = _modules.indexWhere((m) => m.idModul == id);
+      if (index != -1) {
+        final old = _modules[index];
+        _modules[index] = ModuleModel(
+          idModul: old.idModul,
+          judulModul: old.judulModul,
+          fileMateri: old.fileMateri,
+          fileUrl: old.fileUrl,
+          tipeFile: old.tipeFile,
+          idTipeModul: old.idTipeModul,
+          namaTipe: old.namaTipe,
+          idJenjang: old.idJenjang,
+          namaJenjang: old.namaJenjang,
+          idQuiz: old.idQuiz,
+          quizJudul: old.quizJudul,
+          progressModul: old.progressModul,
+          fotoModul: old.fotoModul,
+          fotoUrl: old.fotoUrl,
+          poinModul: old.poinModul,
+          isVideo: old.isVideo,
+          isPdf: old.isPdf,
+          youtubeId: old.youtubeId,
+          youtubeEmbedUrl: old.youtubeEmbedUrl,
+          isMateriSelesai: true,
+          isTuntas: old.idQuiz == null ? true : old.isTuntas,
+        );
+      }
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -73,10 +125,10 @@ class ModuleProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final updatedModule = await _repository.updateModule(id, data);
+      final updated = await _repository.updateModule(id, data);
       final index = _modules.indexWhere((m) => m.idModul == id);
       if (index != -1) {
-        _modules[index] = updatedModule;
+        _modules[index] = updated;
       }
       return true;
     } catch (e) {

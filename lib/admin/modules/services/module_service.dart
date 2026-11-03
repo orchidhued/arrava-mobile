@@ -2,12 +2,31 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/api_constants.dart';
 
 class ModuleService {
-  Future<dynamic> fetchModules() async {
-    return await ApiClient.get(ApiConstants.modules);
+  Future<dynamic> fetchModules({
+    String? search,
+    String? status,
+    int? jenjang,
+  }) async {
+    final queryParams = <String, String>{};
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    if (status != null && status.isNotEmpty) queryParams['status'] = status;
+    if (jenjang != null) queryParams['jenjang'] = jenjang.toString();
+
+    String endpoint = ApiConstants.modules;
+    if (queryParams.isNotEmpty) {
+      final queryString = Uri(queryParameters: queryParams).query;
+      endpoint = '$endpoint?$queryString';
+    }
+
+    return await ApiClient.get(endpoint);
   }
 
   Future<dynamic> fetchModuleById(int id) async {
     return await ApiClient.get('${ApiConstants.modules}/$id');
+  }
+
+  Future<dynamic> completeModule(int id) async {
+    return await ApiClient.post('${ApiConstants.modules}/$id/complete');
   }
 
   Future<dynamic> createModule(Map<String, dynamic> data) async {

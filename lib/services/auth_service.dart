@@ -26,6 +26,7 @@ class AuthService {
         await SecureStorage.write('user_name', user['nama']?.toString() ?? '');
         await SecureStorage.write('user_email', user['email']?.toString() ?? '');
         await SecureStorage.write('user_role', user['id_tipeuser']?.toString() ?? '');
+        await SecureStorage.write('user_jenjang', user['id_jenjang']?.toString() ?? '');
       }
 
       return data;
@@ -42,6 +43,10 @@ class AuthService {
     return SecureStorage.read('user_role');
   }
 
+  static Future<String?> getJenjang() async {
+    return SecureStorage.read('user_jenjang');
+  }
+
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
@@ -53,6 +58,7 @@ class AuthService {
       'name': await SecureStorage.read('user_name'),
       'email': await SecureStorage.read('user_email'),
       'role': await SecureStorage.read('user_role'),
+      'jenjang': await SecureStorage.read('user_jenjang'),
     };
   }
 

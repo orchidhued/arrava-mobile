@@ -25,6 +25,50 @@ void main() {
       expect(model.progressModul, 'Tersedia');
     });
 
+    test('ModuleModel.fromJson should parse enriched video and progress fields', () {
+      final json = {
+        'id_modul': 12,
+        'judul_modul': 'Video Gravitasi Fisika',
+        'file_materi': 'https://youtube.com/watch?v=abcdefghijk',
+        'file_url': 'https://youtube.com/watch?v=abcdefghijk',
+        'tipe_file': 'video',
+        'id_tipemodul': 1,
+        'nama_tipe': 'Video',
+        'id_jenjang': 3,
+        'nama_jenjang': 'SMA',
+        'id_quiz': 7,
+        'quiz': {
+          'id_quiz': 7,
+          'judul': 'Kuis Fisika Gravitasi',
+        },
+        'progressModul': 'Published',
+        'foto_url': 'http://127.0.0.1:8000/storage/covers/sample.jpg',
+        'poin_modul': 60,
+        'is_video': true,
+        'is_pdf': false,
+        'youtube_id': 'abcdefghijk',
+        'progres': {
+          'materi_selesai': true,
+          'quiz_selesai': false,
+          'quiz_lulus': false,
+          'is_tuntas': false,
+          'poin_didapat': 0,
+        },
+      };
+
+      final model = ModuleModel.fromJson(json);
+
+      expect(model.idModul, 12);
+      expect(model.judulModul, 'Video Gravitasi Fisika');
+      expect(model.isVideo, isTrue);
+      expect(model.isPdf, isFalse);
+      expect(model.youtubeId, 'abcdefghijk');
+      expect(model.quizJudul, 'Kuis Fisika Gravitasi');
+      expect(model.isMateriSelesai, isTrue);
+      expect(model.isTuntas, isFalse);
+      expect(model.poinModul, 60);
+    });
+
     test('ModuleModel.fromJson should handle null and default values safely', () {
       final json = <String, dynamic>{};
 
@@ -34,6 +78,9 @@ void main() {
       expect(model.judulModul, '');
       expect(model.fileMateri, isNull);
       expect(model.idJenjang, isNull);
+      expect(model.isMateriSelesai, isFalse);
+      expect(model.isTuntas, isFalse);
+      expect(model.isVideo, isFalse);
     });
 
     test('ModuleModel.toJson should serialize fields accurately', () {
@@ -56,4 +103,3 @@ void main() {
     });
   });
 }
-

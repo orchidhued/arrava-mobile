@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../admin/quizzes/models/quiz_model.dart';
 import '../../admin/quizzes/providers/quiz_provider.dart';
 import '../../admin/quizzes/repositories/quiz_repository.dart';
+import '../../core/constants/api_constants.dart';
 
 class StudentQuizPlayerPage extends StatefulWidget {
   final QuizModel quiz;
@@ -525,38 +526,10 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
 
             // Question Card
             Expanded(
-              flex: 4,
+              flex: (currentQ.fotoSoal != null && currentQ.fotoSoal!.trim().isNotEmpty) ? 5 : 4,
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: Text(
-                        currentQ.pertanyaan,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                          height: 1.45,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: _buildQuestionCard(currentQ),
               ),
             ),
 
@@ -566,6 +539,235 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
                 child: _buildAnswerArea(currentQ, choices),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionCard(QuestionModel currentQ) {
+    final String? resolvedFotoUrl = ApiConstants.resolveMediaUrl(currentQ.fotoSoal);
+    final String typeLabel = currentQ.jenisSoal == JenisSoal.trueFalse
+        ? 'Benar atau Salah'
+        : (currentQ.jenisSoal == JenisSoal.isianSingkat ? 'Isian Singkat' : 'Pilihan Ganda');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Badges row: Question number, type, points
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Soal ${_currentIndex + 1} / ${_questions.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    typeLabel,
+                    style: const TextStyle(
+                      color: Color(0xFF2563EB),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.bolt, size: 12, color: Color(0xFFD97706)),
+                      const SizedBox(width: 2),
+                      Text(
+                        '+${currentQ.poin} XP',
+                        style: const TextStyle(
+                          color: Color(0xFFB45309),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Foto Soal (jika ada)
+            if (resolvedFotoUrl != null) ...[
+              GestureDetector(
+                onTap: () => _showFullImage(context, resolvedFotoUrl),
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 145),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Center(
+                          child: Image.network(
+                            resolvedFotoUrl,
+                            fit: BoxFit.contain,
+                            height: 145,
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return const SizedBox(
+                                height: 120,
+                                child: Center(
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              height: 100,
+                              color: const Color(0xFFF8FAFC),
+                              child: const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.broken_image_rounded, color: Color(0xFF94A3B8), size: 28),
+                                    SizedBox(height: 4),
+                                    Text('Gambar soal tidak tersedia', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.zoom_in_rounded, color: Colors.white, size: 13),
+                            SizedBox(width: 3),
+                            Text(
+                              'Perbesar',
+                              style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Teks Pertanyaan
+            Text(
+              currentQ.pertanyaan,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: (resolvedFotoUrl != null) ? 15 : 17,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFullImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.8,
+                  maxScale: 4.0,
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: Colors.black87,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 20),
+                ),
               ),
             ),
           ],
