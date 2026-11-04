@@ -86,7 +86,8 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
         foregroundColor: const Color(0xFF0F172A),
         elevation: 0.5,
       ),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           // Filter Tabs & Search
           Container(
@@ -245,20 +246,48 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                           )
                         : RefreshIndicator(
                             onRefresh: _loadModules,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: modules.length,
-                              itemBuilder: (context, index) {
-                                final modul = modules[index];
-                                return _buildModuleCard(modul);
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final double maxW = constraints.maxWidth;
+                                final int columns =
+                                    maxW >= 1050 ? 3 : (maxW >= 600 ? 2 : 1);
+
+                                if (columns == 1) {
+                                  return ListView.builder(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    itemCount: modules.length,
+                                    itemBuilder: (context, index) {
+                                      return _buildModuleCard(modules[index]);
+                                    },
+                                  );
+                                }
+
+                                return GridView.builder(
+                                  padding: const EdgeInsets.all(16),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: columns,
+                                        crossAxisSpacing: 16,
+                                        mainAxisSpacing: 16,
+                                        mainAxisExtent: 220,
+                                      ),
+                                  itemCount: modules.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildModuleCard(modules[index]);
+                                  },
+                                );
                               },
                             ),
                           ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildModuleCard(ModuleModel modul) {
     final bool isVideo = modul.isVideo || (modul.idTipeModul == 1);

@@ -802,21 +802,63 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               ),
             ),
 
-            // Question Card
+            // Question Card & Interactive Answer Area (Responsive side-by-side pada layar besar)
             Expanded(
-              flex: (currentQ.fotoSoal != null && currentQ.fotoSoal!.trim().isNotEmpty) ? 5 : 4,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: _buildQuestionCard(currentQ),
-              ),
-            ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWideScreen = constraints.maxWidth >= 700;
 
-            // Interactive Answer Area (Dynamic based on Question Type)
-            Expanded(
-              flex: 5,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
-                child: _buildAnswerArea(currentQ, choices),
+                  if (isWideScreen) {
+                    // LAYAR BESAR / TABLET / LANDSCAPE: Soal dan Jawaban Bersebelahan!
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Kolom Kiri: Kartu Soal
+                        Expanded(
+                          flex: 5,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 8, 16),
+                            child: _buildQuestionCard(currentQ),
+                          ),
+                        ),
+                        // Kolom Kanan: Area Pilihan Jawaban
+                        Expanded(
+                          flex: 6,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 8, 16, 16),
+                            child: _buildAnswerArea(currentQ, choices),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  // LAYAR HP / PORTRAIT: Bertumpuk Atas-Bawah
+                  return Column(
+                    children: [
+                      Expanded(
+                        flex: (currentQ.fotoSoal != null &&
+                                currentQ.fotoSoal!.trim().isNotEmpty)
+                            ? 5
+                            : 4,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: _buildQuestionCard(currentQ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 5,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
+                          child: _buildAnswerArea(currentQ, choices),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],

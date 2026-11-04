@@ -410,7 +410,8 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
         foregroundColor: const Color(0xFF0F172A),
         elevation: 0.5,
       ),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           // Filter Tabs (Semua, Belum Dikerjakan, Lulus, Belum Lulus)
           Container(
@@ -567,20 +568,49 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                   )
                 : RefreshIndicator(
                     onRefresh: _loadQuizzes,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: quizzes.length,
-                      itemBuilder: (context, index) {
-                        final quiz = quizzes[index];
-                        return _buildQuizCard(quiz);
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double maxW = constraints.maxWidth;
+                        // 1 kolom di HP (<600px), 2 kolom di tablet (600-1050px), 3 kolom di desktop (>1050px)
+                        final int columns =
+                            maxW >= 1050 ? 3 : (maxW >= 600 ? 2 : 1);
+
+                        if (columns == 1) {
+                          return ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            itemCount: quizzes.length,
+                            itemBuilder: (context, index) {
+                              return _buildQuizCard(quizzes[index]);
+                            },
+                          );
+                        }
+
+                        return GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                mainAxisExtent: 385,
+                              ),
+                          itemCount: quizzes.length,
+                          itemBuilder: (context, index) {
+                            return _buildQuizCard(quizzes[index]);
+                          },
+                        );
                       },
                     ),
                   ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   /// Widget penampil cover gambar kuis / foto soal dengan fallback aset resmi
   Widget _buildCoverImage(QuizModel quiz, {double height = 160}) {
@@ -644,8 +674,6 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
       default:
         tingkatColor = const Color(0xFF64748B);
     }
-
-    final hasQuestionPhoto = quiz.firstSoalFoto != null;
 
     final questionTypes = quiz.soal
         .map((s) => s.jenisSoal.apiValue == 'true_false'
@@ -856,77 +884,10 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             ],
                           ),
 
-                          // Baris Bawah Cover: Jenjang, Indikator Foto Soal, & Tingkat Kesulitan
+                          // Baris Bawah Cover: Tingkat Kesulitan (Pojok Kanan Bawah Cover persis Web)
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Row(
-                                children: [
-                                  if (quiz.namaJenjang != null)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.6,
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        'Jenjang ${quiz.namaJenjang}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  if (hasQuestionPhoto) ...[
-                                    const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF047857),
-                                        borderRadius: BorderRadius.circular(6),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.3,
-                                            ),
-                                            blurRadius: 4,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.photo_library_outlined,
-                                            size: 11,
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            'Foto Soal',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-
-                              // Tingkat Kesulitan (Pojok Kanan Bawah Cover persis Web)
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
