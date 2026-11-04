@@ -31,8 +31,8 @@ class FloatCfg {
 
 class LoginEffectCfg {
   static const int durationMs = 1400; // lama transisi (ms)
-  static const double bgBack = 0.6; // jarak latar belakang naik
-  static const double bgFront = 1.2; // jarak latar depan naik
+  static const double bgBack = 1.15; // jarak latar belakang belakang naik (persis web)
+  static const double bgFront = 1.30; // jarak latar depan naik (persis web)
   static const double drop = 1.1; // jarak partikel turun
 
   // Gambar aset sesuai petunjuk
@@ -51,6 +51,7 @@ class LoginEffectCfg {
   static const accent = Color(0xFF1F6BFF);
   static const stage = Color(0xFFE8EEFB);
   static const cardBg = Color(0xFFF4F7FF);
+  static const oceanBg = Color(0xFF0E59E0); // Warna dasar ekstensi di bawah gelombang piksel agar saat transisi naik tidak ada celah putih
 }
 
 /* =====================================================================
@@ -258,6 +259,57 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  /// Membangun lapisan latar belakang dengan ekstensi warna dasar #0E59E0 di bawahnya
+  /// agar saat transisi naik (translateY negatif) tidak ada celah kosong di bawah (persis .bg::after di web)
+  Widget _buildBgLayer({
+    required double w,
+    required double h,
+    required double translateY,
+    double opacity = 1.0,
+    bool mirror = false,
+  }) {
+    return Positioned(
+      left: 0,
+      top: 0,
+      width: w,
+      height: h,
+      child: Transform.translate(
+        offset: Offset(0, translateY),
+        child: Opacity(
+          opacity: opacity,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: mirror
+                ? (Matrix4.identity()..scaleByDouble(-1.2, 1.2, 1.0, 1.0))
+                : Matrix4.identity(),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  child: _pixelImage(
+                    LoginEffectCfg.imgBg,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.bottomCenter,
+                  ),
+                ),
+                // Ekstensi warna dasar di bawah gelombang piksel (persis CSS .bg::after)
+                Positioned(
+                  top: h - 2,
+                  left: -w * 0.3,
+                  right: -w * 0.3,
+                  height: 1500,
+                  child: Container(
+                    color: LoginEffectCfg.oceanBg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -277,39 +329,28 @@ class _LoginScreenState extends State<LoginScreen>
                     final double p = _cubicInOut(_s);
 
                     return Stack(
+                      fit: StackFit.expand,
                       children: [
                         // ===============================================
                         // 1. LAPISAN EFEK (Di belakang konten)
                         // ===============================================
 
-                        // (a) Latar Belakang Lapisan 1 (naik pelan)
-                        Positioned.fill(
-                          child: Transform.translate(
-                            offset: Offset(0, -p * h * LoginEffectCfg.bgBack),
-                            child: _pixelImage(
-                              LoginEffectCfg.imgBg,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                        // (a) Latar Belakang Lapisan 1 (naik pelan, persis web bgBack)
+                        _buildBgLayer(
+                          w: w,
+                          h: h,
+                          translateY: -p * h * LoginEffectCfg.bgBack,
+                          opacity: 1.0,
+                          mirror: false,
                         ),
 
-                        // (b) Latar Belakang Lapisan 2 (naik cepat, cermin, transparan)
-                        Positioned.fill(
-                          child: Opacity(
-                            opacity: 0.55,
-                            child: Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.translationValues(
-                                0,
-                                -p * h * LoginEffectCfg.bgFront,
-                                0,
-                              )..scaleByDouble(-1.2, 1.2, 1.0, 1.0),
-                              child: _pixelImage(
-                                LoginEffectCfg.imgBg,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
+                        // (b) Latar Belakang Lapisan 2 (naik cepat, cermin, transparan, persis web bgFront)
+                        _buildBgLayer(
+                          w: w,
+                          h: h,
+                          translateY: -p * h * LoginEffectCfg.bgFront,
+                          opacity: 0.55,
+                          mirror: true,
                         ),
 
                         // (c) Dua Lapisan Partikel Mengambang (turun + memudar)
@@ -703,45 +744,49 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  /// Membangun Halaman Setelah Login (Sheet yang naik dari bawah menutupi layar)
+  /// Membangun Halaman Setelah Login (Home Panel yang naik dari bawah menutupi layar)
+  /// Dilengkapi ekstensi cardBg di bawahnya agar tidak ada celah saat bergerak naik (persis .home-panel::after di web)
   List<Widget> _buildHomeTransitionSheet(double w, double h, double p) {
-    final double q = _clamp((p - 0.2) / 0.8);
-    if (q <= 0.0) return [];
+    if (_s <= 0.001) return const [];
 
+    final double q = _clamp((p - 0.2) / 0.8);
     final double sheetTop = (1.0 - q) * h;
 
     return [
       Positioned(
-        left: 0,
-        right: 0,
-        top: sheetTop,
-        height: h,
-        child: Container(
-          width: w,
-          height: h,
-          padding: EdgeInsets.fromLTRB(
-            22,
-            14,
-            22,
-            40 + MediaQuery.of(context).padding.bottom,
-          ),
-          decoration: const BoxDecoration(
-            color: Color(0xFFF4F7FF),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x330A2878),
-                blurRadius: 30,
-                offset: Offset(0, -10),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Grab handle
-              Center(
-                child: Container(
+      left: 0,
+      right: 0,
+      top: sheetTop,
+      height: h,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Container utama panel home
+          Container(
+            width: w,
+            height: h,
+            padding: EdgeInsets.fromLTRB(
+              24,
+              20,
+              24,
+              24 + MediaQuery.of(context).padding.bottom,
+            ),
+            decoration: const BoxDecoration(
+              color: LoginEffectCfg.cardBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x330A2878),
+                  blurRadius: 30,
+                  offset: Offset(0, -10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Grab handle di atas
+                Container(
                   width: 44,
                   height: 5,
                   margin: const EdgeInsets.only(bottom: 24),
@@ -750,74 +795,148 @@ class _LoginScreenState extends State<LoginScreen>
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
-              ),
 
-              const Spacer(),
+                const Spacer(),
 
-              // Success Icon
-              Center(
-                child: Container(
-                  width: 72,
-                  height: 72,
+                // Success Icon (lingkaran hijau lembut persis web .success-icon-wrap)
+                Container(
+                  width: 68,
+                  height: 68,
                   decoration: BoxDecoration(
-                    color: LoginEffectCfg.accent.withValues(alpha: 0.12),
+                    color: const Color(0xFFECFDF5),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFA7F3D0),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.check_rounded,
-                      color: LoginEffectCfg.accent,
-                      size: 42,
+                      color: Color(0xFF10B981),
+                      size: 36,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              Center(
-                child: Text(
-                  'Halo, $_loggedInUserName!',
+                // Salam Nama User (persis web: Halo, [Nama]!)
+                Text(
+                  _loggedInUserName.isNotEmpty
+                      ? 'Halo, $_loggedInUserName!'
+                      : 'Halo!',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 24,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     color: LoginEffectCfg.ink,
                   ),
                 ),
-              ),
-              const SizedBox(height: 6),
+                const SizedBox(height: 8),
 
-              const Center(
-                child: Text(
-                  'Login berhasil. Mengarahkan ke Beranda...',
+                // Subtitle (persis web: Login berhasil. Mengalihkan ke dashboard...)
+                const Text(
+                  'Login berhasil. Mengalihkan ke dashboard...',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
                     color: LoginEffectCfg.sub,
+                    height: 1.4,
                   ),
                 ),
-              ),
 
-              const Spacer(),
+                const SizedBox(height: 24),
 
-              // Progress indicator transisi
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: q,
-                  backgroundColor: const Color(0xFFD6E0F7),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    LoginEffectCfg.accent,
+                // Badge status persiapan dashboard (persis web .success-badge)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
                   ),
-                  minHeight: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFFD6E0F7),
+                      width: 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0A1E5A).withValues(alpha: 0.06),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            LoginEffectCfg.accent,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'Menyiapkan dashboard...',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: LoginEffectCfg.sub,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
-            ],
+                const Spacer(),
+
+                // Progress indicator transisi halus di bagian bawah
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: q,
+                    backgroundColor: const Color(0xFFD6E0F7),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      LoginEffectCfg.accent,
+                    ),
+                    minHeight: 6,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
-        ),
+
+          // Ekstensi warna cardBg di bawah panel (persis .home-panel::after di web)
+          Positioned(
+            top: h - 2,
+            left: 0,
+            right: 0,
+            height: 1000,
+            child: Container(
+              color: LoginEffectCfg.cardBg,
+            ),
+          ),
+        ],
       ),
-    ];
-  }
+    ),
+  ];
+}
 }
