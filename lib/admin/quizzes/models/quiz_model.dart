@@ -363,6 +363,31 @@ class QuizModel {
   /// True jika siswa sudah lulus pada kuis ini.
   bool get isPassed => userResult?.isLulus ?? false;
 
+  /// Mencari foto soal pertama yang tersedia di dalam butir kuis
+  String? get firstSoalFoto {
+    for (final item in soal) {
+      if (item.fotoSoal != null && item.fotoSoal!.trim().isNotEmpty) {
+        return item.fotoSoal!.trim();
+      }
+    }
+    return null;
+  }
+
+  /// Cover efektif yang memprioritaskan cover kuis atau foto soal
+  String? get effectiveCoverUrl {
+    if (coverUrl != null && coverUrl!.isNotEmpty && !coverUrl!.contains('latarQuizDefault.webp')) {
+      return coverUrl;
+    }
+    if (fotoQuiz != null && fotoQuiz!.isNotEmpty && !fotoQuiz!.startsWith('soal/foto/')) {
+      return fotoQuiz;
+    }
+    final soalFoto = firstSoalFoto;
+    if (soalFoto != null) {
+      return soalFoto;
+    }
+    return coverUrl;
+  }
+
   /// Daftar butir soal di dalam kuis.
   final List<QuestionModel> soal;
 

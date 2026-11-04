@@ -121,6 +121,16 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    // Cover Preview di Modal Detail Sheet
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 130,
+                        width: double.infinity,
+                        child: _buildCoverImage(quiz, height: 130),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     Row(
                       children: [
                         Container(
@@ -572,227 +582,652 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     );
   }
 
+  /// Widget penampil cover gambar kuis / foto soal dengan fallback aset resmi
+  Widget _buildCoverImage(QuizModel quiz, {double height = 160}) {
+    final String? resolvedCoverUrl =
+        ApiConstants.resolveMediaUrl(quiz.effectiveCoverUrl);
+
+    Widget imageWidget;
+    if (resolvedCoverUrl != null &&
+        !resolvedCoverUrl.contains('latarQuizDefault.webp') &&
+        (resolvedCoverUrl.startsWith('http://') ||
+            resolvedCoverUrl.startsWith('https://'))) {
+      imageWidget = Image.network(
+        resolvedCoverUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Image.asset(
+          'assets/widget/latarQuizDefault.webp',
+          fit: BoxFit.cover,
+        ),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: const Color(0xFF0F172A),
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFF38BDF8),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      imageWidget = Image.asset(
+        'assets/widget/latarQuizDefault.webp',
+        fit: BoxFit.cover,
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      child: imageWidget,
+    );
+  }
+
   Widget _buildQuizCard(QuizModel quiz) {
-    final String? resolvedCoverUrl = ApiConstants.resolveMediaUrl(quiz.coverUrl ?? quiz.fotoQuiz);
+    Color tingkatColor;
+    switch ((quiz.namaTingkat ?? '').toLowerCase()) {
+      case 'mudah':
+        tingkatColor = const Color(0xFF10B981);
+        break;
+      case 'sedang':
+        tingkatColor = const Color(0xFFF59E0B);
+        break;
+      case 'sulit':
+        tingkatColor = const Color(0xFFEF4444);
+        break;
+      default:
+        tingkatColor = const Color(0xFF64748B);
+    }
+
+    final hasQuestionPhoto = quiz.firstSoalFoto != null;
+
+    final questionTypes = quiz.soal
+        .map((s) => s.jenisSoal.apiValue == 'true_false'
+            ? 'Benar/Salah'
+            : (s.jenisSoal.apiValue == 'isian_singkat'
+                ? 'Isian Singkat'
+                : 'Pilihan Ganda'))
+        .toSet()
+        .toList();
+
+    final isCompletedAndPassed = quiz.hasTaken && quiz.isPassed;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isCompletedAndPassed
+              ? const Color(0xFF86EFAC).withValues(alpha: 0.8)
+              : const Color(0xFFE2E8F0),
+          width: isCompletedAndPassed ? 1.5 : 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with Cover Image or Gradient
-          SizedBox(
-            height: 115,
-            width: double.infinity,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Background image or gradient
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  child: resolvedCoverUrl != null
-                      ? Image.network(
-                          resolvedCoverUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: quiz.isWayground
-                                    ? [const Color(0xFF1E3A8A), const Color(0xFF3B82F6)]
-                                    : [const Color(0xFF065F46), const Color(0xFF10B981)],
-                              ),
-                            ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => _showQuizDetailSheet(quiz),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // =========================================================
+              // 1. COVER / THUMBNAIL AREA (160px) DENGAN FOTO SOAL / COVER
+              // =========================================================
+              SizedBox(
+                height: 160,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Background Image (Foto Soal / Cover / Latar Default)
+                    _buildCoverImage(quiz, height: 160),
+
+                    // Gradien Bayangan Lembut agar Badge & Judul Terbaca Jelas
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.50),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.75),
+                          ],
+                          stops: const [0.0, 0.40, 1.0],
+                        ),
+                      ),
+                    ),
+
+                    // Overlay Expired Kuis jika sudah lewat batas waktu (persis Web)
+                    if (quiz.isExpired && !quiz.requiresToken)
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
                           ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: quiz.isWayground
-                                  ? [const Color(0xFF1E3A8A), const Color(0xFF3B82F6)]
-                                  : [const Color(0xFF065F46), const Color(0xFF10B981)],
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            child: Image.asset(
+                              'assets/widget/expiredQuiz.webp',
+                              fit: BoxFit.cover,
+                              filterQuality: FilterQuality.none,
+                              opacity: const AlwaysStoppedAnimation(0.9),
                             ),
                           ),
                         ),
-                ),
+                      ),
 
-                // Dark gradient overlay to ensure text and badges pop
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.35),
-                        Colors.black.withValues(alpha: 0.75),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Badges in Header
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              quiz.isWayground ? '⚡ Wayground 360' : '⏱️ Kuis Biasa',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
+                    // STEMPEL SELESAI (Top-Right) jika sudah lulus & dapat skor
+                    if (isCompletedAndPassed)
+                      Positioned(
+                        top: 6,
+                        right: 8,
+                        child: Transform.rotate(
+                          angle: -0.18,
+                          child: Image.asset(
+                            'assets/widget/quizBerhasilStempel.webp',
+                            width: 68,
+                            height: 68,
+                            filterQuality: FilterQuality.medium,
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: quiz.hasTaken
-                                  ? (quiz.isPassed ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
-                                  : Colors.black.withValues(alpha: 0.4),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              quiz.hasTaken
-                                  ? (quiz.isPassed ? '🎉 Lulus' : '💪 Belum Lulus')
-                                  : 'Belum Dikerjakan',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
+                        ),
+                      ),
+
+                    // BADGES DI ATAS COVER
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Baris Atas: Tipe Kuis & Token & Status
+                          Row(
+                            children: [
+                              // Badge Tipe (Wayground / Biasa)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.55),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  quiz.isWayground
+                                      ? '⚡ Wayground 360'
+                                      : '⏱️ Kuis Biasa',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (quiz.requiresToken) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF581C87).withValues(
+                                      alpha: 0.85,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFC084FC),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.lock_rounded,
+                                        size: 11,
+                                        color: Color(0xFFF3E8FF),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Token',
+                                        style: TextStyle(
+                                          color: Color(0xFFF3E8FF),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              const Spacer(),
+                              if (!isCompletedAndPassed)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: quiz.hasTaken
+                                        ? const Color(0xFFF59E0B)
+                                        : Colors.black.withValues(alpha: 0.55),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    quiz.hasTaken
+                                        ? '💪 Belum Lulus'
+                                        : 'Belum Dikerjakan',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          // Baris Bawah Cover: Jenjang, Indikator Foto Soal, & Tingkat Kesulitan
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  if (quiz.namaJenjang != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        'Jenjang ${quiz.namaJenjang}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  if (hasQuestionPhoto) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF047857),
+                                        borderRadius: BorderRadius.circular(6),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.photo_library_outlined,
+                                            size: 11,
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Foto Soal',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+
+                              // Tingkat Kesulitan (Pojok Kanan Bawah Cover persis Web)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: tingkatColor,
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  '● ${quiz.namaTingkat ?? 'Umum'}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      if (quiz.namaJenjang != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Jenjang ${quiz.namaJenjang}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Body Content
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  quiz.judul,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                    height: 1.3,
-                  ),
-                ),
-                if (quiz.deskripsi != null && quiz.deskripsi!.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    quiz.deskripsi!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                      height: 1.35,
                     ),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    _buildBadge(Icons.quiz_outlined, '${quiz.questionsCount} Soal'),
-                    _buildBadge(Icons.bolt, '${quiz.totalPoints} Poin'),
-                    if (quiz.durasiTotalMenit != null)
-                      _buildBadge(Icons.schedule_rounded, '${quiz.durasiTotalMenit} Menit'),
-                    if (quiz.requiresToken)
-                      _buildBadge(Icons.lock_rounded, 'Perlu Token', color: const Color(0xFFD97706)),
                   ],
                 ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  height: 44,
-                  child: ElevatedButton(
-                    onPressed: () => _showQuizDetailSheet(quiz),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: quiz.hasTaken
-                          ? const Color(0xFF0F172A)
-                          : const Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              ),
+
+              // =========================================================
+              // 2. CARD BODY (Informasi Judul, Deskripsi, Tipe Soal & Metrik)
+              // =========================================================
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      quiz.judul,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                        height: 1.3,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    if (quiz.deskripsi != null &&
+                        quiz.deskripsi!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        quiz.deskripsi!.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+
+                    // Ringkasan Jenis Soal di dalam Kuis (persis Web)
+                    if (questionTypes.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: questionTypes.map((t) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFFDBEAFE),
+                              ),
+                            ),
+                            child: Text(
+                              t,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1D4ED8),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+
+                    const SizedBox(height: 12),
+
+                    // Badges Metrik Kuis
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
-                        Icon(
-                          quiz.hasTaken ? Icons.replay_rounded : Icons.play_arrow_rounded,
-                          size: 18,
+                        _buildBadge(
+                          Icons.quiz_outlined,
+                          '${quiz.questionsCount} Soal',
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          quiz.hasTaken
-                              ? 'Kerjakan Ulang Kuis'
-                              : 'Mulai Kerjakan Kuis ⚡',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
+                        _buildBadge(
+                          Icons.bolt_rounded,
+                          '${quiz.totalPoints} Poin',
+                          color: const Color(0xFF2563EB),
+                        ),
+                        if (quiz.durasiTotalMenit != null)
+                          _buildBadge(
+                            Icons.schedule_rounded,
+                            '${quiz.durasiTotalMenit} Menit',
                           ),
-                        ),
+                        if (quiz.hasTaken)
+                          _buildBadge(
+                            Icons.emoji_events_rounded,
+                            'Skor: ${quiz.userResult!.poinDidapat}/${quiz.userResult!.totalPoin}',
+                            color: const Color(0xFFD97706),
+                          ),
                       ],
                     ),
-                  ),
+
+                    const SizedBox(height: 14),
+
+                    // =========================================================
+                    // 3. CARD ACTION FOOTER (Status Tersedia + Tombol Detail & Kerjakan)
+                    // =========================================================
+                    Container(
+                      padding: const EdgeInsets.only(top: 12),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                            color: Color(0xFFF1F5F9),
+                            width: 1.2,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Status Kuis (Kiri)
+                          if (quiz.isExpired)
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.circle,
+                                  size: 8,
+                                  color: Color(0xFFEF4444),
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Kadaluarsa',
+                                  style: TextStyle(
+                                    color: Color(0xFFEF4444),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.circle,
+                                  size: 8,
+                                  color: Color(0xFF10B981),
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Tersedia',
+                                  style: TextStyle(
+                                    color: Color(0xFF10B981),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                          // Tombol Aksi (Kanan): Detail + Kerjakan
+                          Row(
+                            children: [
+                              OutlinedButton(
+                                onPressed: () => _showQuizDetailSheet(quiz),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF334155),
+                                  side: const BorderSide(
+                                    color: Color(0xFFCBD5E1),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  minimumSize: const Size(0, 36),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Detail',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  gradient: LinearGradient(
+                                    colors: quiz.isExpired
+                                        ? [
+                                            const Color(0xFF94A3B8),
+                                            const Color(0xFF64748B),
+                                          ]
+                                        : (quiz.hasTaken
+                                            ? [
+                                                const Color(0xFF0F172A),
+                                                const Color(0xFF1E293B),
+                                              ]
+                                            : [
+                                                const Color(0xFF2563EB),
+                                                const Color(0xFF4F46E5),
+                                              ]),
+                                  ),
+                                  boxShadow: [
+                                    if (!quiz.isExpired)
+                                      BoxShadow(
+                                        color: (quiz.hasTaken
+                                                ? const Color(0xFF0F172A)
+                                                : const Color(0xFF2563EB))
+                                            .withValues(alpha: 0.25),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: quiz.isExpired
+                                      ? null
+                                      : () => _showQuizDetailSheet(quiz),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                    disabledForegroundColor: Colors.white70,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 8,
+                                    ),
+                                    minimumSize: const Size(0, 36),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        quiz.hasTaken
+                                            ? 'Kerjakan Ulang'
+                                            : 'Kerjakan',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        quiz.hasTaken
+                                            ? Icons.replay_rounded
+                                            : Icons.arrow_forward_rounded,
+                                        size: 14,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
