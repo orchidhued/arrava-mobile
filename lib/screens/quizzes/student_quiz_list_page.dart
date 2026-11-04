@@ -583,7 +583,10 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             ),
                             itemCount: quizzes.length,
                             itemBuilder: (context, index) {
-                              return _buildQuizCard(quizzes[index]);
+                              return _buildQuizCard(
+                                quizzes[index],
+                                inGrid: false,
+                              );
                             },
                           );
                         }
@@ -593,13 +596,16 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: columns,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                                mainAxisExtent: 385,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                mainAxisExtent: 315,
                               ),
                           itemCount: quizzes.length,
                           itemBuilder: (context, index) {
-                            return _buildQuizCard(quizzes[index]);
+                            return _buildQuizCard(
+                              quizzes[index],
+                              inGrid: true,
+                            );
                           },
                         );
                       },
@@ -613,7 +619,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 }
 
   /// Widget penampil cover gambar kuis / foto soal dengan fallback aset resmi
-  Widget _buildCoverImage(QuizModel quiz, {double height = 160}) {
+  Widget _buildCoverImage(QuizModel quiz, {double height = 110}) {
     final String? resolvedCoverUrl =
         ApiConstants.resolveMediaUrl(quiz.effectiveCoverUrl);
 
@@ -635,8 +641,8 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
             color: const Color(0xFF0F172A),
             child: const Center(
               child: SizedBox(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Color(0xFF38BDF8),
@@ -654,12 +660,12 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     }
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       child: imageWidget,
     );
   }
 
-  Widget _buildQuizCard(QuizModel quiz) {
+  Widget _buildQuizCard(QuizModel quiz, {bool inGrid = false}) {
     Color tingkatColor;
     switch ((quiz.namaTingkat ?? '').toLowerCase()) {
       case 'mudah':
@@ -686,11 +692,286 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 
     final isCompletedAndPassed = quiz.hasTaken && quiz.isPassed;
 
+    // Body content: judul, deskripsi, tag tipe, metrik
+    final bodyContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          quiz.judul,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A),
+            height: 1.25,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (quiz.deskripsi != null && quiz.deskripsi!.trim().isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            quiz.deskripsi!.trim(),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF64748B),
+              height: 1.3,
+            ),
+          ),
+        ],
+
+        // Ringkasan Jenis Soal di dalam Kuis (persis Web)
+        if (questionTypes.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 5,
+            runSpacing: 3,
+            children: questionTypes.map((t) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(
+                    color: const Color(0xFFDBEAFE),
+                  ),
+                ),
+                child: Text(
+                  t,
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1D4ED8),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+
+        const SizedBox(height: 6),
+
+        // Badges Metrik Kuis
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            _buildBadge(
+              Icons.quiz_outlined,
+              '${quiz.questionsCount} Soal',
+            ),
+            _buildBadge(
+              Icons.bolt_rounded,
+              '${quiz.totalPoints} Poin',
+              color: const Color(0xFF2563EB),
+            ),
+            if (quiz.durasiTotalMenit != null)
+              _buildBadge(
+                Icons.schedule_rounded,
+                '${quiz.durasiTotalMenit} Menit',
+              ),
+            if (quiz.hasTaken)
+              _buildBadge(
+                Icons.emoji_events_rounded,
+                'Skor: ${quiz.userResult!.poinDidapat}/${quiz.userResult!.totalPoin}',
+                color: const Color(0xFFD97706),
+              ),
+          ],
+        ),
+      ],
+    );
+
+    // Footer aksi: status kuis + tombol detail & kerjakan
+    final footerContent = Container(
+      padding: const EdgeInsets.only(top: 8),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Color(0xFFF1F5F9),
+            width: 1.0,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Status Kuis (Kiri)
+          if (quiz.isExpired)
+            const Row(
+              children: [
+                Icon(
+                  Icons.circle,
+                  size: 7,
+                  color: Color(0xFFEF4444),
+                ),
+                SizedBox(width: 4),
+                Text(
+                  'Kadaluarsa',
+                  style: TextStyle(
+                    color: Color(0xFFEF4444),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            )
+          else
+            const Row(
+              children: [
+                Icon(
+                  Icons.circle,
+                  size: 7,
+                  color: Color(0xFF10B981),
+                ),
+                SizedBox(width: 4),
+                Text(
+                  'Tersedia',
+                  style: TextStyle(
+                    color: Color(0xFF10B981),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+
+          // Tombol Aksi (Kanan): Detail + Kerjakan
+          Row(
+            children: [
+              OutlinedButton(
+                onPressed: () => _showQuizDetailSheet(quiz),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF334155),
+                  side: const BorderSide(
+                    color: Color(0xFFCBD5E1),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  minimumSize: const Size(0, 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Detail',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    colors: quiz.isExpired
+                        ? [
+                            const Color(0xFF94A3B8),
+                            const Color(0xFF64748B),
+                          ]
+                        : (quiz.hasTaken
+                            ? [
+                                const Color(0xFF0F172A),
+                                const Color(0xFF1E293B),
+                              ]
+                            : [
+                                const Color(0xFF2563EB),
+                                const Color(0xFF4F46E5),
+                              ]),
+                  ),
+                  boxShadow: [
+                    if (!quiz.isExpired)
+                      BoxShadow(
+                        color: (quiz.hasTaken
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFF2563EB))
+                            .withValues(alpha: 0.22),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: quiz.isExpired
+                      ? null
+                      : () => _showQuizDetailSheet(quiz),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    disabledForegroundColor: Colors.white70,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 3,
+                    ),
+                    minimumSize: const Size(0, 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        quiz.hasTaken
+                            ? 'Kerjakan Ulang'
+                            : 'Kerjakan',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Icon(
+                        quiz.hasTaken
+                            ? Icons.replay_rounded
+                            : Icons.arrow_forward_rounded,
+                        size: 13,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final cardBody = Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      child: inGrid
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                bodyContent,
+                footerContent,
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bodyContent,
+                const SizedBox(height: 8),
+                footerContent,
+              ],
+            ),
+    );
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
+      margin: inGrid ? EdgeInsets.zero : const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCompletedAndPassed
               ? const Color(0xFF86EFAC).withValues(alpha: 0.8)
@@ -699,46 +980,46 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           onTap: () => _showQuizDetailSheet(quiz),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // =========================================================
-              // 1. COVER / THUMBNAIL AREA (160px) DENGAN FOTO SOAL / COVER
+              // 1. COVER / THUMBNAIL AREA (110px) LEBIH KOMPAK & RAPI
               // =========================================================
               SizedBox(
-                height: 160,
+                height: 110,
                 width: double.infinity,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     // Background Image (Foto Soal / Cover / Latar Default)
-                    _buildCoverImage(quiz, height: 160),
+                    _buildCoverImage(quiz, height: 110),
 
                     // Gradien Bayangan Lembut agar Badge & Judul Terbaca Jelas
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
+                          top: Radius.circular(16),
                         ),
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.50),
+                            Colors.black.withValues(alpha: 0.45),
                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.75),
+                            Colors.black.withValues(alpha: 0.70),
                           ],
                           stops: const [0.0, 0.40, 1.0],
                         ),
@@ -750,7 +1031,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                       Positioned.fill(
                         child: ClipRRect(
                           borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(20),
+                            top: Radius.circular(16),
                           ),
                           child: Container(
                             color: Colors.black.withValues(alpha: 0.35),
@@ -767,14 +1048,14 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                     // STEMPEL SELESAI (Top-Right) jika sudah lulus & dapat skor
                     if (isCompletedAndPassed)
                       Positioned(
-                        top: 6,
-                        right: 8,
+                        top: 4,
+                        right: 6,
                         child: Transform.rotate(
                           angle: -0.18,
                           child: Image.asset(
                             'assets/widget/quizBerhasilStempel.webp',
-                            width: 68,
-                            height: 68,
+                            width: 52,
+                            height: 52,
                             filterQuality: FilterQuality.medium,
                           ),
                         ),
@@ -782,7 +1063,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 
                     // BADGES DI ATAS COVER
                     Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(9),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -793,12 +1074,12 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                               // Badge Tipe (Wayground / Biasa)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
+                                  horizontal: 7,
+                                  vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.55),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: Colors.white.withValues(alpha: 0.2),
                                     width: 0.8,
@@ -810,23 +1091,23 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                       : '⏱️ Kuis Biasa',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 10,
+                                    fontSize: 9.5,
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
                               ),
                               if (quiz.requiresToken) ...[
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 5),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: 6,
+                                    vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF581C87).withValues(
                                       alpha: 0.85,
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: const Color(0xFFC084FC),
                                       width: 0.8,
@@ -837,15 +1118,15 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                     children: [
                                       Icon(
                                         Icons.lock_rounded,
-                                        size: 11,
+                                        size: 10,
                                         color: Color(0xFFF3E8FF),
                                       ),
-                                      SizedBox(width: 4),
+                                      SizedBox(width: 3),
                                       Text(
                                         'Token',
                                         style: TextStyle(
                                           color: Color(0xFFF3E8FF),
-                                          fontSize: 10,
+                                          fontSize: 9.5,
                                           fontWeight: FontWeight.w800,
                                         ),
                                       ),
@@ -857,14 +1138,14 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                               if (!isCompletedAndPassed)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: 7,
+                                    vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
                                     color: quiz.hasTaken
                                         ? const Color(0xFFF59E0B)
                                         : Colors.black.withValues(alpha: 0.55),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: Colors.white.withValues(alpha: 0.2),
                                       width: 0.8,
@@ -876,7 +1157,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                         : 'Belum Dikerjakan',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 10,
+                                      fontSize: 9.5,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
@@ -890,18 +1171,18 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
+                                  horizontal: 7,
+                                  vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
                                   color: tingkatColor,
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(5),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withValues(
                                         alpha: 0.25,
                                       ),
-                                      blurRadius: 4,
+                                      blurRadius: 3,
                                     ),
                                   ],
                                 ),
@@ -909,7 +1190,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                   '● ${quiz.namaTingkat ?? 'Umum'}',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 10,
+                                    fontSize: 9.5,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.3,
                                   ),
@@ -925,267 +1206,9 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
               ),
 
               // =========================================================
-              // 2. CARD BODY (Informasi Judul, Deskripsi, Tipe Soal & Metrik)
+              // 2. CARD BODY & FOOTER
               // =========================================================
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      quiz.judul,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (quiz.deskripsi != null &&
-                        quiz.deskripsi!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        quiz.deskripsi!.trim(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-
-                    // Ringkasan Jenis Soal di dalam Kuis (persis Web)
-                    if (questionTypes.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: questionTypes.map((t) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: const Color(0xFFDBEAFE),
-                              ),
-                            ),
-                            child: Text(
-                              t,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF1D4ED8),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-
-                    const SizedBox(height: 12),
-
-                    // Badges Metrik Kuis
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        _buildBadge(
-                          Icons.quiz_outlined,
-                          '${quiz.questionsCount} Soal',
-                        ),
-                        _buildBadge(
-                          Icons.bolt_rounded,
-                          '${quiz.totalPoints} Poin',
-                          color: const Color(0xFF2563EB),
-                        ),
-                        if (quiz.durasiTotalMenit != null)
-                          _buildBadge(
-                            Icons.schedule_rounded,
-                            '${quiz.durasiTotalMenit} Menit',
-                          ),
-                        if (quiz.hasTaken)
-                          _buildBadge(
-                            Icons.emoji_events_rounded,
-                            'Skor: ${quiz.userResult!.poinDidapat}/${quiz.userResult!.totalPoin}',
-                            color: const Color(0xFFD97706),
-                          ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // =========================================================
-                    // 3. CARD ACTION FOOTER (Status Tersedia + Tombol Detail & Kerjakan)
-                    // =========================================================
-                    Container(
-                      padding: const EdgeInsets.only(top: 12),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          top: BorderSide(
-                            color: Color(0xFFF1F5F9),
-                            width: 1.2,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Status Kuis (Kiri)
-                          if (quiz.isExpired)
-                            const Row(
-                              children: [
-                                Icon(
-                                  Icons.circle,
-                                  size: 8,
-                                  color: Color(0xFFEF4444),
-                                ),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Kadaluarsa',
-                                  style: TextStyle(
-                                    color: Color(0xFFEF4444),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            const Row(
-                              children: [
-                                Icon(
-                                  Icons.circle,
-                                  size: 8,
-                                  color: Color(0xFF10B981),
-                                ),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Tersedia',
-                                  style: TextStyle(
-                                    color: Color(0xFF10B981),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                          // Tombol Aksi (Kanan): Detail + Kerjakan
-                          Row(
-                            children: [
-                              OutlinedButton(
-                                onPressed: () => _showQuizDetailSheet(quiz),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFF334155),
-                                  side: const BorderSide(
-                                    color: Color(0xFFCBD5E1),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  minimumSize: const Size(0, 36),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Detail',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  gradient: LinearGradient(
-                                    colors: quiz.isExpired
-                                        ? [
-                                            const Color(0xFF94A3B8),
-                                            const Color(0xFF64748B),
-                                          ]
-                                        : (quiz.hasTaken
-                                            ? [
-                                                const Color(0xFF0F172A),
-                                                const Color(0xFF1E293B),
-                                              ]
-                                            : [
-                                                const Color(0xFF2563EB),
-                                                const Color(0xFF4F46E5),
-                                              ]),
-                                  ),
-                                  boxShadow: [
-                                    if (!quiz.isExpired)
-                                      BoxShadow(
-                                        color: (quiz.hasTaken
-                                                ? const Color(0xFF0F172A)
-                                                : const Color(0xFF2563EB))
-                                            .withValues(alpha: 0.25),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                  ],
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: quiz.isExpired
-                                      ? null
-                                      : () => _showQuizDetailSheet(quiz),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    foregroundColor: Colors.white,
-                                    disabledForegroundColor: Colors.white70,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 8,
-                                    ),
-                                    minimumSize: const Size(0, 36),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        quiz.hasTaken
-                                            ? 'Kerjakan Ulang'
-                                            : 'Kerjakan',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        quiz.hasTaken
-                                            ? Icons.replay_rounded
-                                            : Icons.arrow_forward_rounded,
-                                        size: 14,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              inGrid ? Expanded(child: cardBody) : cardBody,
             ],
           ),
         ),
@@ -1195,23 +1218,24 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 
   Widget _buildBadge(IconData icon, String label, {Color? color}) {
     final effectiveColor = color ?? const Color(0xFF64748B);
-    final bgColor = color != null ? color.withValues(alpha: 0.1) : const Color(0xFFF1F5F9);
+    final bgColor =
+        color != null ? color.withValues(alpha: 0.1) : const Color(0xFFF1F5F9);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: effectiveColor),
-          const SizedBox(width: 4),
+          Icon(icon, size: 11, color: effectiveColor),
+          const SizedBox(width: 3.5),
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10.5,
               fontWeight: FontWeight.w700,
               color: effectiveColor,
             ),
