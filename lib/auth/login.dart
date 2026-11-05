@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:arrava_mobile/admin/admin_shell.dart';
 import 'package:arrava_mobile/core/storage/secure_storage.dart';
 import 'package:arrava_mobile/screens/dashboard_screen.dart';
+import 'package:arrava_mobile/screens/parent/parent_dashboard_screen.dart';
 import 'package:arrava_mobile/services/auth_service.dart';
 
 /* =====================================================================
@@ -210,6 +211,8 @@ class _LoginScreenState extends State<LoginScreen>
         return;
       } else if (role == 3) {
         destinationPage = const DashboardScreen();
+      } else if (role == 4) {
+        destinationPage = const ParentDashboardScreen();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Role pengguna tidak dikenali.')),
