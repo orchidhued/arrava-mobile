@@ -208,10 +208,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildTopHeader(Map<String, dynamic>? user, Map<String, dynamic>? stats) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -226,7 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           GestureDetector(
             onTap: () => setState(() => _currentIndex = 3),
             child: CircleAvatar(
-              radius: 22,
+              radius: 20,
               backgroundColor: const Color(0xFFEFF6FF),
               backgroundImage: (user?['foto_profil'] != null &&
                       user!['foto_profil'].toString().isNotEmpty)
@@ -234,16 +234,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   : null,
               child: (user?['foto_profil'] == null ||
                       user!['foto_profil'].toString().isEmpty)
-                  ? const Icon(Icons.person, color: _blue, size: 24)
+                  ? const Icon(Icons.person, color: _blue, size: 22)
                   : null,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _currentIndex = 3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     user != null && user['nama'] != null
@@ -252,13 +253,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -270,19 +272,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Text(
                           'Jenjang ${user?['jenjang'] ?? 'SD'}',
                           style: const TextStyle(
-                            fontSize: 10.5,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF1D4ED8),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '• Siap belajar?',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '• Siap belajar?',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -291,9 +297,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 6),
           // XP Pill
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(10),
@@ -302,26 +309,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.bolt_rounded, size: 15, color: Color(0xFFD97706)),
-                const SizedBox(width: 3),
+                const Icon(Icons.bolt_rounded, size: 14, color: Color(0xFFD97706)),
+                const SizedBox(width: 2),
                 Text(
                   '${user?['total_xp'] ?? stats?['total_xp'] ?? 0} XP',
                   style: const TextStyle(
                     color: Color(0xFFB45309),
                     fontWeight: FontWeight.w800,
-                    fontSize: 12,
+                    fontSize: 11.5,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           // Logout Button
           InkWell(
             onTap: () => showLogoutConfirmationDialog(context),
             borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 color: const Color(0xFFFEE2E2),
                 borderRadius: BorderRadius.circular(10),
@@ -330,7 +337,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: const Icon(
                 Icons.logout_rounded,
                 color: Color(0xFFDC2626),
-                size: 18,
+                size: 17,
               ),
             ),
           ),

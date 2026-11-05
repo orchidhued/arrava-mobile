@@ -53,8 +53,8 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
   static const String _imgFloat = 'assets/backgorund3.png';
 
   static const List<FloatCfg> _floats = [
-    FloatCfg(dur: 4200, ax: 5, ay: 12, ph: 0.0, o: 0.55, heightFactor: 1.0),
-    FloatCfg(dur: 3000, ax: 4, ay: 10, ph: 0.5, o: 1.0, heightFactor: 1.2),
+    FloatCfg(dur: 4200, ax: 2.8, ay: 6.0, ph: 0.0, o: 0.50, heightFactor: 0.88),
+    FloatCfg(dur: 3000, ax: 2.4, ay: 5.0, ph: 0.5, o: 0.70, heightFactor: 1.0),
   ];
 
   /// Easing sinus halus
@@ -84,12 +84,14 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
 
   Widget _pixelImage(
     String path, {
-    BoxFit fit = BoxFit.cover,
-    Alignment alignment = Alignment.center,
+    BoxFit fit = BoxFit.fitHeight,
+    ImageRepeat repeat = ImageRepeat.repeatX,
+    Alignment alignment = Alignment.bottomCenter,
   }) {
     return Image.asset(
       path,
       fit: fit,
+      repeat: repeat,
       alignment: alignment,
       filterQuality: FilterQuality.none,
       width: double.infinity,
@@ -101,7 +103,6 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double w = constraints.maxWidth;
         final double h = constraints.maxHeight;
 
         return Stack(
@@ -115,53 +116,69 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
                   child: AnimatedBuilder(
                     animation: _frame,
                     builder: (context, _) {
-                      // Parallax scroll jika controller aktif
+                      // Parallax scroll jika controller aktif (terkunci di bawah viewport seperti web)
                       final double scrollY = (widget.enableParallax &&
                               widget.scrollController != null &&
                               widget.scrollController!.hasClients)
                           ? widget.scrollController!.offset
                           : 0.0;
 
-                      final double bgParallax1 =
-                          (scrollY * 0.08).clamp(0.0, h * 0.25);
-                      final double bgParallax2 =
-                          (scrollY * 0.16).clamp(0.0, h * 0.35);
-                      final double floatParallax =
-                          (scrollY * 0.22).clamp(0.0, h * 0.40);
+                      final double bgBaseH = (h * 0.30).clamp(200.0, 320.0);
+                      final double bgParallax1 = (scrollY * 0.08).clamp(0.0, 45.0);
+                      final double bgParallax2 = (scrollY * 0.10).clamp(0.0, 55.0);
+                      final double floatParallax = (scrollY * 0.09).clamp(0.0, 50.0);
 
                       return Stack(
                         children: [
                           // 1. Latar Belakang Lapisan 1 (assets/backgorund1.png)
-                          Positioned.fill(
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: -20,
+                            height: bgBaseH + 20,
                             child: Transform.translate(
                               offset: Offset(0, -bgParallax1),
                               child: Opacity(
-                                opacity: widget.bgOpacity,
-                                child: _pixelImage(_imgBg, fit: BoxFit.cover),
+                                opacity: (0.42 * widget.bgOpacity).clamp(0.0, 1.0),
+                                child: _pixelImage(
+                                  _imgBg,
+                                  fit: BoxFit.fitHeight,
+                                  repeat: ImageRepeat.repeatX,
+                                  alignment: Alignment.bottomCenter,
+                                ),
                               ),
                             ),
                           ),
 
                           // 2. Latar Belakang Lapisan 2 (dicerminkan, kedalaman ganda)
-                          Positioned.fill(
-                            child: Opacity(
-                              opacity: 0.45 * widget.bgOpacity,
-                              child: Transform(
-                                alignment: Alignment.center,
-                                transform: Matrix4.translationValues(
-                                  0,
-                                  -bgParallax2,
-                                  0,
-                                )..scaleByDouble(-1.2, 1.2, 1.0, 1.0),
-                                child: _pixelImage(_imgBg, fit: BoxFit.cover),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: -20,
+                            height: bgBaseH * 1.06 + 20,
+                            child: Transform.translate(
+                              offset: Offset(30, -bgParallax2),
+                              child: Opacity(
+                                opacity: (0.24 * widget.bgOpacity).clamp(0.0, 1.0),
+                                child: Transform(
+                                  alignment: Alignment.bottomCenter,
+                                  transform: Matrix4.identity()
+                                    ..scaleByDouble(-1.0, 1.0, 1.0, 1.0),
+                                  child: _pixelImage(
+                                    _imgBg,
+                                    fit: BoxFit.fitHeight,
+                                    repeat: ImageRepeat.repeatX,
+                                    alignment: Alignment.bottomCenter,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
 
                           // 3. Lapisan Partikel Mengambang (assets/backgorund3.png)
                           ..._floats.map((l) {
-                            final double layerW = w * 1.15;
-                            final double layerH = h * l.heightFactor;
+                            final double layerH =
+                                (bgBaseH * l.heightFactor).clamp(160.0, 320.0);
 
                             final double ex = _ease(
                                   _pingpong(_ms, l.dur * 1.3, l.ph),
@@ -174,25 +191,26 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
                                 2.0 -
                                 1.0;
 
-                            final double floatX = ex * l.ax / 100.0 * layerW;
-                            final double floatY = -ey * l.ay / 100.0 * layerH;
+                            final double floatX = ex * (l.ax * 4.5);
+                            final double floatY = -ey * (l.ay * 2.2);
 
                             return Positioned(
-                              left: w * (-0.075),
-                              width: layerW,
-                              height: layerH,
-                              bottom: h * (-0.12),
+                              left: -40,
+                              right: -40,
+                              bottom: -15,
+                              height: layerH + 15,
                               child: Transform.translate(
                                 offset: Offset(
                                   floatX,
                                   floatY - floatParallax,
                                 ),
                                 child: Opacity(
-                                  opacity: (l.o * widget.bgOpacity)
-                                      .clamp(0.0, 1.0),
+                                  opacity:
+                                      (l.o * widget.bgOpacity).clamp(0.0, 1.0),
                                   child: _pixelImage(
                                     _imgFloat,
-                                    fit: BoxFit.fill,
+                                    fit: BoxFit.fitHeight,
+                                    repeat: ImageRepeat.repeatX,
                                     alignment: Alignment.bottomCenter,
                                   ),
                                 ),
