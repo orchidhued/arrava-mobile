@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/api_constants.dart';
 import 'models/module_model.dart';
 import 'providers/module_provider.dart';
 
@@ -341,6 +342,8 @@ class _ModulePageContentState extends State<_ModulePageContent> {
   }
 
   Widget _buildModuleCard(ModuleModel module) {
+    final isVideo = module.isVideo || module.idTipeModul == 1;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
@@ -352,21 +355,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (module.fotoModul != null && module.fotoModul!.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Image.network(
-                module.fotoModul!,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) {
-                  return _buildCoverPlaceholder();
-                },
-              ),
-            )
-          else
-            _buildCoverPlaceholder(),
+          _buildModuleCover(module, isVideo),
 
           const SizedBox(height: 14),
 
@@ -418,20 +407,88 @@ class _ModulePageContentState extends State<_ModulePageContent> {
     );
   }
 
-  Widget _buildCoverPlaceholder() {
-    return Container(
-      height: 150,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.menu_book_outlined,
-          size: 48,
-          color: Color(0xFF2563EB),
+  Widget _buildModuleCover(ModuleModel module, bool isVideo) {
+    final customCover = ApiConstants.resolveMediaUrl(
+      module.fotoUrl?.isNotEmpty == true ? module.fotoUrl : module.fotoModul,
+    );
+    final youtubeThumbnail = module.youtubeId?.isNotEmpty == true
+        ? 'https://img.youtube.com/vi/${module.youtubeId}/maxresdefault.jpg'
+        : null;
+
+    Widget placeholder() {
+      return Container(
+        height: 150,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isVideo
+                ? const [Color(0xFF4C1D95), Color(0xFF7C3AED)]
+                : const [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
         ),
+        child: Center(
+          child: Icon(
+            isVideo
+                ? Icons.play_circle_fill_rounded
+                : Icons.picture_as_pdf_rounded,
+            size: 54,
+            color: Colors.white.withValues(alpha: 0.85),
+          ),
+        ),
+      );
+    }
+
+    Widget cover;
+    if (customCover != null) {
+      cover = Image.network(
+        customCover,
+        height: 150,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => placeholder(),
+      );
+    } else if (youtubeThumbnail != null) {
+      cover = Image.network(
+        youtubeThumbnail,
+        height: 150,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => Image.network(
+          'https://img.youtube.com/vi/${module.youtubeId}/hqdefault.jpg',
+          height: 150,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => placeholder(),
+        ),
+      );
+    } else {
+      cover = placeholder();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          cover,
+          if (isVideo && customCover == null)
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                size: 32,
+                color: Colors.white,
+              ),
+            ),
+        ],
       ),
     );
   }

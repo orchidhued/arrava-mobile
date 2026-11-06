@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../services/dashboard_service.dart';
@@ -43,10 +44,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   String _getFormattedDate() {
     final now = DateTime.now();
-    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const days = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     final dayName = days[now.weekday - 1];
     final monthName = months[now.month - 1];
@@ -56,7 +75,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final stats = (_adminData?['stats'] as Map<String, dynamic>?) ?? {};
-    final recentModules = (_adminData?['recent_modules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final recentModules =
+        (_adminData?['recent_modules'] as List?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
 
     return Material(
       color: AppColors.background,
@@ -127,7 +149,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           const Center(
                             child: Padding(
                               padding: EdgeInsets.all(32.0),
-                              child: CircularProgressIndicator(color: AppColors.primary),
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
                             ),
                           )
                         else
@@ -209,7 +233,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 onTap: () => showLogoutConfirmationDialog(context),
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
@@ -220,7 +247,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.logout_rounded, color: AppColors.error, size: 15),
+                      Icon(
+                        Icons.logout_rounded,
+                        color: AppColors.error,
+                        size: 15,
+                      ),
                       SizedBox(width: 5),
                       Text(
                         'Keluar',
@@ -282,10 +313,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: AppTextStyles.heading3.copyWith(fontSize: 16),
-              ),
+              Text(title, style: AppTextStyles.heading3.copyWith(fontSize: 16)),
 
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
@@ -334,9 +362,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ModulePage(),
-                ),
+                MaterialPageRoute(builder: (context) => const ModulePage()),
               );
             },
           ),
@@ -361,18 +387,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: primary
-                ? null
-                : Border.all(color: AppColors.border),
+            border: primary ? null : Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
               Icon(
                 icon,
                 size: 17,
-                color: primary
-                    ? Colors.white
-                    : AppColors.primary,
+                color: primary ? Colors.white : AppColors.primary,
               ),
 
               const SizedBox(width: 7),
@@ -382,9 +404,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: primary
-                      ? Colors.white
-                      : AppColors.textPrimary,
+                  color: primary ? Colors.white : AppColors.textPrimary,
                 ),
               ),
             ],
@@ -481,26 +501,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
               ),
 
               const Spacer(),
 
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 7,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 decoration: BoxDecoration(
                   color: badgeError
                       ? const Color(0xFFFFE7E7)
                       : badgeNeutral
-                          ? const Color(0xFFEFF1F7)
-                          : const Color(0xFFD9FBEA),
+                      ? const Color(0xFFEFF1F7)
+                      : const Color(0xFFD9FBEA),
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
@@ -511,8 +524,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     color: badgeError
                         ? AppColors.error
                         : badgeNeutral
-                            ? AppColors.textSecondary
-                            : AppColors.success,
+                        ? AppColors.textSecondary
+                        : AppColors.success,
                   ),
                 ),
               ),
@@ -548,9 +561,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               Icon(
                 footerIcon,
                 size: 13,
-                color: footerError
-                    ? AppColors.error
-                    : AppColors.success,
+                color: footerError ? AppColors.error : AppColors.success,
               ),
 
               const SizedBox(width: 4),
@@ -605,10 +616,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           child: _buildModuleCard(
             icon: Icons.menu_book_outlined,
             title: m['judul_modul']?.toString() ?? 'Modul',
-            subtitle: '${m['tipe'] ?? 'Materi'} • Jenjang ${m['jenjang'] ?? 'Semua'}',
+            subtitle:
+                '${m['tipe'] ?? 'Materi'} • Jenjang ${m['jenjang'] ?? 'Semua'}',
             status: m['status']?.toString() ?? 'Tersedia',
             isDraft: isDraft,
             iconColor: isDraft ? AppColors.textSecondary : AppColors.primary,
+            coverUrl:
+                m['foto_url']?.toString() ??
+                m['foto_modul']?.toString() ??
+                (m['youtube_id']?.toString().isNotEmpty == true
+                    ? 'https://img.youtube.com/vi/${m['youtube_id']}/hqdefault.jpg'
+                    : null),
           ),
         );
       }).toList(),
@@ -622,7 +640,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     required String status,
     required Color iconColor,
     bool isDraft = false,
+    String? coverUrl,
   }) {
+    final resolvedCoverUrl = ApiConstants.resolveMediaUrl(coverUrl);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -633,18 +654,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: iconColor,
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: resolvedCoverUrl != null
+                ? Image.network(
+                    resolvedCoverUrl,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      width: 48,
+                      height: 48,
+                      color: AppColors.primaryLight,
+                      child: Icon(icon, size: 20, color: iconColor),
+                    ),
+                  )
+                : Container(
+                    width: 48,
+                    height: 48,
+                    color: AppColors.primaryLight,
+                    child: Icon(icon, size: 20, color: iconColor),
+                  ),
           ),
 
           const SizedBox(width: 10),
@@ -678,10 +708,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
 
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: isDraft
                   ? const Color(0xFFEFF1F7)
@@ -693,9 +720,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: isDraft
-                    ? AppColors.textSecondary
-                    : AppColors.success,
+                color: isDraft ? AppColors.textSecondary : AppColors.success,
               ),
             ),
           ),
