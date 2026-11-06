@@ -29,6 +29,14 @@ class ModuleService {
     return await ApiClient.post('${ApiConstants.modules}/$id/complete');
   }
 
+  Future<dynamic> submitModuleQuiz(int id, Map<int, int> answers) async {
+    final formattedAnswers = answers.map((key, value) => MapEntry(key.toString(), value));
+    return await ApiClient.post(
+      '${ApiConstants.modules}/$id/quiz-submit',
+      body: {'jawaban': formattedAnswers},
+    );
+  }
+
   Future<dynamic> createModule(Map<String, dynamic> data) async {
     return await ApiClient.post(ApiConstants.modules, body: data);
   }

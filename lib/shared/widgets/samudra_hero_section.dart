@@ -67,6 +67,10 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
     'assets/widget/cards/fish3.webp',
     'assets/widget/cards/fish4.webp',
     'assets/widget/cards/fish5.webp',
+    'assets/widget/cards/fish6.webp',
+    'assets/widget/cards/fish7.webp',
+    'assets/widget/cards/fish8.webp',
+    'assets/widget/cards/fish9.webp',
   ];
   static const _ks = [
     23.0, // Ikan 1 (Sedang: ~115px)
@@ -74,6 +78,10 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
     33.0, // Ikan 3 (Paling Besar & Gagah: ~145px)
     22.0, // Ikan 4 (Lincah: ~100px)
     22.0, // Ikan 5 (Sedang-Besar: ~120px)
+    32.0,
+    35.0,
+    37.0,
+    22.0,
   ]; // Ukuran pixel visual nyata langsung (dp) yang jelas dan proporsional di layar
   static const _speeds = [
     12.0,
@@ -81,6 +89,10 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
     9.0,
     15.0,
     11.0,
+    11.5,
+    12.0,
+    12.5,
+    13.0,
   ]; // Kecepatan renang santai & tenang (px per detik)
 
   late final Ticker _ticker;
@@ -357,22 +369,26 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
 
           // 3. Ikan-ikan Berenang Bebas
           Positioned.fill(
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _tick,
-                builder: (context, _) =>
-                    Stack(children: [for (final f in _fish) _fishWidget(f)]),
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _tick,
+                  builder: (context, _) =>
+                      Stack(children: [for (final f in _fish) _fishWidget(f)]),
+                ),
               ),
             ),
           ),
 
           // 4. Gelembung Udara Naik
           Positioned.fill(
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _tick,
-                builder: (context, _) => Stack(
-                  children: [for (var k = 0; k < 14; k++) _bubble(k, size)],
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _tick,
+                  builder: (context, _) => Stack(
+                    children: [for (var k = 0; k < 14; k++) _bubble(k, size)],
+                  ),
                 ),
               ),
             ),
@@ -423,7 +439,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                     ],
                   ),
                   child: CircleAvatar(
-                    radius: 20,
+                    radius: 50,
                     backgroundColor: const Color(0xFFF97316),
                     backgroundImage:
                         (user?['foto_profil'] != null &&
@@ -447,7 +463,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
-                  vertical: 4.5,
+                  vertical: 2.5,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.95),
@@ -481,7 +497,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                             .clamp(1, 5);
                         final bool isFilled = index < filledSegments;
                         return Container(
-                          width: 8,
+                          width: 10,
                           height: 4,
                           margin: const EdgeInsets.symmetric(horizontal: 1),
                           decoration: BoxDecoration(
@@ -517,7 +533,6 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
 
           // 2. Baris Tengah: Nama Siswa & Jenjang Badge (Tanpa persentase & pesan)
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Flexible(
                 child: Text(
@@ -527,7 +542,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 20,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                     shadows: [
@@ -566,7 +581,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                     Text(
                       user?['jenjang'] != null ? '${user!['jenjang']}' : 'SD',
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF047857),
                       ),
@@ -583,7 +598,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
           Text(
             'Level $level • $kuisLulus Kuis Selesai',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Colors.white.withValues(alpha: 0.95),
               shadows: const [

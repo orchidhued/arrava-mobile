@@ -37,7 +37,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
   bool _isAnswerSubmitted = false;
   int _score = 0;
   int _correctCount = 0;
-  late int _remainingSeconds;
+  int _remainingSeconds = 20;
   Timer? _timer;
 
   List<_SampleQuestion> _activeQuestions = [];

@@ -31,6 +31,11 @@ class ModuleRepository {
     return response as Map<String, dynamic>;
   }
 
+  Future<ModuleQuizSubmitResult> submitModuleQuiz(int id, Map<int, int> answers) async {
+    final response = await _service.submitModuleQuiz(id, answers);
+    return ModuleQuizSubmitResult.fromJson(response as Map<String, dynamic>);
+  }
+
   Future<ModuleModel> createModule(Map<String, dynamic> data) async {
     final response = await _service.createModule(data);
     return ModuleModel.fromJson(response['data']);

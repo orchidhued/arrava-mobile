@@ -17,7 +17,7 @@ class StudentModuleListPage extends StatefulWidget {
 class _StudentModuleListPageState extends State<StudentModuleListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter =
-      'Semua'; // 'Semua', 'Video', 'PDF', 'Belum Selesai', 'Selesai'
+      'Semua'; // 'Semua', 'Video', 'PDF', 'Belum Tuntas', 'Tuntas'
   int? _userJenjangId;
 
   @override
@@ -63,10 +63,10 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
         matchFilter = modul.isVideo || (modul.idTipeModul == 1);
       } else if (_selectedFilter == 'PDF') {
         matchFilter = modul.isPdf || (modul.idTipeModul == 2);
-      } else if (_selectedFilter == 'Belum Selesai') {
-        matchFilter = !modul.isMateriSelesai;
-      } else if (_selectedFilter == 'Selesai') {
-        matchFilter = modul.isMateriSelesai;
+      } else if (_selectedFilter == 'Belum Tuntas') {
+        matchFilter = !modul.isTuntas;
+      } else if (_selectedFilter == 'Tuntas') {
+        matchFilter = modul.isTuntas;
       }
 
       return matchQuery && matchFilter;
@@ -82,7 +82,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'Materi & Modul Belajar',
+          'Belajar Asikk — Modul',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         backgroundColor: Colors.white,
@@ -102,7 +102,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                     controller: _searchController,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'Cari materi pembelajaran...',
+                      hintText: 'Cari modul, materi, atau topik...',
                       hintStyle: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF94A3B8),
@@ -133,8 +133,8 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                             'Semua',
                             'Video',
                             'PDF',
-                            'Belum Selesai',
-                            'Selesai',
+                            'Belum Tuntas',
+                            'Tuntas',
                           ].map((filter) {
                             final isSelected = _selectedFilter == filter;
                             return Padding(
@@ -391,7 +391,8 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
     final Color badgeColor = isVideo
         ? const Color(0xFF7C3AED)
         : const Color(0xFF2563EB);
-    final bool isDone = modul.isMateriSelesai;
+    final bool isDone = modul.isTuntas;
+    final bool hasStarted = modul.isMateriSelesai;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -471,7 +472,9 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                       decoration: BoxDecoration(
                         color: isDone
                             ? const Color(0xFFD1FAE5)
-                            : const Color(0xFFF1F5F9),
+                            : (hasStarted
+                                ? const Color(0xFFDBEAFE)
+                                : const Color(0xFFF1F5F9)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -480,21 +483,31 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                           Icon(
                             isDone
                                 ? Icons.check_circle_rounded
-                                : Icons.schedule_rounded,
+                                : (hasStarted
+                                    ? Icons.menu_book_rounded
+                                    : Icons.schedule_rounded),
                             size: 13,
                             color: isDone
                                 ? const Color(0xFF059669)
-                                : const Color(0xFF64748B),
+                                : (hasStarted
+                                    ? const Color(0xFF1D4ED8)
+                                    : const Color(0xFF64748B)),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            isDone ? 'Selesai' : 'Belum Selesai',
+                            isDone
+                                ? 'Tuntas ✅'
+                                : (hasStarted
+                                    ? 'Materi Selesai'
+                                    : 'Belum Tuntas ⏳'),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: isDone
                                   ? const Color(0xFF059669)
-                                  : const Color(0xFF64748B),
+                                  : (hasStarted
+                                      ? const Color(0xFF1D4ED8)
+                                      : const Color(0xFF64748B)),
                             ),
                           ),
                         ],
@@ -626,7 +639,9 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                       size: 18,
                     ),
                     label: Text(
-                      isDone ? 'Buka Kembali Materi' : 'Pelajari Sekarang 🚀',
+                      isDone
+                          ? (isVideo ? 'Tonton Ulang Video' : 'Buka Kembali Modul')
+                          : (isVideo ? 'Tonton Video' : 'Buka Modul'),
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
@@ -634,8 +649,10 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDone
-                          ? const Color(0xFF0F172A)
-                          : const Color(0xFF2563EB),
+                          ? const Color(0xFF334155)
+                          : (isVideo
+                              ? const Color(0xFFDC2626)
+                              : const Color(0xFF2563EB)),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(

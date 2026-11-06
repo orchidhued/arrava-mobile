@@ -713,6 +713,7 @@ class _LoginScreenState extends State<LoginScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: LoginEffectCfg.accent,
                       foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       elevation: 6,
                       shape: RoundedRectangleBorder(

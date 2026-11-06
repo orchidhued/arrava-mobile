@@ -63,38 +63,74 @@ class ModuleProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      await _repository.completeModule(id);
+      final response = await _repository.completeModule(id);
+      final isTuntas = response['is_tuntas'] == true;
+      final poinDiberikan = response['poin_diberikan'] is int
+          ? response['poin_diberikan']
+          : int.tryParse(response['poin_diberikan']?.toString() ?? '0') ?? 0;
+
       final index = _modules.indexWhere((m) => m.idModul == id);
       if (index != -1) {
         final old = _modules[index];
-        _modules[index] = ModuleModel(
-          idModul: old.idModul,
-          judulModul: old.judulModul,
-          fileMateri: old.fileMateri,
-          fileUrl: old.fileUrl,
-          tipeFile: old.tipeFile,
-          idTipeModul: old.idTipeModul,
-          namaTipe: old.namaTipe,
-          idJenjang: old.idJenjang,
-          namaJenjang: old.namaJenjang,
-          idQuiz: old.idQuiz,
-          quizJudul: old.quizJudul,
-          progressModul: old.progressModul,
-          fotoModul: old.fotoModul,
-          fotoUrl: old.fotoUrl,
-          poinModul: old.poinModul,
-          isVideo: old.isVideo,
-          isPdf: old.isPdf,
-          youtubeId: old.youtubeId,
-          youtubeEmbedUrl: old.youtubeEmbedUrl,
+        _modules[index] = old.copyWith(
           isMateriSelesai: true,
-          isTuntas: old.idQuiz == null ? true : old.isTuntas,
+          isTuntas: isTuntas,
+          poinDidapat: old.poinDidapat + (poinDiberikan as int),
+        );
+      }
+      if (_selectedModule != null && _selectedModule!.idModul == id) {
+        _selectedModule = _selectedModule!.copyWith(
+          isMateriSelesai: true,
+          isTuntas: isTuntas,
+          poinDidapat: _selectedModule!.poinDidapat + (poinDiberikan as int),
         );
       }
       return true;
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<ModuleQuizSubmitResult?> submitModuleQuiz(
+      int id, Map<int, int> answers) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final result = await _repository.submitModuleQuiz(id, answers);
+
+      final index = _modules.indexWhere((m) => m.idModul == id);
+      if (index != -1) {
+        final old = _modules[index];
+        _modules[index] = old.copyWith(
+          isQuizSelesai: true,
+          isQuizLulus: result.isLulus,
+          nilaiQuiz:
+              result.skor > old.nilaiQuiz ? result.skor : old.nilaiQuiz,
+          isTuntas: result.isTuntas,
+          poinDidapat: old.poinDidapat + result.poinDiberikan,
+        );
+      }
+      if (_selectedModule != null && _selectedModule!.idModul == id) {
+        _selectedModule = _selectedModule!.copyWith(
+          isQuizSelesai: true,
+          isQuizLulus: result.isLulus,
+          nilaiQuiz: result.skor > _selectedModule!.nilaiQuiz
+              ? result.skor
+              : _selectedModule!.nilaiQuiz,
+          isTuntas: result.isTuntas,
+          poinDidapat: _selectedModule!.poinDidapat + result.poinDiberikan,
+        );
+      }
+      return result;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return null;
     } finally {
       _isLoading = false;
       notifyListeners();
