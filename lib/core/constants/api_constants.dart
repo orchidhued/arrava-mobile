@@ -2,13 +2,13 @@ import 'package:flutter/foundation.dart';
 
 class ApiConstants {
   // Jika di Web / Chrome, otomatis gunakan localhost (127.0.0.1)
-  // Jika di Android (HP Fisik), gunakan IP Wi-Fi PC (192.168.18.4)
-  // Jika di Android Emulator bawaan, ganti ke 'http://10.0.2.2:8000/api'
+  // Jika di Android (HP Fisik), gunakan IP Wi-Fi PC lokal (192.168.18.4)
+  // Jika di Android Emulator bawaan / adb reverse, ganti ke 'http://10.0.2.2:8000/api' atau 'http://127.0.0.1:8000/api'
   static String get baseUrl {
     if (kIsWeb) {
-      return 'https://paging-defy-bluish.ngrok-free.dev/api';
+      return 'http://127.0.0.1:8000/api';
     }
-    return 'https://paging-defy-bluish.ngrok-free.dev/api';
+    return 'http://192.168.18.4:8000/api';
   }
 
   static const String login = '/login';
