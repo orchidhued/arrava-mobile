@@ -113,17 +113,30 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
             Positioned.fill(
               child: IgnorePointer(
                 child: ClipRect(
-                  child: AnimatedBuilder(
-                    animation: _frame,
-                    builder: (context, _) {
-                      // Parallax scroll jika controller aktif (terkunci di bawah viewport seperti web)
-                      final double scrollY = (widget.enableParallax &&
-                              widget.scrollController != null &&
-                              widget.scrollController!.hasClients)
-                          ? widget.scrollController!.offset
-                          : 0.0;
+                  child: ShaderMask(
+                    shaderCallback: (Rect bounds) {
+                      return const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.white,
+                        ],
+                        stops: [0.0, 0.45],
+                      ).createShader(bounds);
+                    },
+                    blendMode: BlendMode.dstIn,
+                    child: AnimatedBuilder(
+                      animation: _frame,
+                      builder: (context, _) {
+                        // Parallax scroll jika controller aktif (terkunci di bawah viewport seperti web)
+                        final double scrollY = (widget.enableParallax &&
+                                widget.scrollController != null &&
+                                widget.scrollController!.hasClients)
+                            ? widget.scrollController!.offset
+                            : 0.0;
 
-                      final double bgBaseH = (h * 0.30).clamp(200.0, 320.0);
+                        final double bgBaseH = (h * 0.40).clamp(260.0, 400.0);
                       final double bgParallax1 = (scrollY * 0.08).clamp(0.0, 45.0);
                       final double bgParallax2 = (scrollY * 0.10).clamp(0.0, 55.0);
                       final double floatParallax = (scrollY * 0.09).clamp(0.0, 50.0);
@@ -230,6 +243,7 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
                 ),
               ),
             ),
+          ),
 
             // ===============================================================
             // KONTEN UTAMA DASHBOARD

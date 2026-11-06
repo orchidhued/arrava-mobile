@@ -126,14 +126,14 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
     _tick.value++;
   }
 
-  // Area renang di bagian bawah perairan agar leluasa dan tidak menutupi search bar
+  // Area renang di bagian perairan agar leluasa, aman dari tepian melengkung dan tidak terpotong
   Rect _bounds(Fish f) {
     final w = _size.width, h = _size.height;
     return Rect.fromLTRB(
-      -f.size * 0.1,
-      math.max(115.0, h * 0.44),
-      math.max(100.0, w - f.size * 0.85),
-      math.max(h * 0.6, h - f.size * 0.65),
+      14.0,
+      math.max(66.0, h * 0.30),
+      math.max(100.0, w - f.size - 18.0),
+      math.max(h * 0.55, h - f.size - 18.0),
     );
   }
 
@@ -302,8 +302,8 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
     return LayoutBuilder(
       builder: (context, constraints) {
         final cardW = constraints.maxWidth;
-        // Tinggi card samudra yang lebih pendek dan ringkas
-        final cardH = cardW < 500 ? 250.0 : (cardW < 800 ? 275.0 : 305.0);
+        // Tinggi card samudra yang proporsional dan tidak mendesak konten bawah
+        final cardH = cardW < 500 ? 230.0 : (cardW < 800 ? 260.0 : 290.0);
 
         final size = Size(cardW, cardH);
         _syncLayout(size);
@@ -401,7 +401,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
     );
   }
 
-  /// Konten Profil, Bar EXP & Search Bar yang menimpa samudra
+  /// Konten Profil, Bar EXP & Info Siswa yang menimpa samudra
   Widget _buildOverlaidContent() {
     final user = widget.user;
     final stats = widget.stats;
@@ -412,206 +412,209 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
         (stats?['progress_percent'] as num?)?.toDouble() ?? 0.0;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Baris Atas: Foto Profil di kiri, Bar EXP di kanan
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Foto Profil Siswa
-              GestureDetector(
-                onTap: widget.onProfileTap,
-                child: Container(
-                  padding: const EdgeInsets.all(2.5),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.16),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+          // Foto Profil Siswa
+          GestureDetector(
+            onTap: widget.onProfileTap,
+            child: Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.16),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: const Color(0xFFF97316),
-                    backgroundImage:
-                        (user?['foto_profil'] != null &&
-                            user!['foto_profil'].toString().isNotEmpty)
-                        ? NetworkImage(user['foto_profil'] as String)
-                        : null,
-                    child:
-                        (user?['foto_profil'] == null ||
-                            user!['foto_profil'].toString().isEmpty)
-                        ? const Icon(
-                            Icons.sentiment_very_satisfied_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          )
-                        : null,
-                  ),
-                ),
+                ],
               ),
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: const Color(0xFFF97316),
+                backgroundImage:
+                    (user?['foto_profil'] != null &&
+                        user!['foto_profil'].toString().isNotEmpty)
+                    ? NetworkImage(user['foto_profil'] as String)
+                    : null,
+                child:
+                    (user?['foto_profil'] == null ||
+                        user!['foto_profil'].toString().isEmpty)
+                    ? const Icon(
+                        Icons.sentiment_very_satisfied_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      )
+                    : null,
+              ),
+            ),
+          ),
 
-              // Bar EXP Pill: Menggantikan Bar Santai dengan Bar EXP
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 2.5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
+          const SizedBox(width: 10),
+
+          // Info Siswa: Nama, Badge Jenjang, & Level
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '$totalXp EXP',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                    Flexible(
+                      child: Text(
+                        user != null && user['nama'] != null
+                            ? user['nama'].toString()
+                            : 'Siswa Arrava',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black54,
+                              blurRadius: 4,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    // Progress bar mini bersegmen 5 segmen
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(5, (index) {
-                        final int filledSegments = ((progressPercent / 100) * 5)
-                            .round()
-                            .clamp(1, 5);
-                        final bool isFilled = index < filledSegments;
-                        return Container(
-                          width: 10,
-                          height: 4,
-                          margin: const EdgeInsets.symmetric(horizontal: 1),
-                          decoration: BoxDecoration(
-                            color: isFilled
-                                ? const Color(0xFF2563EB)
-                                : const Color(0xFFCBD5E1),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        );
-                      }),
                     ),
                     const SizedBox(width: 5),
                     Container(
-                      width: 18,
-                      height: 18,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFFFEE2E2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1.5,
                       ),
-                      child: const Icon(
-                        Icons.local_fire_department_rounded,
-                        size: 12,
-                        color: Color(0xFFEF4444),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD1FAE5),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 10,
+                            color: Color(0xFF059669),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            user?['jenjang'] != null
+                                ? '${user!['jenjang']}'
+                                : 'SD',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF047857),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 6),
-
-          // 2. Baris Tengah: Nama Siswa & Jenjang Badge (Tanpa persentase & pesan)
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  user != null && user['nama'] != null
-                      ? user['nama'].toString()
-                      : 'Siswa Arrava',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    shadows: [
+                const SizedBox(height: 2),
+                Text(
+                  'Level $level • $kuisLulus Kuis Selesai',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.95),
+                    shadows: const [
                       Shadow(
                         color: Colors.black54,
-                        blurRadius: 6,
+                        blurRadius: 4,
                         offset: Offset(0, 1),
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD1FAE5),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      size: 11,
-                      color: Color(0xFF059669),
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      user?['jenjang'] != null ? '${user!['jenjang']}' : 'SD',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF047857),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 1),
-
-          // Sub-info: Level & Kuis
-          Text(
-            'Level $level • $kuisLulus Kuis Selesai',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.95),
-              shadows: const [
-                Shadow(
-                  color: Colors.black54,
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
-                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(width: 8),
+
+          // Bar EXP Pill: Menggantikan Bar Santai dengan Bar EXP
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 9,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$totalXp EXP',
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                // Progress bar mini bersegmen 5 segmen
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(5, (index) {
+                    final int filledSegments = ((progressPercent / 100) * 5)
+                        .round()
+                        .clamp(1, 5);
+                    final bool isFilled = index < filledSegments;
+                    return Container(
+                      width: 6,
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(horizontal: 1),
+                      decoration: BoxDecoration(
+                        color: isFilled
+                            ? const Color(0xFF2563EB)
+                            : const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(width: 4),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFEE2E2),
+                  ),
+                  child: const Icon(
+                    Icons.local_fire_department_rounded,
+                    size: 11,
+                    color: Color(0xFFEF4444),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
