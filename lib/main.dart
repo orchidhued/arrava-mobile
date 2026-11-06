@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Arrava Mobile',
+      title: 'ARRAVA',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routes: {'/login': (_) => const LoginScreen()},

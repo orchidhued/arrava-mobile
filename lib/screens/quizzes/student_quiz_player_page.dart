@@ -1594,53 +1594,56 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
             ],
 
-            const Spacer(),
-
-            // Tombol Selanjutnya / Submit
-            if (_isLastQuestion)
-              ElevatedButton.icon(
-                onPressed: _isSubmittingFinal ? null : () => _finishAndSubmitQuiz(),
-                icon: _isSubmittingFinal
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('🚀', style: TextStyle(fontSize: 15)),
-                label: Text(
-                  _isSubmittingFinal ? 'Mengirim...' : 'Kumpulkan Jawaban Saya',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4F46E5),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(0, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              )
-            else
-              ElevatedButton.icon(
-                onPressed: () => _goToQuestion(_currentIndex + 1),
-                iconAlignment: IconAlignment.end,
-                icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                label: const Text(
-                  'Soal Selanjutnya',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4F46E5),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(0, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
+            // Tombol Selanjutnya / Submit (Expanded agar responsif di semua ukuran layar)
+            Expanded(
+              child: _isLastQuestion
+                  ? ElevatedButton.icon(
+                      onPressed: _isSubmittingFinal ? null : () => _finishAndSubmitQuiz(),
+                      icon: _isSubmittingFinal
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('🚀', style: TextStyle(fontSize: 15)),
+                      label: Text(
+                        _isSubmittingFinal ? 'Mengirim...' : 'Kumpulkan Jawaban',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    )
+                  : ElevatedButton.icon(
+                      onPressed: () => _goToQuestion(_currentIndex + 1),
+                      iconAlignment: IconAlignment.end,
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                      label: const Text(
+                        'Soal Selanjutnya',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+            ),
           ],
         ),
       ),
