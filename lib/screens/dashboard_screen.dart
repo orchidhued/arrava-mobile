@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../services/dashboard_service.dart';
 import '../shared/utils/logout_dialog.dart';
+import '../shared/widgets/samudra_hero_section.dart';
 import '../shared/widgets/tween_float_background.dart';
 import 'modules/student_module_list_page.dart';
 import 'profile/student_profile_page.dart';
@@ -82,9 +85,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final user = _dashboardData?['user'] as Map<String, dynamic>?;
     final stats = _dashboardData?['stats'] as Map<String, dynamic>?;
     final materiList =
-        (_dashboardData?['materi_terbaru'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        (_dashboardData?['materi_terbaru'] as List?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
     final riwayatList =
-        (_dashboardData?['riwayat_belajar'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        (_dashboardData?['riwayat_belajar'] as List?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -123,28 +130,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // ===================================================
-                          // 1. TOP HEADER BAR: Profile, Level, XP & Logout
+                          // 1. TOP HEADER BAR: 'ARRAVA' & Log Out Saja
                           // ===================================================
-                          _buildTopHeader(user, stats),
+                          _buildTopHeader(),
 
-                          const SizedBox(height: 18),
-
-                          // ===================================================
-                          // 2. STATS ROW / GRID
-                          // ===================================================
-                          _buildStatsOverview(stats, user, maxWidth),
-
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
 
                           // ===================================================
-                          // 3. KAHOOT 360 INTERACTIVE BANNER
+                          // 2. SAMUDRA HERO SECTION (Menimpa: Avatar, Nama, Bar EXP, Search Bar & Ikan Piksel)
                           // ===================================================
-                          _buildKahootBanner(maxWidth),
+                          SamudraHeroSection(
+                            user: user,
+                            stats: stats,
+                            onExploreTap: () {
+                              setState(() => _currentIndex = 1);
+                            },
+                            onProfileTap: () {
+                              setState(() => _currentIndex = 3);
+                            },
+                          ),
 
                           const SizedBox(height: 24),
 
                           // ===================================================
-                          // 4. MAIN CONTENT AREA (Responsive Split / Stack)
+                          // 2. MAIN CONTENT AREA (Responsive Split / Stack)
                           // ===================================================
                           if (isDesktop)
                             Row(
@@ -206,9 +215,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // WIDGET BUILDERS
   // ===========================================================================
 
-  Widget _buildTopHeader(Map<String, dynamic>? user, Map<String, dynamic>? stats) {
+  Widget _buildTopHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -222,309 +231,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          GestureDetector(
-            onTap: () => setState(() => _currentIndex = 3),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: const Color(0xFFEFF6FF),
-              backgroundImage: (user?['foto_profil'] != null &&
-                      user!['foto_profil'].toString().isNotEmpty)
-                  ? NetworkImage(user['foto_profil'] as String)
-                  : null,
-              child: (user?['foto_profil'] == null ||
-                      user!['foto_profil'].toString().isEmpty)
-                  ? const Icon(Icons.person, color: _blue, size: 22)
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _currentIndex = 3),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    user != null && user['nama'] != null
-                        ? 'Halo, ${user['nama']}! 👋'
-                        : 'Halo, Siswa Arrava! 👋',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+          // Logo & Teks Brand 'ARRAVA'
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFDBEAFE)),
-                        ),
-                        child: Text(
-                          'Jenjang ${user?['jenjang'] ?? 'SD'}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1D4ED8),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          '• Siap belajar?',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          // XP Pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF3C7),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFDE68A)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.bolt_rounded, size: 14, color: Color(0xFFD97706)),
-                const SizedBox(width: 2),
-                Text(
-                  '${user?['total_xp'] ?? stats?['total_xp'] ?? 0} XP',
-                  style: const TextStyle(
-                    color: Color(0xFFB45309),
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11.5,
-                  ),
+                  ],
                 ),
-              ],
-            ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'ARRAVA',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          // Logout Button
+
+          // Tombol Logout
           InkWell(
             onTap: () => showLogoutConfirmationDialog(context),
             borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding: const EdgeInsets.all(7),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: const Color(0xFFFEE2E2),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFFFECACA)),
               ),
-              child: const Icon(
-                Icons.logout_rounded,
-                color: Color(0xFFDC2626),
-                size: 17,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsOverview(
-    Map<String, dynamic>? stats,
-    Map<String, dynamic>? user,
-    double maxWidth,
-  ) {
-    final kursusAktif = stats?['kursus_aktif'] ?? 0;
-    final kuisLulus = stats?['kuis_lulus'] ?? 0;
-    final totalQuiz = stats?['total_quiz'] ?? 0;
-    final progressPercent = stats?['progress_percent'] ?? 0;
-    final totalXp = user?['total_xp'] ?? stats?['total_xp'] ?? 0;
-
-    final stat1 = _StatCard(
-      icon: Icons.menu_book_rounded,
-      color: _blue,
-      bgColor: const Color(0xFFEFF6FF),
-      value: '$kursusAktif',
-      label: 'Modul Aktif',
-      subtitle: 'Materi jenjang kamu',
-    );
-
-    final stat2 = _StatCard(
-      icon: Icons.task_alt_rounded,
-      color: _green,
-      bgColor: const Color(0xFFECFDF5),
-      value: '$progressPercent%',
-      label: 'Kuis Lulus',
-      subtitle: '$kuisLulus dari $totalQuiz kuis',
-    );
-
-    final stat3 = _StatCard(
-      icon: Icons.emoji_events_rounded,
-      color: _orange,
-      bgColor: const Color(0xFFFEF3C7),
-      value: '$totalXp',
-      label: 'Total Poin XP',
-      subtitle: 'Akumulasi skor kuis',
-    );
-
-    final stat4 = _StatCard(
-      icon: Icons.local_fire_department_rounded,
-      color: const Color(0xFFEF4444),
-      bgColor: const Color(0xFFFEE2E2),
-      value: 'Aktif',
-      label: 'Status Belajar',
-      subtitle: 'Konsisten & giat',
-    );
-
-    if (maxWidth >= 880) {
-      return Row(
-        children: [
-          Expanded(child: stat1),
-          const SizedBox(width: 12),
-          Expanded(child: stat2),
-          const SizedBox(width: 12),
-          Expanded(child: stat3),
-          const SizedBox(width: 12),
-          Expanded(child: stat4),
-        ],
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(child: stat1),
-        const SizedBox(width: 10),
-        Expanded(child: stat2),
-        const SizedBox(width: 10),
-        Expanded(child: stat3),
-      ],
-    );
-  }
-
-  Widget _buildKahootBanner(double maxWidth) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E1065), Color(0xFF4338CA), Color(0xFF2563EB)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4338CA).withValues(alpha: 0.30),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFDC2626),
+                    size: 16,
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('⚡', style: TextStyle(fontSize: 12)),
-                      SizedBox(width: 5),
-                      Text(
-                        'MODE WAYGROUND & KAHOOT 360',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Kuis Interaktif Pembelajaran',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Asah kemampuanmu dengan kuis seru berbatas waktu, raih skor sempurna, dan kumpulkan poin XP!',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                ElevatedButton.icon(
-                  onPressed: () => setState(() => _currentIndex = 2),
-                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                  label: const Text(
-                    'Mulai Kerjakan Kuis ⚡',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1E3A8A),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  SizedBox(width: 5),
+                  Text(
+                    'Keluar',
+                    style: TextStyle(
+                      color: Color(0xFFDC2626),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          if (maxWidth >= 600) ...[
-            const SizedBox(width: 20),
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-              ),
-              child: const Center(
-                child: Text('🏆', style: TextStyle(fontSize: 44)),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -553,9 +331,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () => setState(() => _currentIndex = 1),
               icon: const Text(
                 'Lihat Semua',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _blue),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _blue,
+                ),
               ),
-              label: const Icon(Icons.arrow_forward_rounded, size: 14, color: _blue),
+              label: const Icon(
+                Icons.arrow_forward_rounded,
+                size: 14,
+                color: _blue,
+              ),
               style: TextButton.styleFrom(padding: EdgeInsets.zero),
             ),
           ],
@@ -572,7 +358,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             child: Column(
               children: [
-                Icon(Icons.menu_book_outlined, size: 40, color: Colors.grey.shade400),
+                Icon(
+                  Icons.menu_book_outlined,
+                  size: 40,
+                  color: Colors.grey.shade400,
+                ),
                 const SizedBox(height: 8),
                 const Text(
                   'Belum ada modul materi tersedia',
@@ -652,7 +442,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             child: Column(
               children: [
-                Icon(Icons.quiz_outlined, size: 40, color: Colors.grey.shade400),
+                Icon(
+                  Icons.quiz_outlined,
+                  size: 40,
+                  color: Colors.grey.shade400,
+                ),
                 const SizedBox(height: 8),
                 const Text(
                   'Belum ada riwayat pengerjaan kuis',
@@ -687,7 +481,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   judul: riwayat['judul']?.toString() ?? 'Kuis Pembelajaran',
                   tanggal: riwayat['tanggal']?.toString() ?? 'Baru saja',
                   skor: '${riwayat['skor'] ?? 0}%',
-                  icon: isLulus ? Icons.check_circle_rounded : Icons.schedule_rounded,
+                  icon: isLulus
+                      ? Icons.check_circle_rounded
+                      : Icons.schedule_rounded,
                   color: color,
                   isLulus: isLulus,
                 ),
@@ -747,8 +543,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           currentIndex: _currentIndex,
           selectedItemColor: _blue,
           unselectedItemColor: const Color(0xFF94A3B8),
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 11,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
+          ),
           type: BottomNavigationBarType.fixed,
           onTap: (index) {
             setState(() => _currentIndex = index);
@@ -784,98 +586,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 // =============================================================================
 // SUB-COMPONENTS
 // =============================================================================
-
-class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
-  final String? subtitle;
-  final IconData icon;
-  final Color color;
-  final Color bgColor;
-
-  const _StatCard({
-    required this.value,
-    required this.label,
-    this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.bgColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.5,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 1),
-                  Text(
-                    subtitle!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _MateriCard extends StatelessWidget {
   final String label;
@@ -946,7 +656,10 @@ class _MateriCard extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(4),
@@ -963,7 +676,10 @@ class _MateriCard extends StatelessWidget {
                         if (jenjang != null && jenjang!.isNotEmpty) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFEFF6FF),
                               borderRadius: BorderRadius.circular(4),
@@ -983,7 +699,11 @@ class _MateriCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF94A3B8)),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 12,
+                color: Color(0xFF94A3B8),
+              ),
             ],
           ),
         ),
@@ -1065,10 +785,14 @@ class _RiwayatItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: isLulus ? const Color(0xFFECFDF5) : const Color(0xFFFEF3C7),
+              color: isLulus
+                  ? const Color(0xFFECFDF5)
+                  : const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isLulus ? const Color(0xFFA7F3D0) : const Color(0xFFFDE68A),
+                color: isLulus
+                    ? const Color(0xFFA7F3D0)
+                    : const Color(0xFFFDE68A),
                 width: 0.8,
               ),
             ),

@@ -28,9 +28,7 @@ class MyApp extends StatelessWidget {
       title: 'Arrava Mobile',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      routes: {
-        '/login': (_) => const LoginScreen(),
-      },
+      routes: {'/login': (_) => const LoginScreen()},
       home: const LoginScreen(),
     );
   }
