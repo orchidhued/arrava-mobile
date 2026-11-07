@@ -7,6 +7,7 @@ import '../shared/widgets/samudra_hero_section.dart';
 import '../shared/widgets/tween_float_background.dart';
 import 'modules/student_module_list_page.dart';
 import 'profile/student_profile_page.dart';
+import 'profile/student_qr_sheet.dart';
 import 'quizzes/student_quiz_list_page.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -523,59 +524,124 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Future<void> _showAttendanceQr() async {
+    try {
+      final profile = await DashboardService.fetchStudentProfile();
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: const Color(0x9912233F),
+        builder: (_) => StudentQrSheet(
+          user: Map<String, dynamic>.from(profile['user'] as Map? ?? {}),
+        ),
+      );
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal memuat QR presensi. Silakan coba lagi.'),
+          ),
+        );
+    }
+  }
+
   Widget _buildBottomNav() {
+    const blue = Color(0xFF007FBE);
+    Widget item(int index, IconData icon, String label) => Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _currentIndex = index),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: _currentIndex == index ? blue : const Color(0xFF72839E),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.nunitoSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: _currentIndex == index
+                      ? blue
+                      : const Color(0xFF72839E),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A1E5A).withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -2),
+            color: Color(0x1A007FBE),
+            blurRadius: 20,
+            offset: Offset(0, -3),
           ),
         ],
       ),
       child: SafeArea(
         top: false,
-        child: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          currentIndex: _currentIndex,
-          selectedItemColor: _blue,
-          unselectedItemColor: const Color(0xFF94A3B8),
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 11,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 11,
-          ),
-          type: BottomNavigationBarType.fixed,
-          onTap: (index) {
-            setState(() => _currentIndex = index);
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Beranda',
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            item(0, Icons.home_outlined, 'Beranda'),
+            item(1, Icons.menu_book_outlined, 'Belajar'),
+            Expanded(
+              child: InkWell(
+                onTap: _showAttendanceQr,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        transform: Matrix4.translationValues(0, -8, 0),
+                        padding: const EdgeInsets.all(11),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF339BFF), Color(0xFF14B9DC)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x3D008FCC), blurRadius: 14),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          color: Colors.white,
+                          size: 25,
+                        ),
+                      ),
+                      Text(
+                        'Presensi',
+                        style: GoogleFonts.nunitoSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book_outlined),
-              activeIcon: Icon(Icons.menu_book_rounded),
-              label: 'Belajar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.edit_outlined),
-              activeIcon: Icon(Icons.edit_rounded),
-              label: 'Latihan / Kuis',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person_rounded),
-              label: 'Profil',
-            ),
+            item(2, Icons.edit_note_rounded, 'Latihan / Kuis'),
+            item(3, Icons.person_rounded, 'Profil'),
           ],
         ),
       ),
