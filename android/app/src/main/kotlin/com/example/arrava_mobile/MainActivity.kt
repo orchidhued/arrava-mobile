@@ -7,6 +7,33 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var pendingQrBytes: ByteArray? = null
+    private var pendingQrResult: MethodChannel.Result? = null
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != 7301) return
+        val reply = pendingQrResult
+        val bytes = pendingQrBytes
+        pendingQrResult = null
+        pendingQrBytes = null
+        val uri = data?.data
+        if (resultCode != android.app.Activity.RESULT_OK || uri == null) {
+            reply?.error("CANCELLED", "Penyimpanan dibatalkan", null)
+            return
+        }
+        try {
+            checkNotNull(bytes)
+            val stream = contentResolver.openOutputStream(uri)
+                ?: throw IllegalStateException("File tidak dapat dibuka")
+            stream.use { it.write(bytes) }
+            reply?.success(null)
+        } catch (e: Exception) {
+            reply?.error("SAVE_FAILED", e.localizedMessage, null)
+        }
+    }
+
     private val CHANNEL = "com.arrava.app/launcher"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -23,6 +50,30 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
+                "saveQr" -> {
+                    val bytes = call.argument<ByteArray>("bytes")
+                    if (pendingQrResult != null) {
+                        result.error("BUSY", "Penyimpanan QR sedang berlangsung", null)
+                    } else if (bytes == null || bytes.isEmpty()) {
+                        result.error("INVALID_QR", "Data QR tidak tersedia", null)
+                    } else {
+                        pendingQrBytes = bytes
+                        pendingQrResult = result
+                        try {
+                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                type = "image/png"
+                                putExtra(Intent.EXTRA_TITLE, "ARRAVA-QR-Siswa.png")
+                            }
+                            @Suppress("DEPRECATION")
+                            startActivityForResult(intent, 7301)
+                        } catch (e: Exception) {
+                            pendingQrBytes = null
+                            pendingQrResult = null
+                            result.error("SAVE_FAILED", e.localizedMessage, null)
+                        }
+                    }
+                }
                 "openUrl" -> {
                     val url = call.argument<String>("url")
                     if (!url.isNullOrBlank()) {
