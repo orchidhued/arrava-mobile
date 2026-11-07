@@ -203,6 +203,8 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
       if (proceed != true) return;
     }
 
+    if (!mounted) return;
+
     setState(() => _isSubmittingKuis = true);
     final provider = context.read<ModuleProvider>();
     final result =

@@ -539,12 +539,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Gagal memuat QR presensi. Silakan coba lagi.'),
           ),
         );
+      }
     }
   }
 

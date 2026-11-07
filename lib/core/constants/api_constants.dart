@@ -36,7 +36,8 @@ class ApiConstants {
 
       if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
         final parsed = Uri.parse(trimmed);
-        final isLocalHost = parsed.host == 'localhost' ||
+        final isLocalHost =
+            parsed.host == 'localhost' ||
             parsed.host == '127.0.0.1' ||
             parsed.host.endsWith('.test') ||
             parsed.host.startsWith('192.168.') ||
@@ -54,8 +55,9 @@ class ApiConstants {
         return trimmed;
       }
 
-      final cleanPath =
-          trimmed.startsWith('/') ? trimmed.substring(1) : trimmed;
+      final cleanPath = trimmed.startsWith('/')
+          ? trimmed.substring(1)
+          : trimmed;
       final prefix = cleanPath.startsWith('storage/')
           ? cleanPath
           : 'storage/$cleanPath';

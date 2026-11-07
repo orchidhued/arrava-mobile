@@ -4,10 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const Color _navy = Color(0xFF06203F);
-const Color _foam = Color(0xFFE9FBFF);
-const Color _sand = Color(0xFFFFD36B);
-
 final _rng = math.Random();
 double _rand(double a, double b) => a + _rng.nextDouble() * (b - a);
 
@@ -99,7 +95,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
   final _tick = ValueNotifier<int>(0);
   Duration _lastElapsed = Duration.zero;
   double _t = 0; // waktu animasi (berhenti saat dijeda)
-  bool _paused = false;
+  final bool _paused = false;
   Size _size = Size.zero;
   final List<Fish> _fish = [];
 

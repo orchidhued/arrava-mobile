@@ -1632,7 +1632,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                         'Soal Selanjutnya',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4F46E5),

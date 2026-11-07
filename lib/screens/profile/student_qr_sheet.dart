@@ -47,8 +47,14 @@ class _StudentQrSheetState extends State<StudentQrSheet> {
         data: _payload,
         version: QrVersions.auto,
         gapless: true,
-        color: const Color(0xFF006B99),
-        emptyColor: Colors.white,
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: Color(0xFF006B99),
+        ),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: Color(0xFF006B99),
+        ),
       ).toImageData(1024, format: ui.ImageByteFormat.png);
       if (bytes == null) throw StateError('QR tidak dapat dibuat');
       await const MethodChannel('com.arrava.app/launcher')
@@ -59,10 +65,11 @@ class _StudentQrSheetState extends State<StudentQrSheet> {
             ),
             'filename': 'ARRAVA-QR-Siswa.png',
           });
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('QR berhasil disimpan.')));
+      }
     } on PlatformException catch (e) {
       if (mounted && e.code != 'CANCELLED') {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -70,19 +77,21 @@ class _StudentQrSheetState extends State<StudentQrSheet> {
         );
       }
     } on MissingPluginException {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Unduh QR tersedia di aplikasi Android.'),
           ),
         );
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Gagal menyimpan QR. Silakan coba lagi.'),
           ),
         );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

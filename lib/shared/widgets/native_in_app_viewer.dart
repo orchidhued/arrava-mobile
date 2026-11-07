@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 /// Widget pemutar video YouTube/MP4 & pembaca PDF interaktif langsung di dalam aplikasi (In-App)
