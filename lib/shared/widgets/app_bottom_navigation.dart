@@ -58,11 +58,19 @@ class AppBottomNavigation extends StatelessWidget {
               ),
 
               _NavigationItem(
+                icon: Icons.qr_code_scanner_outlined,
+                activeIcon: Icons.qr_code_scanner,
+                label: 'Presensi',
+                isSelected: currentIndex == 4,
+                onTap: () => onTap(4),
+              ),
+
+              _NavigationItem(
                 icon: Icons.quiz_outlined,
                 activeIcon: Icons.quiz,
                 label: 'Kuis',
-                isSelected: currentIndex == 4,
-                onTap: () => onTap(4),
+                isSelected: currentIndex == 5,
+                onTap: () => onTap(5),
               ),
             ],
           ),

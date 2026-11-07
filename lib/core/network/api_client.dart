@@ -191,6 +191,8 @@ class ApiClient {
     } else {
       final message = (data is Map && data['message'] != null)
           ? data['message']
+          : (data is Map && data['pesan'] != null)
+          ? data['pesan']
           : 'HTTP Error ${response.statusCode}';
       throw Exception(message);
     }
