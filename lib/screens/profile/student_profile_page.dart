@@ -715,7 +715,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                         children: [
                           _pill(
                             _text(
-                              '👋 Halo, Petualang!',
+                              '👋 Halo, ${_value(user, 'nama', 'Siswa')}!',
                               color: _blue,
                               size: 13,
                             ),
