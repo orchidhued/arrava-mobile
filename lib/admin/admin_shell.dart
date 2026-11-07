@@ -6,6 +6,7 @@ import '../shared/widgets/app_bottom_navigation.dart';
 import 'dashboard/admin_dashboard_page.dart';
 import 'students/student_page.dart';
 import 'quizzes/quiz_menu_page.dart';
+import 'attendance/attendance_page.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -48,6 +49,9 @@ class _AdminShellState extends State<AdminShell> {
         return const StudentPage();
 
       case 4:
+        return const AttendancePage();
+
+      case 5:
         return const QuizMenuPage();
 
       default:

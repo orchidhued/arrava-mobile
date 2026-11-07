@@ -20,6 +20,11 @@ class ApiConstants {
   static const String adminDashboard = '/admin/dashboard';
   static const String teachers = '/teachers';
   static const String students = '/students';
+  static const String activeAttendanceSessions = '/sesi-aktif';
+
+  static String attendanceRecap(int sessionId) => '/sesi/$sessionId/rekap';
+
+  static String attendanceScan(int sessionId) => '/$sessionId/scan';
 
   /// Memformat URL gambar atau media agar selalu dapat diakses dari Web maupun HP fisik Android
   static String? resolveMediaUrl(String? url) {
