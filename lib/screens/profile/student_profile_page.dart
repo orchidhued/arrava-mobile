@@ -1,7 +1,9 @@
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'student_qr_sheet.dart';
 
@@ -20,6 +22,7 @@ class StudentProfilePage extends StatefulWidget {
 
 class _StudentProfilePageState extends State<StudentProfilePage> {
   bool _isLoading = true;
+  bool _isPickingPhoto = false;
   String? _error;
   Map<String, dynamic>? _profileData;
   bool _isSoundEnabled = true;
@@ -56,6 +59,188 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _changePhoto(Map<String, dynamic> user) async {
+    if (_isPickingPhoto) return;
+    setState(() => _isPickingPhoto = true);
+    try {
+      final photo = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (photo == null || !mounted) return;
+      if (await photo.length() > 2 * 1024 * 1024) {
+        throw Exception(
+          'Ukuran foto maksimal 2 MB. Pilih foto yang lebih kecil.',
+        );
+      }
+      final bytes = await photo.readAsBytes();
+      final extension = _photoExtension(bytes);
+      if (extension == null) {
+        throw Exception('Gunakan foto berformat JPG, PNG, atau WebP.');
+      }
+      if (!mounted) return;
+      await _previewPhoto(user, bytes, 'foto-profil.$extension');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPickingPhoto = false);
+    }
+  }
+
+  String? _photoExtension(Uint8List bytes) {
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xff &&
+        bytes[1] == 0xd8 &&
+        bytes[2] == 0xff) {
+      return 'jpg';
+    }
+    const png = [137, 80, 78, 71, 13, 10, 26, 10];
+    if (bytes.length >= 8 &&
+        List.generate(8, (i) => bytes[i] == png[i]).every((match) => match)) {
+      return 'png';
+    }
+    if (bytes.length >= 12 &&
+        String.fromCharCodes(bytes.take(4)) == 'RIFF' &&
+        String.fromCharCodes(bytes.sublist(8, 12)) == 'WEBP') {
+      return 'webp';
+    }
+    return null;
+  }
+
+  Future<void> _previewPhoto(
+    Map<String, dynamic> user,
+    Uint8List bytes,
+    String filename,
+  ) async {
+    bool saving = false;
+    bool saved = false;
+    String? error;
+    Map<String, dynamic>? updatedProfile;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      isDismissible: false,
+      enableDrag: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (_, updateSheet) => PopScope(
+          canPop: !saving,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _text('Ganti Foto Profil', size: 20),
+                  const SizedBox(height: 6),
+                  _text(
+                    'JPG, PNG, atau WebP • Maksimal 2 MB',
+                    size: 12,
+                    color: _muted,
+                  ),
+                  const SizedBox(height: 22),
+                  ClipOval(
+                    child: Image.memory(
+                      bytes,
+                      width: 180,
+                      height: 180,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, exception, stack) => const SizedBox(
+                        width: 180,
+                        height: 180,
+                        child: Center(
+                          child: Icon(Icons.broken_image_outlined, size: 48),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  if (error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFFCD3845),
+                          fontSize: 12,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              updateSheet(() {
+                                saving = true;
+                                error = null;
+                              });
+                              try {
+                                updatedProfile =
+                                    await DashboardService.uploadStudentPhoto(
+                                      bytes: bytes,
+                                      filename: filename,
+                                      previousPhoto: user['foto_profil']
+                                          ?.toString(),
+                                    );
+                                saved = true;
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
+                                }
+                              } catch (e) {
+                                if (sheetContext.mounted) {
+                                  updateSheet(() {
+                                    saving = false;
+                                    error = e.toString().replaceFirst(
+                                      'Exception: ',
+                                      '',
+                                    );
+                                  });
+                                }
+                              }
+                            },
+                      style: FilledButton.styleFrom(backgroundColor: _blue),
+                      icon: saving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.cloud_upload_outlined, size: 19),
+                      label: Text(saving ? 'Mengunggah...' : 'Simpan Foto'),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: saving
+                        ? null
+                        : () => Navigator.pop(sheetContext),
+                    child: const Text('Batal'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (saved && mounted) {
+      setState(() => _profileData = updatedProfile);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto profil berhasil diperbarui.')),
+      );
     }
   }
 
@@ -122,6 +307,18 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                   style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                 ),
                 const SizedBox(height: 16),
+
+                OutlinedButton.icon(
+                  onPressed: _isPickingPhoto
+                      ? null
+                      : () {
+                          Navigator.pop(ctx);
+                          _changePhoto(user);
+                        },
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: const Text('Pilih Foto Profil'),
+                ),
+                const SizedBox(height: 14),
 
                 // Username
                 const Text(
@@ -536,7 +733,9 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                   shape: const CircleBorder(),
                                   child: InkWell(
                                     customBorder: const CircleBorder(),
-                                    onTap: () => _showEditProfileSheet(user),
+                                    onTap: _isPickingPhoto
+                                        ? null
+                                        : () => _changePhoto(user),
                                     child: const Padding(
                                       padding: EdgeInsets.all(8),
                                       child: Icon(
@@ -702,13 +901,12 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                           const SizedBox(height: 10),
                           _details(
                             'Data Pribadi',
-                            'NISN, Tempat & Tanggal Lahir',
+                            'Nama Lengkap, Username, & NISN',
                             Icons.person_outline,
                             {
                               'Nama Lengkap': _value(user, 'nama'),
                               'NISN': _value(user, 'nisn'),
-                              'Tempat Lahir': _value(user, 'tempat_lahir'),
-                              'Tanggal Lahir': _value(user, 'tanggal_lahir'),
+                              'Username': _value(user, 'username'),
                             },
                           ),
                           const SizedBox(height: 10),
@@ -725,14 +923,9 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                           const SizedBox(height: 10),
                           _details(
                             'Kontak & Keluarga',
-                            'Email, Alamat, & Orang Tua',
+                            'Email, Nomor HP, & Orang Tua',
                             Icons.phone_outlined,
-                            {
-                              'Email': _value(user, 'email'),
-                              'Nomor HP': _value(user, 'nomor_hp'),
-                              'Alamat': _value(user, 'alamat'),
-                              'Orang Tua': _value(user, 'nama_orang_tua'),
-                            },
+                            _familyDetails(user),
                           ),
                           const SizedBox(height: 18),
                           Container(
@@ -803,10 +996,12 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                       value,
                                     );
                                     await AudioService.syncPreferences();
-                                    if (value)
+                                    if (value) {
                                       await AudioService.triggerHaptic();
-                                    if (mounted)
+                                    }
+                                    if (mounted) {
                                       setState(() => _isHapticEnabled = value);
+                                    }
                                   },
                                   green: true,
                                 ),
@@ -955,6 +1150,48 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       ),
     ),
   );
+
+  Map<String, String> _familyDetails(Map<String, dynamic> user) {
+    final values = <String, String>{
+      'Email Siswa': _value(user, 'email'),
+      'Nomor HP Siswa': _value(user, 'nomor_hp'),
+    };
+    final parents = (_profileData?['orang_tua'] as List? ?? [])
+        .whereType<Map>()
+        .map((parent) => Map<String, dynamic>.from(parent))
+        .toList();
+    if (parents.isEmpty) {
+      values.addAll({
+        'Nama Orang Tua': _value(user, 'nama_orang_tua', 'Belum tersedia'),
+        'Nomor HP Orang Tua': _value(
+          user,
+          'nomor_hp_orang_tua',
+          'Belum tersedia',
+        ),
+        'Email Orang Tua': _value(user, 'email_orang_tua', 'Belum tersedia'),
+      });
+    } else {
+      for (var i = 0; i < parents.length; i++) {
+        final suffix = parents.length > 1 ? ' ${i + 1}' : '';
+        values['Nama Orang Tua$suffix'] = _value(
+          parents[i],
+          'nama',
+          'Belum diisi',
+        );
+        values['Nomor HP Orang Tua$suffix'] = _value(
+          parents[i],
+          'nomor_hp',
+          'Belum diisi',
+        );
+        values['Email Orang Tua$suffix'] = _value(
+          parents[i],
+          'email',
+          'Belum diisi',
+        );
+      }
+    }
+    return values;
+  }
 
   Widget _details(
     String title,

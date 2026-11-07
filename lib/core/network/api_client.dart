@@ -8,6 +8,33 @@ import '../constants/api_constants.dart';
 import '../storage/secure_storage.dart';
 
 class ApiClient {
+  static Future<dynamic> uploadProfilePhoto(
+    List<int> bytes,
+    String filename,
+  ) async {
+    final url = _buildUri('/student/profile');
+    final headers = await _getHeaders();
+    // PHP parses uploaded files on POST; Laravel routes it as PUT.
+    headers.remove('Content-Type');
+    final request = http.MultipartRequest('POST', url)
+      ..headers.addAll(headers)
+      ..fields['_method'] = 'PUT'
+      ..files.add(
+        http.MultipartFile.fromBytes('foto_profil', bytes, filename: filename),
+      );
+    try {
+      final response = await (() async {
+        final streamed = await request.send();
+        return http.Response.fromStream(streamed);
+      })().timeout(const Duration(seconds: 30));
+      return _handleResponse(response, url);
+    } on TimeoutException {
+      throw Exception('Upload foto terlalu lama. Silakan coba lagi.');
+    } on http.ClientException {
+      throw Exception('Gagal mengirim foto. Periksa koneksi ke server.');
+    }
+  }
+
   static const Duration _timeout = Duration(seconds: 10);
 
   static Uri _buildUri(String endpoint) {
