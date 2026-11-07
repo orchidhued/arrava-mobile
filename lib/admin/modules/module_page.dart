@@ -27,13 +27,6 @@ class _ModulePageContent extends StatefulWidget {
 class _ModulePageContentState extends State<_ModulePageContent> {
   String _selectedFilter = 'Semua';
 
-  final List<String> _filters = [
-    'Semua',
-    'Pemrograman',
-    'Desain UI/UX',
-    'Data Science',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -43,11 +36,22 @@ class _ModulePageContentState extends State<_ModulePageContent> {
     await context.read<ModuleProvider>().fetchModules();
   }
 
+  List<String> _getFilters(List<ModuleModel> modules) {
+    final mapels = modules
+        .map((m) => m.namaMapel)
+        .whereType<String>()
+        .where((s) => s.trim().isNotEmpty)
+        .toSet()
+        .toList();
+    mapels.sort();
+    return ['Semua', ...mapels];
+  }
+
   List<ModuleModel> _getFilteredModules(List<ModuleModel> modules) {
     if (_selectedFilter == 'Semua') {
       return modules;
     }
-    return modules;
+    return modules.where((m) => m.namaMapel == _selectedFilter).toList();
   }
 
   @override
@@ -71,7 +75,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
               const SizedBox(height: 20),
 
-              _buildFilter(),
+              _buildFilter(modules),
 
               const SizedBox(height: 20),
 
@@ -190,15 +194,16 @@ class _ModulePageContentState extends State<_ModulePageContent> {
     );
   }
 
-  Widget _buildFilter() {
+  Widget _buildFilter(List<ModuleModel> modules) {
+    final filters = _getFilters(modules);
     return SizedBox(
       height: 42,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
+        itemCount: filters.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final filter = _filters[index];
+          final filter = filters[index];
           final isSelected = filter == _selectedFilter;
 
           return ChoiceChip(
@@ -400,6 +405,26 @@ class _ModulePageContentState extends State<_ModulePageContent> {
                 'ID Modul: ${module.idModul}',
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
+
+              if (module.namaMapel != null && module.namaMapel!.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                  ),
+                  child: Text(
+                    '📖 ${module.namaMapel}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1D4ED8),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ],

@@ -6,11 +6,13 @@ class ModuleService {
     String? search,
     String? status,
     int? jenjang,
+    int? mapel,
   }) async {
     final queryParams = <String, String>{};
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (jenjang != null) queryParams['jenjang'] = jenjang.toString();
+    if (mapel != null) queryParams['mapel'] = mapel.toString();
 
     String endpoint = ApiConstants.modules;
     if (queryParams.isNotEmpty) {

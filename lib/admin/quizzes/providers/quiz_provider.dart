@@ -22,6 +22,9 @@ class QuizProvider with ChangeNotifier {
   List<QuizModel> _quizzes = [];
   List<QuizModel> get quizzes => UnmodifiableListView(_quizzes);
 
+  List<MapelModel> _mapels = [];
+  List<MapelModel> get mapels => UnmodifiableListView(_mapels);
+
   QuizModel? _selectedQuiz;
   QuizModel? get selectedQuiz => _selectedQuiz;
 
@@ -65,6 +68,7 @@ class QuizProvider with ChangeNotifier {
     String? search,
     String? status,
     int? jenjang,
+    int? mapel,
   }) async {
     final requestId = ++_listRequestId;
 
@@ -77,6 +81,7 @@ class QuizProvider with ChangeNotifier {
         search: search,
         status: status,
         jenjang: jenjang,
+        mapel: mapel,
       );
 
       if (requestId != _listRequestId) return;
@@ -89,6 +94,16 @@ class QuizProvider with ChangeNotifier {
         _isLoading = false;
         _safeNotify();
       }
+    }
+  }
+
+  Future<void> fetchMapels({int? jenjang}) async {
+    try {
+      final result = await _repository.getMapels(jenjang: jenjang);
+      _mapels = result;
+      _safeNotify();
+    } catch (e) {
+      // Menjaga mapels tetap berjalan lancar jika endpoint bermasalah
     }
   }
 

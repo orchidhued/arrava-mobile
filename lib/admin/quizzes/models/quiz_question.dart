@@ -5,6 +5,8 @@ class QuizQuestion {
   final List<TextEditingController> answers;
   int correctAnswer;
   String level;
+  int? idMapel;
+  String? namaMapel;
   String difficulty;
   int timeLimit;
   int points;
@@ -15,6 +17,8 @@ class QuizQuestion {
     List<String> answers = const ['', '', '', ''],
     this.correctAnswer = 0,
     this.level = 'SMA / MA / SMK Sederajat',
+    this.idMapel,
+    this.namaMapel,
     this.difficulty = 'Mudah',
     this.timeLimit = 20,
     this.points = 10,

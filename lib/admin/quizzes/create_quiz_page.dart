@@ -50,6 +50,8 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
               answers: choices,
               correctAnswer: item.correctAnswerIndex >= 0 ? item.correctAnswerIndex : 0,
               level: q.namaJenjang ?? 'SMA / MA / SMK Sederajat',
+              idMapel: q.idMapel,
+              namaMapel: q.namaMapel,
               difficulty: q.namaTingkat ?? 'Mudah',
               timeLimit: item.durasiDetik,
               points: item.poin,
@@ -62,6 +64,12 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     if (_questions.isEmpty) {
       _questions.add(QuizQuestion());
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<QuizProvider>().fetchMapels();
+      }
+    });
   }
 
   @override
@@ -109,9 +117,15 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                     const SizedBox(height: 14),
                     QuizProperties(
                       question: _question,
+                      availableMapels: context.watch<QuizProvider>().mapels,
                       onChangedLevel: (level) {
                         setState(() {
                           _question.level = level;
+                        });
+                      },
+                      onChangedMapel: (idMapel) {
+                        setState(() {
+                          _question.idMapel = idMapel;
                         });
                       },
                       onChangedDifficulty: (difficulty) {
@@ -403,6 +417,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     final payload = {
       'judul': title,
       'id_jenjang': jenjangMap[_question.level] ?? 3,
+      'id_mapel': _question.idMapel,
       'id_tingkatquiz': difficultyMap[_question.difficulty] ?? 1,
       'mode_pengerjaan': 'wayground',
       'action_type': isDraft ? 'draft' : 'publish',

@@ -60,6 +60,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
       final matchQuery =
           query.isEmpty ||
           quiz.judul.toLowerCase().contains(query) ||
+          (quiz.namaMapel?.toLowerCase().contains(query) ?? false) ||
           (quiz.deskripsi?.toLowerCase().contains(query) ?? false);
 
       final quizJenjang = (quiz.namaJenjang ?? '').toLowerCase().trim();
@@ -179,6 +180,28 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             ),
                           ),
                         ),
+                        if (quiz.namaMapel != null && quiz.namaMapel!.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFBFDBFE)),
+                            ),
+                            child: Text(
+                              '📖 ${quiz.namaMapel}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1D4ED8),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -761,6 +784,12 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
           spacing: 6,
           runSpacing: 4,
           children: [
+            if (quiz.namaMapel != null && quiz.namaMapel!.isNotEmpty)
+              _buildBadge(
+                Icons.menu_book_rounded,
+                quiz.namaMapel!,
+                color: const Color(0xFF4F46E5),
+              ),
             _buildBadge(
               Icons.quiz_outlined,
               '${quiz.questionsCount} Soal',
@@ -1165,10 +1194,36 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             ],
                           ),
 
-                          // Baris Bawah Cover: Tingkat Kesulitan (Pojok Kanan Bawah Cover persis Web)
+                          // Baris Bawah Cover: Mapel & Tingkat Kesulitan
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              if (quiz.namaMapel != null && quiz.namaMapel!.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1E1B4B).withValues(alpha: 0.85),
+                                    borderRadius: BorderRadius.circular(5),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.3),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '📖 ${quiz.namaMapel}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                )
+                              else
+                                const SizedBox.shrink(),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 7,

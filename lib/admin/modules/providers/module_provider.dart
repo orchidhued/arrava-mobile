@@ -23,6 +23,7 @@ class ModuleProvider with ChangeNotifier {
     String? search,
     String? status,
     int? jenjang,
+    int? mapel,
   }) async {
     _isLoading = true;
     _error = null;
@@ -33,6 +34,7 @@ class ModuleProvider with ChangeNotifier {
         search: search,
         status: status,
         jenjang: jenjang,
+        mapel: mapel,
       );
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');

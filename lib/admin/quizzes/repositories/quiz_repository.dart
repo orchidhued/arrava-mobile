@@ -10,16 +10,24 @@ class QuizRepository {
     String? search,
     String? status,
     int? jenjang,
+    int? mapel,
   }) async {
     final queryParams = <String, String>{};
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (status != null && status.isNotEmpty) queryParams['status'] = status;
     if (jenjang != null) queryParams['jenjang'] = jenjang.toString();
+    if (mapel != null) queryParams['mapel'] = mapel.toString();
 
     final response = await _service.fetchQuizzes(queryParams: queryParams);
     final data = response['data'] as List?;
     if (data == null) return [];
     return data.map((e) => QuizModel.fromJson(e)).toList();
+  }
+
+  Future<List<MapelModel>> getMapels({int? jenjang}) async {
+    final queryParams = <String, String>{};
+    if (jenjang != null) queryParams['jenjang'] = jenjang.toString();
+    return await _service.fetchMapelModels(queryParams: queryParams);
   }
 
   Future<QuizModel> getQuizById(int id) async {

@@ -780,6 +780,24 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                     ),
                   ),
                 ),
+              if (modul.namaMapel != null && modul.namaMapel!.isNotEmpty)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3E8FF),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE9D5FF)),
+                  ),
+                  child: Text(
+                    '📖 ${modul.namaMapel!}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF7E22CE),
+                    ),
+                  ),
+                ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

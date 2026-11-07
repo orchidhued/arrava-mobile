@@ -16,6 +16,7 @@ class ApiConstants {
   static const String me = '/me';
   static const String modules = '/modules';
   static const String quizzes = '/quizzes';
+  static const String mapel = '/mapel';
   static const String studentDashboard = '/student/dashboard';
   static const String adminDashboard = '/admin/dashboard';
   static const String teachers = '/teachers';

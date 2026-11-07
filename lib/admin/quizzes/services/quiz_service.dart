@@ -98,6 +98,25 @@ class QuizService {
   }
 
   // ---------------------------------------------------------------------------
+  // MATA PELAJARAN (MAPEL)
+  // ---------------------------------------------------------------------------
+
+  Future<dynamic> fetchMapel({Map<String, String>? queryParams}) async {
+    final endpoint = _withQuery(ApiConstants.mapel, queryParams ?? {});
+    return await ApiClient.get(endpoint);
+  }
+
+  Future<List<MapelModel>> fetchMapelModels({
+    Map<String, String>? queryParams,
+  }) async {
+    final response = await fetchMapel(queryParams: queryParams);
+    return _extractList(response)
+        .whereType<Map>()
+        .map((e) => MapelModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  // ---------------------------------------------------------------------------
   // BANK SOAL
   // ---------------------------------------------------------------------------
 

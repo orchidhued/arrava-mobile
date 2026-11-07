@@ -47,6 +47,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
       final matchQuery =
           query.isEmpty ||
           quiz.judul.toLowerCase().contains(query) ||
+          (quiz.namaMapel?.toLowerCase().contains(query) ?? false) ||
           (quiz.deskripsi?.toLowerCase().contains(query) ?? false) ||
           (quiz.kodeQuiz?.toLowerCase().contains(query) ?? false);
 
@@ -697,6 +698,28 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                         ),
                       ),
                     ),
+                    if (quiz.namaMapel != null && quiz.namaMapel!.isNotEmpty) ...[
+                      const SizedBox(width: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF).withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF93C5FD), width: 0.5),
+                        ),
+                        child: Text(
+                          '📖 ${quiz.namaMapel}',
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1D4ED8),
+                          ),
+                        ),
+                      ),
+                    ],
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(

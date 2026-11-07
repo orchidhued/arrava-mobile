@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../models/quiz_model.dart';
 import '../models/quiz_question.dart';
 
 class QuizProperties extends StatelessWidget {
   final QuizQuestion question;
+  final List<MapelModel> availableMapels;
   final ValueChanged<String> onChangedLevel;
+  final ValueChanged<int?>? onChangedMapel;
   final ValueChanged<String> onChangedDifficulty;
   final ValueChanged<int> onChangedTimeLimit;
   final ValueChanged<int> onChangedPoints;
@@ -14,7 +17,9 @@ class QuizProperties extends StatelessWidget {
   const QuizProperties({
     super.key,
     required this.question,
+    this.availableMapels = const [],
     required this.onChangedLevel,
+    this.onChangedMapel,
     required this.onChangedDifficulty,
     required this.onChangedTimeLimit,
     required this.onChangedPoints,
@@ -54,6 +59,8 @@ class QuizProperties extends StatelessWidget {
           Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 14),
           _buildLevelDropdown(),
+          const SizedBox(height: 14),
+          _buildMapelDropdown(),
           const SizedBox(height: 14),
           _buildDifficulty(),
           const SizedBox(height: 14),
@@ -141,6 +148,90 @@ class QuizProperties extends StatelessWidget {
           onChanged: (value) {
             if (value != null) {
               onChangedLevel(value);
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapelDropdown() {
+    final bool hasMatch = question.idMapel != null &&
+        availableMapels.any((m) => m.idMapel == question.idMapel);
+    final int? selectedValue = hasMatch ? question.idMapel : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.menu_book_rounded, size: 16, color: Color(0xFF2563EB)),
+            SizedBox(width: 6),
+            Text(
+              'Mata Pelajaran (Mapel)',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF334155),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<int?>(
+          initialValue: selectedValue,
+          isExpanded: true,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 9,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+          ),
+          icon: const Icon(
+            Icons.expand_more,
+            size: 19,
+            color: Color(0xFF94A3B8),
+          ),
+          items: [
+            const DropdownMenuItem<int?>(
+              value: null,
+              child: Text(
+                '-- Tanpa Mapel / Umum --',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ),
+            ...availableMapels.map((mapel) {
+              return DropdownMenuItem<int?>(
+                value: mapel.idMapel,
+                child: Text(
+                  mapel.namaMapel + (mapel.namaJenjang != null ? ' (${mapel.namaJenjang})' : ''),
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              );
+            }),
+          ],
+          onChanged: (value) {
+            if (onChangedMapel != null) {
+              onChangedMapel!(value);
             }
           },
         ),

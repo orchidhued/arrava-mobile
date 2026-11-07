@@ -10,11 +10,13 @@ class ModuleRepository {
     String? search,
     String? status,
     int? jenjang,
+    int? mapel,
   }) async {
     final response = await _service.fetchModules(
       search: search,
       status: status,
       jenjang: jenjang,
+      mapel: mapel,
     );
     final data = response['data'] as List?;
     if (data == null) return [];

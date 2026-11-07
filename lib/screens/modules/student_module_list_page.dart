@@ -56,6 +56,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
       final matchQuery =
           query.isEmpty ||
           modul.judulModul.toLowerCase().contains(query) ||
+          (modul.namaMapel?.toLowerCase().contains(query) ?? false) ||
           (modul.namaTipe?.toLowerCase().contains(query) ?? false);
 
       bool matchFilter = true;
@@ -529,7 +530,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                 ),
                 const SizedBox(height: 10),
 
-                // Meta row: Jenjang + XP + Quiz status
+                // Meta row: Jenjang + Mapel + XP + Quiz status
                 Row(
                   children: [
                     if (modul.namaJenjang != null) ...[
@@ -548,6 +549,27 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF1D4ED8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (modul.namaMapel != null && modul.namaMapel!.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3E8FF),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '📖 ${modul.namaMapel!}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF7E22CE),
                           ),
                         ),
                       ),
