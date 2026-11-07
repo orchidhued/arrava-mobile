@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../admin/quizzes/models/quiz_model.dart';
@@ -15,6 +16,11 @@ class StudentQuizListPage extends StatefulWidget {
 }
 
 class _StudentQuizListPageState extends State<StudentQuizListPage> {
+  static const _blue = Color(0xFF007FBE);
+  static const _ink = Color(0xFF12233F);
+  static const _muted = Color(0xFF465673);
+  static const _bg = Color(0xFFF0F6FF);
+
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatusFilter =
       'Semua'; // 'Semua', 'Belum Dikerjakan', 'Lulus', 'Belum Lulus'
@@ -229,9 +235,9 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        color: _bg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFDCEFFF)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -243,7 +249,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                           Container(
                             width: 1,
                             height: 28,
-                            color: const Color(0xFFCBD5E1),
+                            color: const Color(0xFFDCEFFF),
                           ),
                           _buildDetailStat(
                             label: 'Total Poin',
@@ -252,7 +258,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                           Container(
                             width: 1,
                             height: 28,
-                            color: const Color(0xFFCBD5E1),
+                            color: const Color(0xFFDCEFFF),
                           ),
                           _buildDetailStat(
                             label: 'Mode Waktu',
@@ -301,9 +307,19 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                       ),
                     ],
                     const SizedBox(height: 20),
-                    SizedBox(
+                    Container(
                       width: double.infinity,
                       height: 48,
+                      decoration: BoxDecoration(
+                        color: _blue,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0xFF00628E),
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
                       child: ElevatedButton.icon(
                         onPressed: isVerifying
                             ? null
@@ -368,7 +384,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Icon(Icons.play_arrow, size: 20),
+                            : const Icon(Icons.play_arrow_rounded, size: 20),
                         label: Text(
                           isVerifying
                               ? 'Memverifikasi...'
@@ -379,11 +395,10 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                          shape: const StadiumBorder(),
                         ),
                       ),
                     ),
@@ -422,92 +437,159 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     final quizProvider = context.watch<QuizProvider>();
     final quizzes = _filterQuizzes(quizProvider.quizzes);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'Kuis Interaktif Pembelajaran',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0.5,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: GoogleFonts.nunitoSansTextTheme(Theme.of(context).textTheme),
+        colorScheme: Theme.of(context).colorScheme.copyWith(primary: _blue),
       ),
-      body: SafeArea(
-        child: Column(
-        children: [
-          // Filter Tabs (Semua, Belum Dikerjakan, Lulus, Belum Lulus)
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: 'Cari kuis pembelajaran...',
-                    hintStyle: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      size: 20,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF1F5F9),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
+      child: Scaffold(
+        backgroundColor: _bg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Samudra Ocean Header & Filter
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFAEE3F9), Color(0xFFE6F3FF)],
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(24),
                   ),
                 ),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children:
-                        [
-                          'Semua',
-                          'Belum Dikerjakan',
-                          'Lulus',
-                          'Belum Lulus',
-                        ].map((status) {
-                          final isSelected = _selectedStatusFilter == status;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text(status),
-                              selected: isSelected,
-                              onSelected: (_) => setState(
-                                () => _selectedStatusFilter = status,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.rocket_launch_rounded,
+                                size: 16,
+                                color: _blue,
                               ),
-                              selectedColor: const Color(0xFF2563EB),
-                              labelStyle: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected
-                                    ? Colors.white
-                                    : const Color(0xFF475569),
+                              SizedBox(width: 6),
+                              Text(
+                                'Kuis Pembelajaran',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: _blue,
+                                ),
                               ),
-                              backgroundColor: const Color(0xFFF1F5F9),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${quizzes.length} Kuis',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: _muted,
                             ),
-                          );
-                        }).toList(),
-                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Cari kuis, mapel, topik...',
+                        hintStyle: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          size: 20,
+                          color: _blue,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFFDCEFFF)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFFDCEFFF)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children:
+                            [
+                              'Semua',
+                              'Belum Dikerjakan',
+                              'Lulus',
+                              'Belum Lulus',
+                            ].map((status) {
+                              final isSelected = _selectedStatusFilter == status;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(status),
+                                  selected: isSelected,
+                                  onSelected: (_) => setState(
+                                    () => _selectedStatusFilter = status,
+                                  ),
+                                  selectedColor: _blue,
+                                  labelStyle: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : _muted,
+                                  ),
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? _blue
+                                          : const Color(0xFFDCEFFF),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
           // Quiz Cards List
           Expanded(
@@ -638,7 +720,8 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
         ],
       ),
     ),
-  );
+  ),
+);
 }
 
   /// Widget penampil cover gambar kuis / foto soal dengan fallback aset resmi
@@ -899,32 +982,17 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
               const SizedBox(width: 6),
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  gradient: LinearGradient(
-                    colors: quiz.isExpired
-                        ? [
-                            const Color(0xFF94A3B8),
-                            const Color(0xFF64748B),
-                          ]
-                        : (quiz.hasTaken
-                            ? [
-                                const Color(0xFF0F172A),
-                                const Color(0xFF1E293B),
-                              ]
-                            : [
-                                const Color(0xFF2563EB),
-                                const Color(0xFF4F46E5),
-                              ]),
-                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  color: quiz.isExpired
+                      ? const Color(0xFF94A3B8)
+                      : (quiz.hasTaken ? const Color(0xFF12233F) : _blue),
                   boxShadow: [
                     if (!quiz.isExpired)
                       BoxShadow(
-                        color: (quiz.hasTaken
-                                ? const Color(0xFF0F172A)
-                                : const Color(0xFF2563EB))
-                            .withValues(alpha: 0.22),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: quiz.hasTaken
+                            ? const Color(0xFF0A1526)
+                            : const Color(0xFF00628E),
+                        offset: const Offset(0, 3),
                       ),
                   ],
                 ),
@@ -938,13 +1006,11 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                     foregroundColor: Colors.white,
                     disabledForegroundColor: Colors.white70,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 11,
-                      vertical: 3,
+                      horizontal: 14,
+                      vertical: 6,
                     ),
-                    minimumSize: const Size(0, 30),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    minimumSize: const Size(0, 32),
+                    shape: const StadiumBorder(),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -958,7 +1024,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 4),
                       Icon(
                         quiz.hasTaken
                             ? Icons.replay_rounded
@@ -1000,26 +1066,25 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
       margin: inGrid ? EdgeInsets.zero : const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isCompletedAndPassed
-              ? const Color(0xFF86EFAC).withValues(alpha: 0.8)
-              : const Color(0xFFE2E8F0),
+              ? const Color(0xFF86EFAC)
+              : const Color(0xFFDCEFFF),
           width: isCompletedAndPassed ? 1.5 : 1.0,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           onTap: () => _showQuizDetailSheet(quiz),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

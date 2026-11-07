@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../admin/modules/models/module_model.dart';
@@ -20,6 +21,11 @@ class StudentModuleDetailPage extends StatefulWidget {
 }
 
 class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
+  static const _blue = Color(0xFF007FBE);
+  static const _ink = Color(0xFF12233F);
+  static const _muted = Color(0xFF465673);
+  static const _bg = Color(0xFFF0F6FF);
+
   late ModuleModel _modul;
   int _activeTabIndex = 0; // 0: Overview, 1: Catatan, 2: Kuis Modul
   bool _isLoadingFresh = false;
@@ -160,7 +166,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
   }
 
   Future<void> _handleSubmitKuisModul() async {
-    if (_modul.soalModul.isEmpty) return;
+    if (_modul.soalModul.isEmpty) {
+      return;
+    }
+    final provider = context.read<ModuleProvider>();
 
     final int totalSoal = _modul.soalModul.length;
     final int answered = _selectedAnswers.length;
@@ -191,7 +200,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
+                backgroundColor: _blue,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Kumpulkan'),
@@ -200,18 +209,23 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         ),
       );
 
-      if (proceed != true) return;
+      if (proceed != true) {
+        return;
+      }
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() => _isSubmittingKuis = true);
-    final provider = context.read<ModuleProvider>();
     final result =
         await provider.submitModuleQuiz(_modul.idModul, _selectedAnswers);
     setState(() => _isSubmittingKuis = false);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     if (result != null) {
       if (provider.selectedModule != null) {
@@ -438,57 +452,63 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
     final String typeName =
         modul.namaTipe ?? (isVideo ? 'Video Pembelajaran' : 'Dokumen PDF');
     final Color badgeColor =
-        isVideo ? const Color(0xFFDC2626) : const Color(0xFF2563EB);
+        isVideo ? const Color(0xFFDC2626) : _blue;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'Detail Modul Belajar',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0.5,
-        actions: [
-          if (_isLoadingFresh)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: GoogleFonts.nunitoSansTextTheme(Theme.of(context).textTheme),
+        colorScheme: Theme.of(context).colorScheme.copyWith(primary: _blue),
+      ),
+      child: Scaffold(
+        backgroundColor: _bg,
+        appBar: AppBar(
+          title: const Text(
+            'Detail Modul Belajar',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          backgroundColor: Colors.white,
+          foregroundColor: _ink,
+          elevation: 0.5,
+          actions: [
+            if (_isLoadingFresh)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Media Preview Card (In-App Player for Video or PDF Viewer)
-            _buildMediaPreview(modul, isVideo),
-            const SizedBox(height: 16),
-
-            // Header Info & Metadata Card
-            _buildInfoCard(modul, typeName, badgeColor),
-            const SizedBox(height: 16),
-
-            // Dual Requirement Panel (Syarat Ganda Penyelesaian)
-            _buildSyaratGandaPanel(modul),
-            const SizedBox(height: 16),
-
-            // Navigation Tabs (Overview, Catatan, Kuis Modul)
-            _buildTabSelector(modul),
-            const SizedBox(height: 16),
-
-            // Tab Content
-            _buildTabContent(modul, isVideo),
-            const SizedBox(height: 32),
           ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Media Preview Card (In-App Player for Video or PDF Viewer)
+              _buildMediaPreview(modul, isVideo),
+              const SizedBox(height: 16),
+
+              // Header Info & Metadata Card
+              _buildInfoCard(modul, typeName, badgeColor),
+              const SizedBox(height: 16),
+
+              // Dual Requirement Panel (Syarat Ganda Penyelesaian)
+              _buildSyaratGandaPanel(modul),
+              const SizedBox(height: 16),
+
+              // Navigation Tabs (Overview, Catatan, Kuis Modul)
+              _buildTabSelector(modul),
+              const SizedBox(height: 16),
+
+              // Tab Content
+              _buildTabContent(modul, isVideo),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
@@ -737,8 +757,14 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFDCEFFF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -864,16 +890,18 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isTuntas ? const Color(0xFFF0FDF4) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isTuntas
               ? const Color(0xFFA7F3D0)
-              : const Color(0xFFE2E8F0),
+              : const Color(0xFFDCEFFF),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 8,
+            color: isTuntas
+                ? const Color(0xFFA7F3D0)
+                : const Color(0xFFB2E7FC),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -1286,8 +1314,14 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFDCEFFF)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0xFFB2E7FC),
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1320,9 +1354,15 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFC7D2FE)),
+              color: const Color(0xFFF0F6FF),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFDCEFFF)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFFB2E7FC),
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1332,7 +1372,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: Color(0xFF312E81),
+                    color: Color(0xFF12233F),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1340,13 +1380,23 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   'Tandai materi selesai untuk melengkapi langkah pertama penyelesaian modul.',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF4338CA),
+                    color: Color(0xFF465673),
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
+                Container(
                   width: double.infinity,
-                  height: 42,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: _blue,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0xFF00628E),
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: ElevatedButton.icon(
                     onPressed: _isMarkingDone ? null : _handleCompleteMateri,
                     icon: _isMarkingDone
@@ -1365,10 +1415,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                           fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4F46E5),
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                      shape: const StadiumBorder(),
                     ),
                   ),
                 ),
@@ -1384,8 +1434,14 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFDCEFFF)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0xFFB2E7FC),
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -1873,16 +1929,26 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         }),
 
         // Submit Button
-        SizedBox(
+        Container(
           width: double.infinity,
           height: 48,
+          decoration: BoxDecoration(
+            color: _blue,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0xFF00628E),
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
           child: ElevatedButton(
             onPressed: _isSubmittingKuis ? null : _handleSubmitKuisModul,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: const StadiumBorder(),
             ),
             child: _isSubmittingKuis
                 ? const SizedBox(

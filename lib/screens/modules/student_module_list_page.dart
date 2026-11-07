@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../admin/modules/models/module_model.dart';
@@ -15,6 +16,11 @@ class StudentModuleListPage extends StatefulWidget {
 }
 
 class _StudentModuleListPageState extends State<StudentModuleListPage> {
+  static const _blue = Color(0xFF007FBE);
+  static const _ink = Color(0xFF12233F);
+  static const _muted = Color(0xFF465673);
+  static const _bg = Color(0xFFF0F6FF);
+
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter =
       'Semua'; // 'Semua', 'Video', 'PDF', 'Belum Tuntas', 'Tuntas'
@@ -79,97 +85,159 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
     final moduleProvider = context.watch<ModuleProvider>();
     final modules = _filterModules(moduleProvider.modules);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'Belajar Asikk — Modul',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0.5,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: GoogleFonts.nunitoSansTextTheme(Theme.of(context).textTheme),
+        colorScheme: Theme.of(context).colorScheme.copyWith(primary: _blue),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Filter Tabs & Search
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      hintText: 'Cari modul, materi, atau topik...',
-                      hintStyle: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF94A3B8),
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        size: 20,
-                        color: Color(0xFF94A3B8),
-                      ),
-                      filled: true,
-                      fillColor: const Color(0xFFF1F5F9),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
+      child: Scaffold(
+        backgroundColor: _bg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Samudra Ocean Header & Filter
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFAEE3F9), Color(0xFFE6F3FF)],
                   ),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children:
-                          [
-                            'Semua',
-                            'Video',
-                            'PDF',
-                            'Belum Tuntas',
-                            'Tuntas',
-                          ].map((filter) {
-                            final isSelected = _selectedFilter == filter;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text(filter),
-                                selected: isSelected,
-                                onSelected: (_) =>
-                                    setState(() => _selectedFilter = filter),
-                                selectedColor: const Color(0xFF2563EB),
-                                labelStyle: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : const Color(0xFF475569),
-                                ),
-                                backgroundColor: const Color(0xFFF1F5F9),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? const Color(0xFF2563EB)
-                                        : const Color(0xFFE2E8F0),
-                                  ),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.menu_book_rounded,
+                                size: 16,
+                                color: _blue,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Modul Pembelajaran',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: _blue,
                                 ),
                               ),
-                            );
-                          }).toList(),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${modules.length} Modul',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: _muted,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Cari modul, materi, mapel...',
+                        hintStyle: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          size: 20,
+                          color: _blue,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFFDCEFFF)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Color(0xFFDCEFFF)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children:
+                            [
+                              'Semua',
+                              'Video',
+                              'PDF',
+                              'Belum Tuntas',
+                              'Tuntas',
+                            ].map((filter) {
+                              final isSelected = _selectedFilter == filter;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ChoiceChip(
+                                  label: Text(filter),
+                                  selected: isSelected,
+                                  onSelected: (_) =>
+                                      setState(() => _selectedFilter = filter),
+                                  selectedColor: _blue,
+                                  labelStyle: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : _muted,
+                                  ),
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? _blue
+                                          : const Color(0xFFDCEFFF),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
             const Divider(height: 1, color: Color(0xFFE2E8F0)),
 
             // Body Content
@@ -296,8 +364,9 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildModuleCover(ModuleModel modul, bool isVideo) {
     final customCover = ApiConstants.resolveMediaUrl(
@@ -399,19 +468,21 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDone ? const Color(0xFF86EFAC) : const Color(0xFFDCEFFF),
+          width: isDone ? 1.5 : 1.0,
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
@@ -641,9 +712,15 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                 const SizedBox(height: 14),
 
                 // Action Button
-                SizedBox(
+                Container(
                   width: double.infinity,
-                  height: 42,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0xFF00628E), offset: Offset(0, 4)),
+                    ],
+                  ),
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.push(
@@ -665,21 +742,17 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                           ? (isVideo ? 'Tonton Ulang Video' : 'Buka Kembali Modul')
                           : (isVideo ? 'Tonton Video' : 'Buka Modul'),
                       style: const TextStyle(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w900,
                         fontSize: 13,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDone
                           ? const Color(0xFF334155)
-                          : (isVideo
-                              ? const Color(0xFFDC2626)
-                              : const Color(0xFF2563EB)),
+                          : (isVideo ? const Color(0xFFE11D48) : _blue),
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: const StadiumBorder(),
                     ),
                   ),
                 ),

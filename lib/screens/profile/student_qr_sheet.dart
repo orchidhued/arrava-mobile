@@ -56,7 +56,9 @@ class _StudentQrSheetState extends State<StudentQrSheet> {
           color: Color(0xFF006B99),
         ),
       ).toImageData(1024, format: ui.ImageByteFormat.png);
-      if (bytes == null) throw StateError('QR tidak dapat dibuat');
+      if (bytes == null) {
+        throw StateError('QR tidak dapat dibuat');
+      }
       await const MethodChannel('com.arrava.app/launcher')
           .invokeMethod<void>('saveQr', {
             'bytes': bytes.buffer.asUint8List(
@@ -93,7 +95,9 @@ class _StudentQrSheetState extends State<StudentQrSheet> {
         );
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 

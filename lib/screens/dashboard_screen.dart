@@ -21,10 +21,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   final ScrollController _scrollController = ScrollController();
 
-  static const _blue = Color(0xFF2563EB);
+  static const _blue = Color(0xFF007FBE);
   static const _indigo = Color(0xFF4F46E5);
   static const _green = Color(0xFF059669);
   static const _orange = Color(0xFFD97706);
+  static const _bg = Color(0xFFF0F6FF);
 
   bool _isLoading = true;
   Map<String, dynamic>? _dashboardData;
@@ -61,7 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     if (_currentIndex == 1) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: _bg,
         body: const SafeArea(child: StudentModuleListPage()),
         bottomNavigationBar: _buildBottomNav(),
       );
@@ -69,7 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (_currentIndex == 2) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: _bg,
         body: const SafeArea(child: StudentQuizListPage()),
         bottomNavigationBar: _buildBottomNav(),
       );
@@ -77,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (_currentIndex == 3) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: _bg,
         body: const SafeArea(child: StudentProfilePage()),
         bottomNavigationBar: _buildBottomNav(),
       );
@@ -94,8 +95,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ?.cast<Map<String, dynamic>>() ??
         [];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: GoogleFonts.nunitoSansTextTheme(Theme.of(context).textTheme),
+        colorScheme: Theme.of(context).colorScheme.copyWith(primary: _blue),
+      ),
+      child: Scaffold(
+        backgroundColor: _bg,
       body: SafeArea(
         child: TweenFloatBackground(
           scrollController: _scrollController,
@@ -209,8 +215,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
-    );
-  }
+    ),
+  );
+}
 
   // ===========================================================================
   // WIDGET BUILDERS
@@ -221,13 +228,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFDCEFFF)),
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -242,14 +248,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                    colors: [Color(0xFF007FBE), Color(0xFF51CDF4)],
                   ),
                   borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                      color: Color(0x3340B4DB),
                       blurRadius: 6,
-                      offset: const Offset(0, 2),
+                      offset: Offset(0, 2),
                     ),
                   ],
                 ),
@@ -527,7 +533,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _showAttendanceQr() async {
     try {
       final profile = await DashboardService.fetchStudentProfile();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       await showModalBottomSheet<void>(
         context: context,
         useRootNavigator: true,
@@ -682,13 +690,13 @@ class _MateriCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: [
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFDCEFFF)),
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Color(0xFFB2E7FC),
+                offset: Offset(0, 3),
               ),
             ],
           ),
@@ -802,13 +810,12 @@ class _RiwayatItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFDCEFFF)),
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 3),
           ),
         ],
       ),

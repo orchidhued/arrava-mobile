@@ -64,9 +64,93 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
 
   Future<void> _changePhoto(Map<String, dynamic> user) async {
     if (_isPickingPhoto) return;
+
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pilih Sumber Foto Profil',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: _ink,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2FE),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded, color: _blue),
+                ),
+                title: const Text('Ambil dari Kamera',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                subtitle: const Text('Foto langsung menggunakan kamera HP',
+                    style: TextStyle(fontSize: 12, color: _muted)),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              const SizedBox(height: 6),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2FE),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.photo_library_rounded, color: _blue),
+                ),
+                title: const Text('Pilih dari Galeri',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                subtitle: const Text('Pilih foto dari penyimpanan galeri',
+                    style: TextStyle(fontSize: 12, color: _muted)),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+
     setState(() => _isPickingPhoto = true);
     try {
-      final photo = await ImagePicker().pickImage(source: ImageSource.gallery);
+      final photo = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
       if (photo == null || !mounted) return;
       if (await photo.length() > 2 * 1024 * 1024) {
         throw Exception(
@@ -74,10 +158,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
         );
       }
       final bytes = await photo.readAsBytes();
-      final extension = _photoExtension(bytes);
-      if (extension == null) {
-        throw Exception('Gunakan foto berformat JPG, PNG, atau WebP.');
-      }
+      final extension = _photoExtension(bytes) ?? 'jpg';
       if (!mounted) return;
       await _previewPhoto(user, bytes, 'foto-profil.$extension');
     } catch (e) {

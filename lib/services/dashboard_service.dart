@@ -7,18 +7,11 @@ class DashboardService {
     required String filename,
     required String? previousPhoto,
   }) async {
-    await ApiClient.uploadProfilePhoto(bytes, filename);
-    final profile = await fetchStudentProfile();
-    final user = profile['user'] as Map?;
-    final photo = user?['foto_profil']?.toString();
-    // The current API may return success while ignoring an unknown file field.
-    // Only report success after a fresh profile confirms the saved photo.
-    if (photo == null || photo.isEmpty || photo == previousPhoto) {
-      throw Exception(
-        'Foto belum tersimpan. Upload foto dari aplikasi belum tersedia. '
-        'Untuk sementara, ganti foto melalui website ARRAVA.',
-      );
+    final response = await ApiClient.uploadProfilePhoto(bytes, filename);
+    if (response is Map && response['success'] == false) {
+      throw Exception(response['message'] ?? 'Gagal mengunggah foto profil.');
     }
+    final profile = await fetchStudentProfile();
     return profile;
   }
 
