@@ -10,6 +10,7 @@ void main() {
       expect(ApiConstants.modules, '/modules');
       expect(ApiConstants.quizzes, '/quizzes');
       expect(ApiConstants.studentDashboard, '/student/dashboard');
+      expect(ApiConstants.parentDashboard, '/parent/dashboard');
       expect(ApiConstants.adminDashboard, '/admin/dashboard');
       expect(ApiConstants.teachers, '/teachers');
       expect(ApiConstants.students, '/students');

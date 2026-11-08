@@ -55,6 +55,17 @@ class DashboardService {
     return {};
   }
 
+  static Future<Map<String, dynamic>> fetchParentDashboard({int? studentId}) async {
+    final query = studentId != null ? '?siswa_id=$studentId' : '';
+    final response = await ApiClient.get('${ApiConstants.parentDashboard}$query');
+    if (response is Map &&
+        response['success'] == true &&
+        response['data'] != null) {
+      return Map<String, dynamic>.from(response['data']);
+    }
+    return {};
+  }
+
   static Future<List<Map<String, dynamic>>> fetchTeachers() async {
     final response = await ApiClient.get(ApiConstants.teachers);
     if (response is Map &&
