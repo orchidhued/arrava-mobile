@@ -411,215 +411,225 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Foto Profil Siswa
-          GestureDetector(
-            onTap: widget.onProfileTap,
-            child: Container(
-              padding: const EdgeInsets.all(2.5),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.16),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 360;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Foto Profil Siswa
+              GestureDetector(
+                onTap: widget.onProfileTap,
+                child: Container(
+                  padding: const EdgeInsets.all(2.5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.16),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
+                  child: CircleAvatar(
+                    radius: isCompact ? 21 : 24,
+                    backgroundColor: const Color(0xFFF97316),
+                    backgroundImage:
+                        (user?['foto_profil'] != null &&
+                            user!['foto_profil'].toString().isNotEmpty)
+                        ? NetworkImage(user['foto_profil'] as String)
+                        : null,
+                    child:
+                        (user?['foto_profil'] == null ||
+                            user!['foto_profil'].toString().isEmpty)
+                        ? Icon(
+                            Icons.sentiment_very_satisfied_rounded,
+                            color: Colors.white,
+                            size: isCompact ? 22 : 26,
+                          )
+                        : null,
+                  ),
+                ),
               ),
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: const Color(0xFFF97316),
-                backgroundImage:
-                    (user?['foto_profil'] != null &&
-                        user!['foto_profil'].toString().isNotEmpty)
-                    ? NetworkImage(user['foto_profil'] as String)
-                    : null,
-                child:
-                    (user?['foto_profil'] == null ||
-                        user!['foto_profil'].toString().isEmpty)
-                    ? const Icon(
-                        Icons.sentiment_very_satisfied_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      )
-                    : null,
-              ),
-            ),
-          ),
 
-          const SizedBox(width: 10),
+              const SizedBox(width: 8),
 
-          // Info Siswa: Nama, Badge Jenjang, & Level
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+              // Info Siswa: Nama, Badge Jenjang, & Level
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
-                      child: Text(
-                        user != null && user['nama'] != null
-                            ? user['nama'].toString()
-                            : 'Siswa Arrava',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black54,
-                              blurRadius: 4,
-                              offset: Offset(0, 1),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            user != null && user['nama'] != null
+                                ? user['nama'].toString()
+                                : 'Siswa Arrava',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: isCompact ? 13.5 : 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              shadows: const [
+                                Shadow(
+                                  color: Colors.black54,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 5),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD1FAE5),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                size: 10,
+                                color: Color(0xFF059669),
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                user?['jenjang'] != null
+                                    ? '${user!['jenjang']}'
+                                    : 'SD',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF047857),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 5),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 1.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD1FAE5),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Level $level • $kuisLulus Kuis Selesai',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: isCompact ? 10 : 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.95),
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black54,
                             blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            size: 10,
-                            color: Color(0xFF059669),
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            user?['jenjang'] != null
-                                ? '${user!['jenjang']}'
-                                : 'SD',
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF047857),
-                            ),
+                            offset: Offset(0, 1),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Level $level • $kuisLulus Kuis Selesai',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+              ),
+
+              const SizedBox(width: 8),
+
+              // Bar EXP Pill: Menggantikan Bar Santai dengan Bar EXP (Tap untuk Leaderboard)
+              GestureDetector(
+                onTap: widget.onLeaderboardTap,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isCompact ? 7 : 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.95),
-                    shadows: const [
-                      Shadow(
-                        color: Colors.black54,
-                        blurRadius: 4,
-                        offset: Offset(0, 1),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$totalXp EXP',
+                        style: TextStyle(
+                          fontSize: isCompact ? 9.5 : 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      if (!isCompact) ...[
+                        const SizedBox(width: 5),
+                        // Progress bar mini bersegmen 5 segmen
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(5, (index) {
+                            final int filledSegments = ((progressPercent / 100) * 5)
+                                .round()
+                                .clamp(1, 5);
+                            final bool isFilled = index < filledSegments;
+                            return Container(
+                              width: 6,
+                              height: 4,
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              decoration: BoxDecoration(
+                                color: isFilled
+                                    ? const Color(0xFF2563EB)
+                                    : const Color(0xFFCBD5E1),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFFFEE2E2),
+                        ),
+                        child: const Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 11,
+                          color: Color(0xFFEF4444),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Bar EXP Pill: Menggantikan Bar Santai dengan Bar EXP (Tap untuk Leaderboard)
-          GestureDetector(
-            onTap: widget.onLeaderboardTap,
-            child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 9,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$totalXp EXP',
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(width: 5),
-                // Progress bar mini bersegmen 5 segmen
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(5, (index) {
-                    final int filledSegments = ((progressPercent / 100) * 5)
-                        .round()
-                        .clamp(1, 5);
-                    final bool isFilled = index < filledSegments;
-                    return Container(
-                      width: 6,
-                      height: 4,
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      decoration: BoxDecoration(
-                        color: isFilled
-                            ? const Color(0xFF2563EB)
-                            : const Color(0xFFCBD5E1),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(width: 4),
-                Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFFEE2E2),
-                  ),
-                  child: const Icon(
-                    Icons.local_fire_department_rounded,
-                    size: 11,
-                    color: Color(0xFFEF4444),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   Widget _fishWidget(Fish f) {
     final bob = math.sin(_t * 1.2 + f.seed) * 3;

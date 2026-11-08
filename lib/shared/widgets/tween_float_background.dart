@@ -2,27 +2,33 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-/// Konfigurasi parameter gelombang/partikel mengambang
-class FloatCfg {
-  final int dur; // ms per siklus naik-turun
-  final double ax; // jarak geser kiri-kanan (%)
-  final double ay; // jarak geser naik-turun (%)
-  final double ph; // fase awal
-  final double o; // opacity dasar
-  final double heightFactor; // faktor tinggi lapisan
+/// Data partikel gelembung mengambang laut
+class _OceanParticle {
+  final double xPct;
+  final double radius;
+  final double speed;
+  final double driftFreq;
+  final double driftAmp;
+  final double baseOpacity;
+  final Color color;
 
-  const FloatCfg({
-    required this.dur,
-    required this.ax,
-    required this.ay,
-    required this.ph,
-    required this.o,
-    required this.heightFactor,
+  double yPct;
+
+  _OceanParticle({
+    required this.xPct,
+    required this.yPct,
+    required this.radius,
+    required this.speed,
+    required this.driftFreq,
+    required this.driftAmp,
+    required this.baseOpacity,
+    required this.color,
   });
 }
 
-/// Widget latar belakang efek piksel mengambang (Tween Float Pixel Effect)
-/// Mengikuti lebar penuh beranda dan tinggi dari dashboard secara dinamis.
+/// Widget latar belakang efek gelombang & partikel samudra (Modern Oceanic Ambient)
+/// Mengikuti lebar penuh layar dan memberikan kedalaman visual yang tenang & profesional
+/// tanpa mengganggu keterbacaan teks atau kartu utama.
 class TweenFloatBackground extends StatefulWidget {
   final Widget child;
   final ScrollController? scrollController;
@@ -47,32 +53,50 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   final ValueNotifier<int> _frame = ValueNotifier<int>(0);
-  double _ms = 0.0;
+  double _timeSec = 0.0;
+  Duration _lastElapsed = Duration.zero;
 
-  static const String _imgBg = 'assets/backgorund1.png';
-  static const String _imgFloat = 'assets/backgorund3.png';
-
-  static const List<FloatCfg> _floats = [
-    FloatCfg(dur: 4200, ax: 2.8, ay: 6.0, ph: 0.0, o: 0.50, heightFactor: 0.88),
-    FloatCfg(dur: 3000, ax: 2.4, ay: 5.0, ph: 0.5, o: 0.70, heightFactor: 1.0),
-  ];
-
-  /// Easing sinus halus
-  static double _ease(double t) => -(math.cos(math.pi * t) - 1) / 2;
-
-  /// Bolak-balik 0 -> 1 -> 0 seiring waktu
-  static double _pingpong(double ms, double d, double ph) {
-    final p = ((ms / d) + ph) % 2;
-    return p < 1 ? p : 2 - p;
-  }
+  late final List<_OceanParticle> _particles;
 
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker((elapsed) {
-      _ms = elapsed.inMicroseconds / 1000.0;
-      _frame.value++;
-    })..start();
+    _initParticles();
+    _ticker = createTicker(_onTick)..start();
+  }
+
+  void _initParticles() {
+    final rng = math.Random(42); // Seed konsisten
+    const particleCount = 18;
+    _particles = List.generate(particleCount, (i) {
+      final isCyan = rng.nextBool();
+      return _OceanParticle(
+        xPct: rng.nextDouble(),
+        yPct: rng.nextDouble(),
+        radius: 3.5 + rng.nextDouble() * 5.5,
+        speed: 0.025 + rng.nextDouble() * 0.045,
+        driftFreq: 1.2 + rng.nextDouble() * 1.5,
+        driftAmp: 6.0 + rng.nextDouble() * 12.0,
+        baseOpacity: 0.22 + rng.nextDouble() * 0.28,
+        color: isCyan ? const Color(0xFF51CDF4) : const Color(0xFF007FBE),
+      );
+    });
+  }
+
+  void _onTick(Duration elapsed) {
+    final dt = ((elapsed - _lastElapsed).inMicroseconds / 1e6).clamp(0.001, 0.05);
+    _lastElapsed = elapsed;
+    _timeSec += dt;
+
+    // Update posisi partikel naik ke atas
+    for (final p in _particles) {
+      p.yPct -= p.speed * dt;
+      if (p.yPct < 0.0) {
+        p.yPct = 1.0;
+      }
+    }
+
+    _frame.value++;
   }
 
   @override
@@ -82,179 +106,182 @@ class _TweenFloatBackgroundState extends State<TweenFloatBackground>
     super.dispose();
   }
 
-  Widget _pixelImage(
-    String path, {
-    BoxFit fit = BoxFit.fitHeight,
-    ImageRepeat repeat = ImageRepeat.repeatX,
-    Alignment alignment = Alignment.bottomCenter,
-  }) {
-    return Image.asset(
-      path,
-      fit: fit,
-      repeat: repeat,
-      alignment: alignment,
-      filterQuality: FilterQuality.none,
-      width: double.infinity,
-      height: double.infinity,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double h = constraints.maxHeight;
+    return Stack(
+      children: [
+        // ===============================================================
+        // LAPISAN AMBIENT GELOMBANG & PARTIKEL SAMUDRA (DI BELAKANG KONTEN)
+        // ===============================================================
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _frame,
+              builder: (context, _) {
+                final double scrollY = (widget.enableParallax &&
+                        widget.scrollController != null &&
+                        widget.scrollController!.hasClients)
+                    ? widget.scrollController!.offset
+                    : 0.0;
 
-        return Stack(
-          children: [
-            // ===============================================================
-            // LAPISAN EFEK (Mengikuti lebar beranda dan tinggi dashboard)
-            // ===============================================================
-            Positioned.fill(
-              child: IgnorePointer(
-                child: ClipRect(
-                  child: ShaderMask(
-                    shaderCallback: (Rect bounds) {
-                      return const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.white,
-                        ],
-                        stops: [0.0, 0.45],
-                      ).createShader(bounds);
-                    },
-                    blendMode: BlendMode.dstIn,
-                    child: AnimatedBuilder(
-                      animation: _frame,
-                      builder: (context, _) {
-                        // Parallax scroll jika controller aktif (terkunci di bawah viewport seperti web)
-                        final double scrollY = (widget.enableParallax &&
-                                widget.scrollController != null &&
-                                widget.scrollController!.hasClients)
-                            ? widget.scrollController!.offset
-                            : 0.0;
-
-                        final double bgBaseH = (h * 0.40).clamp(260.0, 400.0);
-                      final double bgParallax1 = (scrollY * 0.08).clamp(0.0, 45.0);
-                      final double bgParallax2 = (scrollY * 0.10).clamp(0.0, 55.0);
-                      final double floatParallax = (scrollY * 0.09).clamp(0.0, 50.0);
-
-                      return Stack(
-                        children: [
-                          // 1. Latar Belakang Lapisan 1 (assets/backgorund1.png)
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: -20,
-                            height: bgBaseH + 20,
-                            child: Transform.translate(
-                              offset: Offset(0, -bgParallax1),
-                              child: Opacity(
-                                opacity: (0.42 * widget.bgOpacity).clamp(0.0, 1.0),
-                                child: _pixelImage(
-                                  _imgBg,
-                                  fit: BoxFit.fitHeight,
-                                  repeat: ImageRepeat.repeatX,
-                                  alignment: Alignment.bottomCenter,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // 2. Latar Belakang Lapisan 2 (dicerminkan, kedalaman ganda)
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: -20,
-                            height: bgBaseH * 1.06 + 20,
-                            child: Transform.translate(
-                              offset: Offset(30, -bgParallax2),
-                              child: Opacity(
-                                opacity: (0.24 * widget.bgOpacity).clamp(0.0, 1.0),
-                                child: Transform(
-                                  alignment: Alignment.bottomCenter,
-                                  transform: Matrix4.identity()
-                                    ..scaleByDouble(-1.0, 1.0, 1.0, 1.0),
-                                  child: _pixelImage(
-                                    _imgBg,
-                                    fit: BoxFit.fitHeight,
-                                    repeat: ImageRepeat.repeatX,
-                                    alignment: Alignment.bottomCenter,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // 3. Lapisan Partikel Mengambang (assets/backgorund3.png)
-                          ..._floats.map((l) {
-                            final double layerH =
-                                (bgBaseH * l.heightFactor).clamp(160.0, 320.0);
-
-                            final double ex = _ease(
-                                  _pingpong(_ms, l.dur * 1.3, l.ph),
-                                ) *
-                                2.0 -
-                                1.0;
-                            final double ey = _ease(
-                                  _pingpong(_ms, l.dur.toDouble(), 0),
-                                ) *
-                                2.0 -
-                                1.0;
-
-                            final double floatX = ex * (l.ax * 4.5);
-                            final double floatY = -ey * (l.ay * 2.2);
-
-                            return Positioned(
-                              left: -40,
-                              right: -40,
-                              bottom: -15,
-                              height: layerH + 15,
-                              child: Transform.translate(
-                                offset: Offset(
-                                  floatX,
-                                  floatY - floatParallax,
-                                ),
-                                child: Opacity(
-                                  opacity:
-                                      (l.o * widget.bgOpacity).clamp(0.0, 1.0),
-                                  child: _pixelImage(
-                                    _imgFloat,
-                                    fit: BoxFit.fitHeight,
-                                    repeat: ImageRepeat.repeatX,
-                                    alignment: Alignment.bottomCenter,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-
-                          // 4. Lapisan Overlay Opsional (untuk kontras teks)
-                          if (widget.overlayColor != null)
-                            Positioned.fill(
-                              child: ColoredBox(color: widget.overlayColor!),
-                            ),
-                        ],
-                      );
-                    },
+                return CustomPaint(
+                  painter: _OceanAmbientPainter(
+                    time: _timeSec,
+                    scrollY: scrollY,
+                    bgOpacity: widget.bgOpacity,
+                    particles: _particles,
                   ),
-                ),
-              ),
+                );
+              },
+            ),
+          ),
+        ),
+
+        // ===============================================================
+        // OVERLAY WARNA OPSIONAL
+        // ===============================================================
+        if (widget.overlayColor != null)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ColoredBox(color: widget.overlayColor!),
             ),
           ),
 
-            // ===============================================================
-            // KONTEN UTAMA DASHBOARD
-            // ===============================================================
-            Positioned.fill(
-              child: widget.child,
-            ),
-          ],
-        );
-      },
+        // ===============================================================
+        // KONTEN UTAMA DASHBOARD
+        // ===============================================================
+        Positioned.fill(
+          child: widget.child,
+        ),
+      ],
     );
   }
 }
 
+/// Custom Painter untuk menggambar gelombang samudra halus & partikel ambient
+class _OceanAmbientPainter extends CustomPainter {
+  final double time;
+  final double scrollY;
+  final double bgOpacity;
+  final List<_OceanParticle> particles;
+
+  _OceanAmbientPainter({
+    required this.time,
+    required this.scrollY,
+    required this.bgOpacity,
+    required this.particles,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Batasi tinggi area gelombang di 30% layar bagian bawah
+    final waveBaseH = (h * 0.28).clamp(160.0, 280.0);
+    final parallax = (scrollY * 0.08).clamp(0.0, 45.0);
+
+    final baseY = h - waveBaseH + parallax;
+
+    // 1. Gambar Gelombang Lapis 1 (Deep Ocean Wave - Paling Belakang)
+    _drawSmoothWave(
+      canvas: canvas,
+      width: w,
+      height: h,
+      baseY: baseY + 30,
+      amplitude: 14.0,
+      frequency: 0.007,
+      speed: 0.7,
+      phase: 0.0,
+      color: const Color(0xFFBAE6FD).withValues(alpha: 0.22 * bgOpacity),
+    );
+
+    // 2. Gambar Gelombang Lapis 2 (Mid Ocean Wave - Tengah)
+    _drawSmoothWave(
+      canvas: canvas,
+      width: w,
+      height: h,
+      baseY: baseY + 14,
+      amplitude: 11.0,
+      frequency: 0.009,
+      speed: -0.9,
+      phase: 2.2,
+      color: const Color(0xFF7DD3FC).withValues(alpha: 0.18 * bgOpacity),
+    );
+
+    // 3. Gambar Gelombang Lapis 3 (Front Crest Wave - Depan)
+    _drawSmoothWave(
+      canvas: canvas,
+      width: w,
+      height: h,
+      baseY: baseY,
+      amplitude: 8.0,
+      frequency: 0.011,
+      speed: 1.1,
+      phase: 4.1,
+      color: const Color(0xFFE0F2FE).withValues(alpha: 0.32 * bgOpacity),
+    );
+
+    // 4. Gambar Partikel Gelembung Ambient (Hanya muncul di 45% bagian bawah layar)
+    final particlePaint = Paint()..style = PaintingStyle.fill;
+    final strokePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (final p in particles) {
+      // Petakan yPct ke 50% bagian bawah layar agar tidak naik ke atas kartu
+      final py = h - (p.yPct * (h * 0.45));
+      final drift = math.sin(time * p.driftFreq + p.xPct * 10) * p.driftAmp;
+      final px = (p.xPct * w + drift) % w;
+
+      // Efek fade-out saat partikel naik mendekati bagian tengah layar
+      final fadeFactor = (1.0 - (1.0 - p.yPct)).clamp(0.0, 1.0);
+      final alpha = (p.baseOpacity * fadeFactor * bgOpacity).clamp(0.0, 1.0);
+
+      particlePaint.color = p.color.withValues(alpha: alpha * 0.45);
+      canvas.drawCircle(Offset(px, py), p.radius, particlePaint);
+
+      // Cincin halus gelembung
+      strokePaint.color = p.color.withValues(alpha: alpha * 0.75);
+      canvas.drawCircle(Offset(px, py), p.radius, strokePaint);
+    }
+  }
+
+  void _drawSmoothWave({
+    required Canvas canvas,
+    required double width,
+    required double height,
+    required double baseY,
+    required double amplitude,
+    required double frequency,
+    required double speed,
+    required double phase,
+    required Color color,
+  }) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.moveTo(0, height);
+    path.lineTo(0, baseY);
+
+    const step = 8.0; // Interval sampling kurva halus
+    for (double x = 0; x <= width; x += step) {
+      final y = baseY + math.sin(x * frequency + (time * speed) + phase) * amplitude;
+      path.lineTo(x, y);
+    }
+
+    path.lineTo(width, height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _OceanAmbientPainter oldDelegate) {
+    return oldDelegate.time != time ||
+        oldDelegate.scrollY != scrollY ||
+        oldDelegate.bgOpacity != bgOpacity;
+  }
+}
