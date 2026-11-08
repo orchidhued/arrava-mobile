@@ -23,7 +23,6 @@ class StudentModuleDetailPage extends StatefulWidget {
 class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
   static const _blue = Color(0xFF007FBE);
   static const _ink = Color(0xFF12233F);
-  static const _muted = Color(0xFF465673);
   static const _bg = Color(0xFFF0F6FF);
 
   late ModuleModel _modul;
@@ -910,59 +909,67 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         children: [
           // Header Bar Syarat
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: isTuntas
-                          ? const Color(0xFF059669)
-                          : const Color(0xFFEEF2FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        isTuntas ? Icons.check : Icons.track_changes_rounded,
-                        color:
-                            isTuntas ? Colors.white : const Color(0xFF4F46E5),
-                        size: 18,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isTuntas
+                            ? const Color(0xFF059669)
+                            : const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isTuntas
-                            ? 'Modul Tuntas Sempurna!'
-                            : 'Syarat Penyelesaian Modul',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: isTuntas
-                              ? const Color(0xFF065F46)
-                              : const Color(0xFF0F172A),
+                      child: Center(
+                        child: Icon(
+                          isTuntas ? Icons.check : Icons.track_changes_rounded,
+                          color:
+                              isTuntas ? Colors.white : const Color(0xFF4F46E5),
+                          size: 18,
                         ),
                       ),
-                      Text(
-                        isTuntas
-                            ? 'Materi & evaluasi kuis modul tuntas.'
-                            : 'Selesaikan 2 langkah untuk klaim EXP.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isTuntas
-                              ? const Color(0xFF047857)
-                              : const Color(0xFF64748B),
-                        ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isTuntas
+                                ? 'Modul Tuntas Sempurna!'
+                                : 'Syarat Penyelesaian Modul',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: isTuntas
+                                  ? const Color(0xFF065F46)
+                                  : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          Text(
+                            isTuntas
+                                ? 'Materi & evaluasi kuis modul tuntas.'
+                                : 'Selesaikan 2 langkah untuk klaim EXP.',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isTuntas
+                                  ? const Color(0xFF047857)
+                                  : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

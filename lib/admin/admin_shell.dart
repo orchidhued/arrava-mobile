@@ -9,7 +9,8 @@ import 'quizzes/quiz_menu_page.dart';
 import 'attendance/attendance_page.dart';
 
 class AdminShell extends StatefulWidget {
-  const AdminShell({super.key});
+  final bool isTeacher;
+  const AdminShell({super.key, this.isTeacher = false});
 
   @override
   State<AdminShell> createState() => _AdminShellState();
@@ -37,7 +38,7 @@ class _AdminShellState extends State<AdminShell> {
   Widget _buildCurrentPage() {
     switch (_currentIndex) {
       case 0:
-        return const AdminDashboardPage();
+        return AdminDashboardPage(isTeacher: widget.isTeacher);
 
       case 1:
         return const ModulePage();
@@ -55,7 +56,7 @@ class _AdminShellState extends State<AdminShell> {
         return const QuizMenuPage();
 
       default:
-        return const AdminDashboardPage();
+        return AdminDashboardPage(isTeacher: widget.isTeacher);
     }
   }
 }

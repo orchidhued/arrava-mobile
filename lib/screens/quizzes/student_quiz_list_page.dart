@@ -17,7 +17,6 @@ class StudentQuizListPage extends StatefulWidget {
 
 class _StudentQuizListPageState extends State<StudentQuizListPage> {
   static const _blue = Color(0xFF007FBE);
-  static const _ink = Color(0xFF12233F);
   static const _muted = Color(0xFF465673);
   static const _bg = Color(0xFFF0F6FF);
 
@@ -186,7 +185,8 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             ),
                           ),
                         ),
-                        if (quiz.namaMapel != null && quiz.namaMapel!.isNotEmpty) ...[
+                        if (quiz.namaMapel != null &&
+                            quiz.namaMapel!.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -196,7 +196,9 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFEFF6FF),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFFBFDBFE)),
+                              border: Border.all(
+                                color: const Color(0xFFBFDBFE),
+                              ),
                             ),
                             child: Text(
                               '📖 ${quiz.namaMapel}',
@@ -537,11 +539,15 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFDCEFFF)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFDCEFFF),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFDCEFFF)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFDCEFFF),
+                          ),
                         ),
                       ),
                     ),
@@ -556,7 +562,8 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                               'Lulus',
                               'Belum Lulus',
                             ].map((status) {
-                              final isSelected = _selectedStatusFilter == status;
+                              final isSelected =
+                                  _selectedStatusFilter == status;
                               return Padding(
                                 padding: const EdgeInsets.only(right: 8),
                                 child: ChoiceChip(
@@ -569,9 +576,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                   labelStyle: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : _muted,
+                                    color: isSelected ? Colors.white : _muted,
                                   ),
                                   backgroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
@@ -591,143 +596,145 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                 ),
               ),
 
-          // Quiz Cards List
-          Expanded(
-            child: quizProvider.isLoading && quizProvider.quizzes.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : quizProvider.error != null && quizProvider.quizzes.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.cloud_off,
-                            size: 48,
-                            color: Color(0xFF94A3B8),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Gagal Memuat Kuis',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            quizProvider.error!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: _loadQuizzes,
-                            icon: const Icon(Icons.refresh, size: 16),
-                            label: const Text('Coba Lagi'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : quizzes.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.quiz_outlined,
-                          size: 48,
-                          color: Color(0xFF94A3B8),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Belum Ada Kuis Tersedia',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Silakan periksa kembali nanti atau hubungi guru Anda.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        ElevatedButton.icon(
-                          onPressed: _loadQuizzes,
-                          icon: const Icon(Icons.refresh, size: 16),
-                          label: const Text('Refresh'),
-                        ),
-                      ],
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _loadQuizzes,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final double maxW = constraints.maxWidth;
-                        // 1 kolom di HP (<600px), 2 kolom di tablet (600-1050px), 3 kolom di desktop (>1050px)
-                        final int columns =
-                            maxW >= 1050 ? 3 : (maxW >= 600 ? 2 : 1);
-
-                        if (columns == 1) {
-                          return ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            itemCount: quizzes.length,
-                            itemBuilder: (context, index) {
-                              return _buildQuizCard(
-                                quizzes[index],
-                                inGrid: false,
-                              );
-                            },
-                          );
-                        }
-
-                        return GridView.builder(
-                          padding: const EdgeInsets.all(16),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: columns,
-                                crossAxisSpacing: 14,
-                                mainAxisSpacing: 14,
-                                mainAxisExtent: 315,
+              // Quiz Cards List
+              Expanded(
+                child: quizProvider.isLoading && quizProvider.quizzes.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : quizProvider.error != null && quizProvider.quizzes.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.cloud_off,
+                                size: 48,
+                                color: Color(0xFF94A3B8),
                               ),
-                          itemCount: quizzes.length,
-                          itemBuilder: (context, index) {
-                            return _buildQuizCard(
-                              quizzes[index],
-                              inGrid: true,
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Gagal Memuat Kuis',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                quizProvider.error!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: _loadQuizzes,
+                                icon: const Icon(Icons.refresh, size: 16),
+                                label: const Text('Coba Lagi'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : quizzes.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.quiz_outlined,
+                              size: 48,
+                              color: Color(0xFF94A3B8),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Belum Ada Kuis Tersedia',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Silakan periksa kembali nanti atau hubungi guru Anda.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            ElevatedButton.icon(
+                              onPressed: _loadQuizzes,
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: const Text('Refresh'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadQuizzes,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final double maxW = constraints.maxWidth;
+                            // 1 kolom di HP (<600px), 2 kolom di tablet (600-1050px), 3 kolom di desktop (>1050px)
+                            final int columns = maxW >= 1050
+                                ? 3
+                                : (maxW >= 600 ? 2 : 1);
+
+                            if (columns == 1) {
+                              return ListView.builder(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                itemCount: quizzes.length,
+                                itemBuilder: (context, index) {
+                                  return _buildQuizCard(
+                                    quizzes[index],
+                                    inGrid: false,
+                                  );
+                                },
+                              );
+                            }
+
+                            return GridView.builder(
+                              padding: const EdgeInsets.all(16),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: columns,
+                                    crossAxisSpacing: 14,
+                                    mainAxisSpacing: 14,
+                                    mainAxisExtent: 315,
+                                  ),
+                              itemCount: quizzes.length,
+                              itemBuilder: (context, index) {
+                                return _buildQuizCard(
+                                  quizzes[index],
+                                  inGrid: true,
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    ),
-                  ),
+                        ),
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 
   /// Widget penampil cover gambar kuis / foto soal dengan fallback aset resmi
   Widget _buildCoverImage(QuizModel quiz, {double height = 110}) {
-    final String? resolvedCoverUrl =
-        ApiConstants.resolveMediaUrl(quiz.effectiveCoverUrl);
+    final String? resolvedCoverUrl = ApiConstants.resolveMediaUrl(
+      quiz.effectiveCoverUrl,
+    );
 
     Widget imageWidget;
     if (resolvedCoverUrl != null &&
@@ -788,11 +795,13 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     }
 
     final questionTypes = quiz.soal
-        .map((s) => s.jenisSoal.apiValue == 'true_false'
-            ? 'Benar/Salah'
-            : (s.jenisSoal.apiValue == 'isian_singkat'
-                ? 'Isian Singkat'
-                : 'Pilihan Ganda'))
+        .map(
+          (s) => s.jenisSoal.apiValue == 'true_false'
+              ? 'Benar/Salah'
+              : (s.jenisSoal.apiValue == 'isian_singkat'
+                    ? 'Isian Singkat'
+                    : 'Pilihan Ganda'),
+        )
         .toSet()
         .toList();
 
@@ -836,16 +845,11 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
             runSpacing: 3,
             children: questionTypes.map((t) {
               return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(5),
-                  border: Border.all(
-                    color: const Color(0xFFDBEAFE),
-                  ),
+                  border: Border.all(color: const Color(0xFFDBEAFE)),
                 ),
                 child: Text(
                   t,
@@ -873,10 +877,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                 quiz.namaMapel!,
                 color: const Color(0xFF4F46E5),
               ),
-            _buildBadge(
-              Icons.quiz_outlined,
-              '${quiz.questionsCount} Soal',
-            ),
+            _buildBadge(Icons.quiz_outlined, '${quiz.questionsCount} Soal'),
             _buildBadge(
               Icons.bolt_rounded,
               '${quiz.totalPoints} Poin',
@@ -902,12 +903,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     final footerContent = Container(
       padding: const EdgeInsets.only(top: 8),
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Color(0xFFF1F5F9),
-            width: 1.0,
-          ),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFF1F5F9), width: 1.0)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -916,11 +912,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
           if (quiz.isExpired)
             const Row(
               children: [
-                Icon(
-                  Icons.circle,
-                  size: 7,
-                  color: Color(0xFFEF4444),
-                ),
+                Icon(Icons.circle, size: 7, color: Color(0xFFEF4444)),
                 SizedBox(width: 4),
                 Text(
                   'Kadaluarsa',
@@ -935,11 +927,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
           else
             const Row(
               children: [
-                Icon(
-                  Icons.circle,
-                  size: 7,
-                  color: Color(0xFF10B981),
-                ),
+                Icon(Icons.circle, size: 7, color: Color(0xFF10B981)),
                 SizedBox(width: 4),
                 Text(
                   'Tersedia',
@@ -959,9 +947,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                 onPressed: () => _showQuizDetailSheet(quiz),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF334155),
-                  side: const BorderSide(
-                    color: Color(0xFFCBD5E1),
-                  ),
+                  side: const BorderSide(color: Color(0xFFCBD5E1)),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 3,
@@ -973,10 +959,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                 ),
                 child: const Text(
                   'Detail',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(width: 6),
@@ -1016,9 +999,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        quiz.hasTaken
-                            ? 'Kerjakan Ulang'
-                            : 'Kerjakan',
+                        quiz.hasTaken ? 'Kerjakan Ulang' : 'Kerjakan',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -1047,18 +1028,11 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                bodyContent,
-                footerContent,
-              ],
+              children: [bodyContent, footerContent],
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                bodyContent,
-                const SizedBox(height: 8),
-                footerContent,
-              ],
+              children: [bodyContent, const SizedBox(height: 8), footerContent],
             ),
     );
 
@@ -1074,10 +1048,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
           width: isCompletedAndPassed ? 1.5 : 1.0,
         ),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0xFFB2E7FC),
-            offset: Offset(0, 4),
-          ),
+          BoxShadow(color: Color(0xFFB2E7FC), offset: Offset(0, 4)),
         ],
       ),
       child: Material(
@@ -1198,9 +1169,8 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF581C87).withValues(
-                                      alpha: 0.85,
-                                    ),
+                                    color: const Color(0xFF581C87)
+                                        .withValues(alpha: 0.85),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: const Color(0xFFC084FC),
@@ -1241,7 +1211,9 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                         : Colors.black.withValues(alpha: 0.55),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.2),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       width: 0.8,
                                     ),
                                   ),
@@ -1263,17 +1235,21 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              if (quiz.namaMapel != null && quiz.namaMapel!.isNotEmpty)
+                              if (quiz.namaMapel != null &&
+                                  quiz.namaMapel!.isNotEmpty)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 7,
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF1E1B4B).withValues(alpha: 0.85),
+                                    color: const Color(0xFF1E1B4B)
+                                        .withValues(alpha: 0.85),
                                     borderRadius: BorderRadius.circular(5),
                                     border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.3),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
                                       width: 0.8,
                                     ),
                                   ),
@@ -1338,8 +1314,9 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 
   Widget _buildBadge(IconData icon, String label, {Color? color}) {
     final effectiveColor = color ?? const Color(0xFF64748B);
-    final bgColor =
-        color != null ? color.withValues(alpha: 0.1) : const Color(0xFFF1F5F9);
+    final bgColor = color != null
+        ? color.withValues(alpha: 0.1)
+        : const Color(0xFFF1F5F9);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),

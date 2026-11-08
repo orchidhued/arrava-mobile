@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/api_constants.dart';
+import '../../core/storage/secure_storage.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../services/dashboard_service.dart';
@@ -10,7 +11,8 @@ import '../../shared/utils/logout_dialog.dart';
 import '../modules/module_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
-  const AdminDashboardPage({super.key});
+  final bool isTeacher;
+  const AdminDashboardPage({super.key, this.isTeacher = false});
 
   @override
   State<AdminDashboardPage> createState() => _AdminDashboardPageState();
@@ -19,11 +21,32 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   bool _isLoading = true;
   Map<String, dynamic>? _adminData;
+  String _userName = '';
+  late bool _isTeacher;
 
   @override
   void initState() {
     super.initState();
+    _isTeacher = widget.isTeacher;
+    _loadUserData();
     _loadDashboard();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final name = await SecureStorage.read('user_name');
+      final role = await SecureStorage.read('user_role');
+      if (mounted) {
+        setState(() {
+          if (name != null && name.trim().isNotEmpty) {
+            _userName = name.trim();
+          }
+          if (role == '2') {
+            _isTeacher = true;
+          }
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadDashboard() async {
@@ -86,7 +109,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         child: Column(
           children: [
             AppHeader(
-              title: 'Beranda Admin',
+              title: _isTeacher ? 'Beranda Guru' : 'Beranda Admin',
               onLogoutTap: () => showLogoutConfirmationDialog(context),
               onNotificationTap: () {},
             ),
@@ -206,10 +229,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Halo,',
                     style: TextStyle(
                       fontSize: 23,
@@ -219,8 +242,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                   ),
                   Text(
-                    'Administrator',
-                    style: TextStyle(
+                    _userName.isNotEmpty
+                        ? _userName
+                        : (_isTeacher ? 'Bapak/Ibu Guru' : 'Administrator'),
+                    style: const TextStyle(
                       fontSize: 24,
                       height: 1.2,
                       fontWeight: FontWeight.w700,

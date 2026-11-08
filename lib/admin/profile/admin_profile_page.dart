@@ -10,57 +10,74 @@ class AdminProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ============================================================
-            // HEADER
-            // ============================================================
-            AppHeader(
-              title: 'Profil Admin',
-              onNotificationTap: () {
-                // TODO: buka halaman notifikasi
-              },
+    return FutureBuilder<Map<String, String?>>(
+      future: AuthService.getSavedUser(),
+      builder: (context, snapshot) {
+        final userData = snapshot.data ?? {};
+        final name = userData['name']?.trim();
+        final email = userData['email']?.trim();
+        final role = userData['role'];
+        final isTeacher = role == '2';
+        final displayName = (name != null && name.isNotEmpty)
+            ? name
+            : (isTeacher ? 'Guru / Pendidik' : 'Administrator');
+        final displayEmail = (email != null && email.isNotEmpty)
+            ? email
+            : (isTeacher ? 'guru@arrava.com' : 'admin@arrava.com');
+        final displayRole = isTeacher ? 'Guru / Pendidik' : 'Administrator';
+        final headerTitle = isTeacher ? 'Profil Guru' : 'Profil Admin';
 
-              // Profile dimatikan karena sedang berada di halaman Profil.
-              profileEnabled: false,
-            ),
-
-            // ============================================================
-            // CONTENT
-            // ============================================================
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProfileHeader(),
-
-                    const SizedBox(height: 18),
-
-                    _buildSectionTitle('Informasi Akun'),
-
-                    const SizedBox(height: 10),
-
-                    _buildInfoCard(),
-
-                    const SizedBox(height: 18),
-
-                    _buildSectionTitle('Pengaturan'),
-
-                    const SizedBox(height: 10),
-
-                    _buildSettingsCard(context),
-                  ],
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // ============================================================
+                // HEADER
+                // ============================================================
+                AppHeader(
+                  title: headerTitle,
+                  onNotificationTap: () {
+                    // TODO: buka halaman notifikasi
+                  },
+                  profileEnabled: false,
                 ),
-              ),
+
+                // ============================================================
+                // CONTENT
+                // ============================================================
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildProfileHeader(displayName, displayRole),
+
+                        const SizedBox(height: 18),
+
+                        _buildSectionTitle('Informasi Akun'),
+
+                        const SizedBox(height: 10),
+
+                        _buildInfoCard(displayName, displayEmail, displayRole),
+
+                        const SizedBox(height: 18),
+
+                        _buildSectionTitle('Pengaturan'),
+
+                        const SizedBox(height: 10),
+
+                        _buildSettingsCard(context),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -68,7 +85,7 @@ class AdminProfilePage extends StatelessWidget {
   // PROFILE HEADER
   // ============================================================
 
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(String name, String role) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -95,9 +112,11 @@ class AdminProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Administrator',
-                  style: TextStyle(
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -106,9 +125,9 @@ class AdminProfilePage extends StatelessWidget {
 
                 const SizedBox(height: 4),
 
-                const Text(
-                  'Admin Sistem',
-                  style: TextStyle(
+                Text(
+                  role,
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
@@ -161,7 +180,7 @@ class AdminProfilePage extends StatelessWidget {
   // ACCOUNT INFORMATION
   // ============================================================
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(String name, String email, String role) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -174,7 +193,7 @@ class AdminProfilePage extends StatelessWidget {
           _buildInfoItem(
             icon: Icons.person_outline,
             title: 'Nama',
-            value: 'Administrator',
+            value: name,
           ),
 
           _buildDivider(),
@@ -182,7 +201,7 @@ class AdminProfilePage extends StatelessWidget {
           _buildInfoItem(
             icon: Icons.email_outlined,
             title: 'Email',
-            value: 'admin@arrava.com',
+            value: email,
           ),
 
           _buildDivider(),
@@ -190,7 +209,7 @@ class AdminProfilePage extends StatelessWidget {
           _buildInfoItem(
             icon: Icons.admin_panel_settings_outlined,
             title: 'Role',
-            value: 'Administrator',
+            value: role,
           ),
         ],
       ),

@@ -200,15 +200,7 @@ class _LoginScreenState extends State<LoginScreen>
       if (role == 1) {
         destinationPage = const AdminShell();
       } else if (role == 2) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Login Guru berhasil. Halaman Guru belum dihubungkan.',
-            ),
-          ),
-        );
-        setState(() => _target = 0.0);
-        return;
+        destinationPage = const AdminShell(isTeacher: true);
       } else if (role == 3) {
         destinationPage = const DashboardScreen();
       } else if (role == 4) {

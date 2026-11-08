@@ -17,7 +17,6 @@ class StudentModuleListPage extends StatefulWidget {
 
 class _StudentModuleListPageState extends State<StudentModuleListPage> {
   static const _blue = Color(0xFF007FBE);
-  static const _ink = Color(0xFF12233F);
   static const _muted = Color(0xFF465673);
   static const _bg = Color(0xFFF0F6FF);
 
