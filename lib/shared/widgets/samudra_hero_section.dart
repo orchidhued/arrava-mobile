@@ -3,6 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/constants/api_constants.dart';
+import '../../providers/notification_provider.dart';
 
 final _rng = math.Random();
 double _rand(double a, double b) => a + _rng.nextDouble() * (b - a);
@@ -43,6 +47,7 @@ class SamudraHeroSection extends StatefulWidget {
   final VoidCallback? onExploreTap;
   final VoidCallback? onProfileTap;
   final VoidCallback? onLeaderboardTap;
+  final VoidCallback? onNotificationTap;
 
   const SamudraHeroSection({
     super.key,
@@ -51,6 +56,7 @@ class SamudraHeroSection extends StatefulWidget {
     this.onExploreTap,
     this.onProfileTap,
     this.onLeaderboardTap,
+    this.onNotificationTap,
   });
 
   @override
@@ -413,7 +419,8 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 360;
+          final isCompact = constraints.maxWidth < 410;
+          final showSegments = constraints.maxWidth >= 450;
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -434,23 +441,49 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                       ),
                     ],
                   ),
-                  child: CircleAvatar(
-                    radius: isCompact ? 21 : 24,
-                    backgroundColor: const Color(0xFFF97316),
-                    backgroundImage:
-                        (user?['foto_profil'] != null &&
-                            user!['foto_profil'].toString().isNotEmpty)
-                        ? NetworkImage(user['foto_profil'] as String)
-                        : null,
-                    child:
-                        (user?['foto_profil'] == null ||
-                            user!['foto_profil'].toString().isEmpty)
-                        ? Icon(
+                  child: ClipOval(
+                    child: Builder(
+                      builder: (context) {
+                        final rawPhoto = user?['foto_profil']?.toString();
+                        final resolvedPhoto =
+                            ApiConstants.resolveMediaUrl(rawPhoto);
+                        final avatarRadius = isCompact ? 21.0 : 24.0;
+                        if (resolvedPhoto != null &&
+                            resolvedPhoto.isNotEmpty) {
+                          return Image.network(
+                            resolvedPhoto,
+                            width: avatarRadius * 2,
+                            height: avatarRadius * 2,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, error, ___) {
+                              debugPrint('[HERO AVATAR ERROR] Failed loading: $resolvedPhoto | Error: $error');
+                              return Container(
+                                width: avatarRadius * 2,
+                                height: avatarRadius * 2,
+                                color: const Color(0xFFF97316),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.sentiment_very_satisfied_rounded,
+                                  color: Colors.white,
+                                  size: isCompact ? 22 : 26,
+                                ),
+                              );
+                            },
+                          );
+                        }
+                        return Container(
+                          width: avatarRadius * 2,
+                          height: avatarRadius * 2,
+                          color: const Color(0xFFF97316),
+                          alignment: Alignment.center,
+                          child: Icon(
                             Icons.sentiment_very_satisfied_rounded,
                             color: Colors.white,
                             size: isCompact ? 22 : 26,
-                          )
-                        : null,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -582,7 +615,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                           color: const Color(0xFF0F172A),
                         ),
                       ),
-                      if (!isCompact) ...[
+                      if (showSegments) ...[
                         const SizedBox(width: 5),
                         // Progress bar mini bersegmen 5 segmen
                         Row(
@@ -624,6 +657,67 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                   ),
                 ),
               ),
+              if (widget.onNotificationTap != null) ...[
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: widget.onNotificationTap,
+                  child: Consumer<NotificationProvider>(
+                    builder: (context, notifProvider, _) {
+                      final unread = notifProvider.unreadCount;
+                      return Container(
+                        padding: const EdgeInsets.all(5.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const Icon(
+                              Icons.notifications_outlined,
+                              size: 17,
+                              color: Color(0xFF12233F),
+                            ),
+                            if (unread > 0)
+                              Positioned(
+                                top: -3,
+                                right: -3,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFEF4444),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 12,
+                                    minHeight: 12,
+                                  ),
+                                  child: Text(
+                                    unread > 9 ? '9+' : '$unread',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 7.5,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ],
           );
         },

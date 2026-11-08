@@ -3,26 +3,27 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Primary
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryDark = Color(0xFF1D4ED8);
-  static const Color primaryLight = Color(0xFFDBEAFE);
+  // Primary (Samudra Ocean Soft Blue)
+  static const Color primary = Color(0xFF007FBE);
+  static const Color primaryDark = Color(0xFF00628E);
+  static const Color primaryLight = Color(0xFFDDF3FF);
 
-  // Background
-  static const Color background = Color(0xFFF8FAFC);
+  // Background (Soft Mist Blue & White Surface)
+  static const Color background = Color(0xFFF0F6FF);
   static const Color surface = Colors.white;
 
-  // Text
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color textTertiary = Color(0xFF94A3B8);
+  // Text (Deep Navy Ink & Muted Slate)
+  static const Color textPrimary = Color(0xFF12233F);
+  static const Color textSecondary = Color(0xFF465673);
+  static const Color textTertiary = Color(0xFF72839E);
 
-  // Border
-  static const Color border = Color(0xFFE2E8F0);
+  // Border & 3D Playful Shadow
+  static const Color border = Color(0xFFDCEFFF);
+  static const Color shadow3D = Color(0xFFB2E7FC);
 
-  // Status
-  static const Color success = Color(0xFF16A34A);
-  static const Color warning = Color(0xFFF59E0B);
+  // Status (Playful & Friendly)
+  static const Color success = Color(0xFF059669);
+  static const Color warning = Color(0xFFD97706);
   static const Color error = Color(0xFFDC2626);
-  static const Color info = Color(0xFF0EA5E9);
+  static const Color info = Color(0xFF007FBE);
 }

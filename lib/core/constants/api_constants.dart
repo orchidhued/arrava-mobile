@@ -1,14 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConstants {
-  // Jika di Web / Chrome, otomatis gunakan localhost (127.0.0.1)
-  // Jika di Android (HP Fisik), gunakan IP Wi-Fi PC lokal (192.168.18.4)
-  // Jika di Android Emulator bawaan / adb reverse, ganti ke 'http://10.0.2.2:8000/api' atau 'http://127.0.0.1:8000/api'
+  // Jika di Web / Chrome, atau di Android via USB adb reverse (adb reverse tcp:8000 tcp:8000): gunakan 127.0.0.1
+  // Jika di Android via Wi-Fi langsung: gunakan IP Wi-Fi PC (192.168.18.4)
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://127.0.0.1:8000/api';
-    }
-    return 'http://192.168.18.4:8000/api';
+    return 'http://127.0.0.1:8000/api';
   }
 
   static const String login = '/login';
@@ -24,6 +20,8 @@ class ApiConstants {
   static const String teachers = '/teachers';
   static const String students = '/students';
   static const String activeAttendanceSessions = '/sesi-aktif';
+  static const String notifikasiCheck = '/notifikasi/check';
+  static const String notifikasiMarkRead = '/notifikasi/mark-read';
 
   static String attendanceRecap(int sessionId) => '/sesi/$sessionId/rekap';
 
@@ -47,11 +45,16 @@ class ApiConstants {
             parsed.host.startsWith('10.0.');
 
         if (isLocalHost) {
+          String path = parsed.path;
+          if (path.startsWith('/storage/')) {
+            path = '/api$path';
+          }
           return parsed
               .replace(
                 scheme: baseUri.scheme,
                 host: baseUri.host,
                 port: baseUri.hasPort ? baseUri.port : null,
+                path: path,
               )
               .toString();
         }
@@ -61,9 +64,11 @@ class ApiConstants {
       final cleanPath = trimmed.startsWith('/')
           ? trimmed.substring(1)
           : trimmed;
-      final prefix = cleanPath.startsWith('storage/')
+      final prefix = cleanPath.startsWith('api/storage/')
           ? cleanPath
-          : 'storage/$cleanPath';
+          : (cleanPath.startsWith('storage/')
+              ? 'api/$cleanPath'
+              : 'api/storage/$cleanPath');
       final portPart = baseUri.hasPort ? ':${baseUri.port}' : '';
       return '${baseUri.scheme}://${baseUri.host}$portPart/$prefix';
     } catch (_) {

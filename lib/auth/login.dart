@@ -7,6 +7,7 @@ import 'package:arrava_mobile/core/storage/secure_storage.dart';
 import 'package:arrava_mobile/screens/dashboard_screen.dart';
 import 'package:arrava_mobile/screens/parent/parent_dashboard_screen.dart';
 import 'package:arrava_mobile/services/auth_service.dart';
+import 'package:arrava_mobile/shared/widgets/arrava_logo.dart';
 
 /* =====================================================================
    1. PENGATURAN (Gambar, Warna, dan Parameter Efek)
@@ -434,20 +435,19 @@ class _LoginScreenState extends State<LoginScreen>
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: LoginEffectCfg.accent,
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: const Color(0xFFDCEFFF), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: LoginEffectCfg.accent.withValues(alpha: 0.35),
+                    color: const Color(0xFF007FBE).withValues(alpha: 0.15),
                     blurRadius: 18,
                     offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.school_outlined,
-                color: Colors.white,
-                size: 38,
+              child: const ArravaLogo(
+                size: 44,
               ),
             ),
           ),

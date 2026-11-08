@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/api_constants.dart';
+import '../../core/theme/app_colors.dart';
 import 'models/module_model.dart';
 import 'providers/module_provider.dart';
 
@@ -214,16 +215,17 @@ class _ModulePageContentState extends State<_ModulePageContent> {
                 _selectedFilter = filter;
               });
             },
-            selectedColor: const Color(0xFF2563EB),
+            selectedColor: AppColors.primary,
             backgroundColor: Colors.white,
             labelStyle: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey.shade700,
-              fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
             ),
             side: BorderSide(
               color: isSelected
-                  ? const Color(0xFF2563EB)
-                  : const Color(0xFFE5E7EB),
+                  ? AppColors.primary
+                  : AppColors.border,
+              width: 1.2,
             ),
           );
         },
@@ -354,8 +356,15 @@ class _ModulePageContentState extends State<_ModulePageContent> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow3D,
+            offset: Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -909,6 +909,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         children: [
           // Header Bar Syarat
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Row(
@@ -919,14 +920,14 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                       decoration: BoxDecoration(
                         color: isTuntas
                             ? const Color(0xFF059669)
-                            : const Color(0xFFEEF2FF),
+                            : const Color(0xFFDDF3FF),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
                         child: Icon(
                           isTuntas ? Icons.check : Icons.track_changes_rounded,
                           color:
-                              isTuntas ? Colors.white : const Color(0xFF4F46E5),
+                              isTuntas ? Colors.white : _blue,
                           size: 18,
                         ),
                       ),
@@ -947,7 +948,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                               fontWeight: FontWeight.w800,
                               color: isTuntas
                                   ? const Color(0xFF065F46)
-                                  : const Color(0xFF0F172A),
+                                  : _ink,
                             ),
                           ),
                           Text(
@@ -970,21 +971,26 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isTuntas
-                      ? const Color(0xFF059669)
-                      : const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '🏆 +${modul.poinModul} EXP',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: isTuntas ? Colors.white : const Color(0xFF92400E),
+              Flexible(
+                fit: FlexFit.loose,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isTuntas
+                        ? const Color(0xFF059669)
+                        : const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '🏆 +${modul.poinModul} EXP',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: isTuntas ? Colors.white : const Color(0xFF92400E),
+                    ),
                   ),
                 ),
               ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:arrava_mobile/admin/modules/providers/module_provider.dart';
 import 'package:arrava_mobile/admin/quizzes/providers/quiz_provider.dart';
+import 'package:arrava_mobile/providers/notification_provider.dart';
 import 'package:arrava_mobile/auth/login.dart';
 import 'package:arrava_mobile/core/theme/app_theme.dart';
 
@@ -13,6 +14,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => ModuleProvider()),
         ChangeNotifierProvider(create: (_) => QuizProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: const MyApp(),
     ),

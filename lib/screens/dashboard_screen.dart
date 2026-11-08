@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/notification_provider.dart';
 import '../services/dashboard_service.dart';
 import '../shared/utils/logout_dialog.dart';
+import '../shared/widgets/arrava_logo.dart';
+import '../shared/widgets/notification_sheet.dart';
 import '../shared/widgets/samudra_hero_section.dart';
 import '../shared/widgets/tween_float_background.dart';
 import 'leaderboard/leaderboard_screen.dart';
@@ -39,6 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboard() async {
     try {
+      context.read<NotificationProvider>().fetchNotifications(silent: true);
       final data = await DashboardService.fetchStudentDashboard();
       if (mounted) {
         setState(() {
@@ -51,6 +56,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _openNotificationSheet() {
+    NotificationSheet.show(
+      context,
+      onOpenQrPresensi: () => _showAttendanceQr(),
+    );
   }
 
   @override
@@ -165,9 +177,123 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                               );
                             },
+                            onNotificationTap: () => _openNotificationSheet(),
                           ),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
+
+                          // Banner Notifikasi Presensi Aktif Hari Ini (Sinkron dengan Elearning Web)
+                          Consumer<NotificationProvider>(
+                            builder: (context, notifProv, _) {
+                              final unreadToday = notifProv.todayNotifications
+                                  .where((n) => !n.isRead)
+                                  .toList();
+                              if (unreadToday.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+
+                              final item = unreadToday.first;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(color: const Color(0xFFDCEFFF)),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0xFFB2E7FC),
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE0F2FE),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.calendar_month_rounded,
+                                          color: _blue,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.judul,
+                                              style: const TextStyle(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w800,
+                                                color: Color(0xFF12233F),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              item.pesan,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Color(0xFF465673),
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: _blue,
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              color: Color(0xFF00628E),
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            notifProv.markAsRead(item.id);
+                                            _showAttendanceQr();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 4,
+                                            ),
+                                            minimumSize: const Size(0, 30),
+                                            shape: const StadiumBorder(),
+                                          ),
+                                          child: const Text(
+                                            'Presensi',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 8),
 
                           // ===================================================
                           // 2. MAIN CONTENT AREA (Responsive Split / Stack)
@@ -254,43 +380,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Logo & Teks Brand 'ARRAVA'
+              // Logo Resmi Arrava & Teks Brand
               Flexible(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF007FBE), Color(0xFF51CDF4)],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x3340B4DB),
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                    ArravaLogo(
+                      size: isCompact ? 28 : 32,
                     ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'ARRAVA',
+                        'Arrava',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: isCompact ? 16 : 18,
+                          fontSize: isCompact ? 17 : 20,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                          color: const Color(0xFF0F172A),
+                          letterSpacing: -0.7,
+                          color: const Color(0xFF082765),
                         ),
                       ),
                     ),
@@ -348,6 +456,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ],
                           ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Tombol Notifikasi
+                  Tooltip(
+                    message: 'Notifikasi Presensi',
+                    child: InkWell(
+                      onTap: () => _openNotificationSheet(),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 8 : 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F6FF),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFDCEFFF)),
+                        ),
+                        child: Consumer<NotificationProvider>(
+                          builder: (context, notifProv, _) {
+                            final unread = notifProv.unreadCount;
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    const Icon(
+                                      Icons.notifications_outlined,
+                                      color: _blue,
+                                      size: 16,
+                                    ),
+                                    if (unread > 0)
+                                      Positioned(
+                                        top: -3,
+                                        right: -3,
+                                        child: Container(
+                                          width: 7,
+                                          height: 7,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFEF4444),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                if (!isCompact) ...[
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    unread > 0 ? '$unread' : 'Notif',
+                                    style: const TextStyle(
+                                      color: _blue,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -649,7 +822,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const blue = Color(0xFF007FBE);
     Widget item(int index, IconData icon, String label) => Expanded(
       child: InkWell(
-        onTap: () => setState(() => _currentIndex = index),
+        onTap: () {
+          final wasDifferent = _currentIndex != index;
+          setState(() => _currentIndex = index);
+          if (wasDifferent && index == 0) {
+            _loadDashboard();
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Column(

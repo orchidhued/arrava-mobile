@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../services/auth_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -37,9 +38,7 @@ class AdminProfilePage extends StatelessWidget {
                 // ============================================================
                 AppHeader(
                   title: headerTitle,
-                  onNotificationTap: () {
-                    // TODO: buka halaman notifikasi
-                  },
+                  onNotificationTap: () {},
                   profileEnabled: false,
                 ),
 
@@ -48,13 +47,13 @@ class AdminProfilePage extends StatelessWidget {
                 // ============================================================
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildProfileHeader(displayName, displayRole),
 
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 20),
 
                         _buildSectionTitle('Informasi Akun'),
 
@@ -62,9 +61,9 @@ class AdminProfilePage extends StatelessWidget {
 
                         _buildInfoCard(displayName, displayEmail, displayRole),
 
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 20),
 
-                        _buildSectionTitle('Pengaturan'),
+                        _buildSectionTitle('Pengaturan & Keamanan'),
 
                         const SizedBox(height: 10),
 
@@ -88,25 +87,54 @@ class AdminProfilePage extends StatelessWidget {
   Widget _buildProfileHeader(String name, String role) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow3D,
+            offset: Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
+            width: 72,
+            height: 72,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Colors.white, Color(0xFF67D7FC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFFB2E7FC),
+                  offset: Offset(0, 4),
+                  blurRadius: 0,
+                ),
+              ],
             ),
-            child: const Icon(Icons.person, size: 34, color: AppColors.primary),
+            padding: const EdgeInsets.all(3),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFDDF3FF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 36,
+                color: AppColors.primary,
+              ),
+            ),
           ),
 
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
 
           Expanded(
             child: Column(
@@ -116,41 +144,57 @@ class AdminProfilePage extends StatelessWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: GoogleFonts.nunitoSans(
                     fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
                   ),
                 ),
 
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
 
                 Text(
                   role,
-                  style: const TextStyle(
+                  style: GoogleFonts.nunitoSans(
                     fontSize: 12,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
                 ),
 
-                const SizedBox(height: 7),
+                const SizedBox(height: 8),
 
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
+                    horizontal: 10,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD9FBEA),
-                    borderRadius: BorderRadius.circular(6),
+                    color: const Color(0xFFD1FAE5),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFA7F3D0), width: 1),
                   ),
-                  child: const Text(
-                    'Akun Aktif',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF00875A),
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF059669),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Akun Aktif',
+                        style: GoogleFonts.nunitoSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF059669),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -168,9 +212,9 @@ class AdminProfilePage extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: GoogleFonts.nunitoSans(
         fontSize: 15,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: AppColors.textPrimary,
       ),
     );
@@ -185,13 +229,20 @@ class AdminProfilePage extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow3D,
+            offset: Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         children: [
           _buildInfoItem(
-            icon: Icons.person_outline,
+            icon: Icons.person_outline_rounded,
             title: 'Nama',
             value: name,
           ),
@@ -222,7 +273,7 @@ class AdminProfilePage extends StatelessWidget {
     required String value,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Container(
@@ -230,12 +281,13 @@ class AdminProfilePage extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFB2E7FC), width: 1),
             ),
-            child: Icon(icon, size: 19, color: AppColors.primary),
+            child: Icon(icon, size: 20, color: AppColors.primary),
           ),
 
-          const SizedBox(width: 11),
+          const SizedBox(width: 12),
 
           Expanded(
             child: Column(
@@ -243,19 +295,20 @@ class AdminProfilePage extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 10,
+                  style: GoogleFonts.nunitoSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
                 ),
 
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
 
                 Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  style: GoogleFonts.nunitoSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -270,9 +323,10 @@ class AdminProfilePage extends StatelessWidget {
   Widget _buildDivider() {
     return const Divider(
       height: 1,
-      indent: 64,
-      endIndent: 15,
-      color: AppColors.border,
+      thickness: 1,
+      indent: 66,
+      endIndent: 16,
+      color: Color(0xFFE8F3FF),
     );
   }
 
@@ -285,24 +339,20 @@ class AdminProfilePage extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow3D,
+            offset: Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         children: [
           _buildSettingItem(
-            icon: Icons.edit_outlined,
-            title: 'Edit Profil',
-            subtitle: 'Ubah informasi akun admin',
-            onTap: () {
-              // TODO: Edit profil
-            },
-          ),
-
-          _buildDivider(),
-
-          _buildSettingItem(
-            icon: Icons.lock_outline,
+            icon: Icons.lock_outline_rounded,
             title: 'Ubah Password',
             subtitle: 'Perbarui password akun',
             onTap: () {
@@ -318,38 +368,62 @@ class AdminProfilePage extends StatelessWidget {
           _buildDivider(),
 
           _buildSettingItem(
-            icon: Icons.logout,
+            icon: Icons.logout_rounded,
             title: 'Keluar',
-            subtitle: 'Keluar dari akun administrator',
-            iconColor: AppColors.error,
-            titleColor: AppColors.error,
+            subtitle: 'Keluar dari akun aplikasi',
+            iconColor: const Color(0xFFDC2626),
+            titleColor: const Color(0xFFDC2626),
             onTap: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) {
                   return AlertDialog(
-                    title: const Text(
-                      'Keluar',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    content: const Text(
-                      'Apakah kamu yakin ingin keluar dari akun administrator?',
+                    title: Text(
+                      'Keluar',
+                      style: GoogleFonts.nunitoSans(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    content: Text(
+                      'Apakah kamu yakin ingin keluar dari akun ini?',
+                      style: GoogleFonts.nunitoSans(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () {
                           Navigator.pop(dialogContext, false);
                         },
-                        child: const Text('Batal'),
+                        child: Text(
+                          'Batal',
+                          style: GoogleFonts.nunitoSans(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ),
 
-                      TextButton(
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFDC2626),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                         onPressed: () {
                           Navigator.pop(dialogContext, true);
                         },
-                        child: const Text(
+                        child: Text(
                           'Keluar',
-                          style: TextStyle(color: AppColors.error),
+                          style: GoogleFonts.nunitoSans(
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -410,26 +484,26 @@ class AdminProfilePage extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
             Container(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: (iconColor ?? AppColors.primary).withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(9),
+                color: (iconColor ?? AppColors.primary).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                size: 19,
+                size: 20,
                 color: iconColor ?? AppColors.primary,
               ),
             ),
 
-            const SizedBox(width: 11),
+            const SizedBox(width: 12),
 
             Expanded(
               child: Column(
@@ -437,19 +511,20 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    style: GoogleFonts.nunitoSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
                       color: titleColor ?? AppColors.textPrimary,
                     ),
                   ),
 
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
 
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 10,
+                    style: GoogleFonts.nunitoSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -457,7 +532,11 @@ class AdminProfilePage extends StatelessWidget {
               ),
             ),
 
-            Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),

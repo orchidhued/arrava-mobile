@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../providers/notification_provider.dart';
+import 'arrava_logo.dart';
+import 'notification_sheet.dart';
 
 class AppHeader extends StatelessWidget {
   final String title;
@@ -23,14 +28,17 @@ class AppHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 68,
-      padding: const EdgeInsets.symmetric(horizontal: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.background,
-        boxShadow: [
+        border: const Border(
+          bottom: BorderSide(color: AppColors.border, width: 1.5),
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Color(0x0C007FBE),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -39,22 +47,9 @@ class AppHeader extends StatelessWidget {
           // ============================================================
           // LOGO
           // ============================================================
+          const ArravaLogo(size: 34),
 
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.school_outlined,
-              color: Colors.white,
-              size: 21,
-            ),
-          ),
-
-          const SizedBox(width: 9),
+          const SizedBox(width: 10),
 
           // ============================================================
           // BRAND + PAGE TITLE
@@ -64,35 +59,26 @@ class AppHeader extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // EduAdmin Pro
-                RichText(
-                  text: const TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Arrava',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                          height: 1.0,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Arrava',
+                  style: GoogleFonts.nunitoSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primary,
+                    height: 1.1,
+                    letterSpacing: 0.2,
                   ),
                 ),
-
-                const SizedBox(height: 3),
-
-                // Nama halaman
+                const SizedBox(height: 2),
                 Text(
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                  style: GoogleFonts.nunitoSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textSecondary,
-                    height: 1.0,
+                    height: 1.1,
                   ),
                 ),
               ],
@@ -102,27 +88,56 @@ class AppHeader extends StatelessWidget {
           // ============================================================
           // NOTIFICATION
           // ============================================================
-          if (onNotificationTap != null)
-            GestureDetector(
-              onTap: onNotificationTap,
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(
-                      Icons.notifications_none_outlined,
-                      size: 23,
-                      color: AppColors.textPrimary,
-                    ),
-                  ],
-                ),
+          GestureDetector(
+            onTap: onNotificationTap ?? () => NotificationSheet.show(context),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.border, width: 1.2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0xFFB2E7FC),
+                    offset: Offset(0, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: Consumer<NotificationProvider>(
+                builder: (context, notifProv, _) {
+                  final unread = notifProv.unreadCount;
+                  return Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(
+                        Icons.notifications_none_rounded,
+                        size: 21,
+                        color: AppColors.textPrimary,
+                      ),
+                      if (unread > 0)
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
+          ),
 
-          const SizedBox(width: 5),
+          const SizedBox(width: 8),
 
           // ============================================================
           // PROFILE
@@ -135,31 +150,28 @@ class AppHeader extends StatelessWidget {
                 : null,
             child: Opacity(
               opacity: profileEnabled ? 1.0 : 0.55,
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Circle profile
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.15),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.person_outline,
-                        size: 21,
-                        color: Colors.white,
-                      ),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDF3FF),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFF67D7FC),
+                    width: 1.5,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0xFFB2E7FC),
+                      offset: Offset(0, 2),
+                      blurRadius: 0,
                     ),
                   ],
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  size: 20,
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -169,23 +181,31 @@ class AppHeader extends StatelessWidget {
           // LOGOUT
           // ============================================================
           if (onLogoutTap != null) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: onLogoutTap,
               child: Container(
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFFFFECEE),
+                  shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.error.withValues(alpha: 0.20),
+                    color: const Color(0xFFFFCDD2),
+                    width: 1.2,
                   ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0xFFFFCDD2),
+                      offset: Offset(0, 2),
+                      blurRadius: 0,
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.logout_rounded,
-                  size: 20,
-                  color: AppColors.error,
+                  size: 19,
+                  color: Color(0xFFDC2626),
                 ),
               ),
             ),

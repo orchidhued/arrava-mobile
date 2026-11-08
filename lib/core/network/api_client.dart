@@ -30,9 +30,17 @@ class ApiClient {
       return _handleResponse(response, url);
     } on TimeoutException {
       throw Exception('Upload foto terlalu lama. Silakan coba lagi.');
-    } on http.ClientException {
-      throw Exception('Gagal mengirim foto. Periksa koneksi ke server.');
+    } on http.ClientException catch (e) {
+      throw Exception(_clientExceptionMessage(e, url));
     }
+  }
+
+  static String _clientExceptionMessage(http.ClientException e, Uri url) {
+    final isLocalhost = url.host == '127.0.0.1' || url.host == 'localhost';
+    final hint = (!kIsWeb && isLocalhost)
+        ? ' Di HP Android fisik, jalankan "adb reverse tcp:8000 tcp:8000" jika pakai kabel USB, atau ganti baseUrl ke IP Wi-Fi PC (192.168.18.4).'
+        : ' Pastikan Laravel aktif dengan "php artisan serve --host=0.0.0.0 --port=8000" dan CORS diizinkan.';
+    return 'Gagal menghubungi API ($url): ${e.message}. $hint';
   }
 
   static const Duration _timeout = Duration(seconds: 10);
@@ -67,9 +75,7 @@ class ApiClient {
         'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
       );
     } on http.ClientException catch (e) {
-      throw Exception(
-        'Gagal menghubungi API ($url): ${e.message}. Pastikan server Laravel aktif dan CORS diizinkan.',
-      );
+      throw Exception(_clientExceptionMessage(e, url));
     } catch (e) {
       if (e.toString().contains('Exception:')) rethrow;
       throw Exception('Gagal menghubungi API ($url): $e');
@@ -97,9 +103,7 @@ class ApiClient {
         'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
       );
     } on http.ClientException catch (e) {
-      throw Exception(
-        'Gagal menghubungi API ($url): ${e.message}. Pastikan server Laravel aktif dan CORS diizinkan.',
-      );
+      throw Exception(_clientExceptionMessage(e, url));
     } catch (e) {
       if (e.toString().contains('Exception:')) rethrow;
       throw Exception('Gagal menghubungi API ($url): $e');
@@ -127,9 +131,7 @@ class ApiClient {
         'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
       );
     } on http.ClientException catch (e) {
-      throw Exception(
-        'Gagal menghubungi API ($url): ${e.message}. Pastikan server Laravel aktif dan CORS diizinkan.',
-      );
+      throw Exception(_clientExceptionMessage(e, url));
     } catch (e) {
       if (e.toString().contains('Exception:')) rethrow;
       throw Exception('Gagal menghubungi API ($url): $e');
@@ -150,9 +152,7 @@ class ApiClient {
         'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
       );
     } on http.ClientException catch (e) {
-      throw Exception(
-        'Gagal menghubungi API ($url): ${e.message}. Pastikan server Laravel aktif dan CORS diizinkan.',
-      );
+      throw Exception(_clientExceptionMessage(e, url));
     } catch (e) {
       if (e.toString().contains('Exception:')) rethrow;
       throw Exception('Gagal menghubungi API ($url): $e');

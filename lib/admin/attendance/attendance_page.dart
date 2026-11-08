@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../services/attendance_service.dart';
@@ -180,10 +181,10 @@ class _AttendancePageState extends State<AttendancePage> {
     final jenjang = kelas['jenjang']?.toString();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: sessionId == null
               ? null
@@ -201,28 +202,36 @@ class _AttendancePageState extends State<AttendancePage> {
                   );
                   if (mounted) await _loadSessions();
                 },
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border, width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppColors.shadow3D,
+                  offset: Offset(0, 4),
+                  blurRadius: 0,
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFB2E7FC), width: 1),
                   ),
                   child: const Icon(
-                    Icons.class_outlined,
+                    Icons.class_rounded,
                     color: AppColors.primary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,28 +240,30 @@ class _AttendancePageState extends State<AttendancePage> {
                         className,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: GoogleFonts.nunitoSans(
                           fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
                         '$title${meeting == null ? '' : ' • Pertemuan $meeting'}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: GoogleFonts.nunitoSans(
                           fontSize: 12,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         'Lihat siswa hadir dan tidak hadir',
-                        style: const TextStyle(
+                        style: GoogleFonts.nunitoSans(
                           fontSize: 11,
-                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textTertiary,
                         ),
                       ),
                     ],
@@ -260,9 +271,9 @@ class _AttendancePageState extends State<AttendancePage> {
                 ),
                 const SizedBox(width: 8),
                 const Icon(
-                  Icons.chevron_right,
+                  Icons.chevron_right_rounded,
                   color: AppColors.primary,
-                  size: 23,
+                  size: 24,
                 ),
               ],
             ),

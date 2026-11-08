@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../services/dashboard_service.dart';
@@ -228,16 +229,16 @@ class _StudentPageState extends State<StudentPage> {
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
@@ -253,7 +254,7 @@ class _StudentPageState extends State<StudentPage> {
 
   Widget _buildFilters() {
     return SizedBox(
-      height: 34,
+      height: 36,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _filters.length,
@@ -273,13 +274,23 @@ class _StudentPageState extends State<StudentPage> {
               decoration: BoxDecoration(
                 color: selected ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
-                border: selected ? null : Border.all(color: AppColors.border),
+                border: Border.all(
+                  color: selected ? AppColors.primaryDark : AppColors.border,
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: selected ? AppColors.primaryDark : AppColors.shadow3D,
+                    offset: const Offset(0, 2),
+                    blurRadius: 0,
+                  ),
+                ],
               ),
               child: Text(
                 _filters[index],
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                style: GoogleFonts.nunitoSans(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
                   color: selected ? Colors.white : AppColors.textSecondary,
                 ),
               ),
@@ -297,23 +308,30 @@ class _StudentPageState extends State<StudentPage> {
   Widget _buildStatistics() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow3D,
+            offset: Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 'Total Siswa Terdaftar',
-                style: TextStyle(
+                style: GoogleFonts.nunitoSans(
                   fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
                 ),
               ),
 
@@ -324,10 +342,11 @@ class _StudentPageState extends State<StudentPage> {
                 height: 38,
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFB2E7FC), width: 1),
                 ),
                 child: const Icon(
-                  Icons.groups_outlined,
+                  Icons.groups_rounded,
                   color: AppColors.primary,
                   size: 21,
                 ),
@@ -339,33 +358,34 @@ class _StudentPageState extends State<StudentPage> {
 
           Text(
             '${_students.length}',
-            style: const TextStyle(
-              fontSize: 30,
+            style: GoogleFonts.nunitoSans(
+              fontSize: 32,
               height: 1,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w900,
               color: AppColors.textPrimary,
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFDDF3FF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFB2E7FC), width: 1),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle_outline, size: 13, color: AppColors.primary),
-                SizedBox(width: 4),
+                const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.primary),
+                const SizedBox(width: 5),
                 Text(
                   'Data terhubung dari database',
-                  style: TextStyle(
-                    fontSize: 10,
+                  style: GoogleFonts.nunitoSans(
+                    fontSize: 11,
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
@@ -383,19 +403,23 @@ class _StudentPageState extends State<StudentPage> {
   Widget _buildListHeader(int count) {
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Text(
             'Daftar Profil Siswa',
-            style: TextStyle(
+            style: GoogleFonts.nunitoSans(
               fontSize: 18,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w900,
               color: AppColors.textPrimary,
             ),
           ),
         ),
         Text(
           'Menampilkan $count siswa',
-          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+          style: GoogleFonts.nunitoSans(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+          ),
         ),
       ],
     );
@@ -417,19 +441,26 @@ class _StudentPageState extends State<StudentPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow3D,
+            offset: Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildStudentAvatar(initials),
 
-                const SizedBox(width: 11),
+                const SizedBox(width: 12),
 
                 Expanded(
                   child: Column(
@@ -442,9 +473,9 @@ class _StudentPageState extends State<StudentPage> {
                               name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: GoogleFonts.nunitoSans(
                                 fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w900,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -456,56 +487,59 @@ class _StudentPageState extends State<StudentPage> {
                         ],
                       ),
 
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
 
                       Text(
                         'NISN: $nisn • Jenjang $jenjang',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
+                        style: GoogleFonts.nunitoSans(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
                         ),
                       ),
 
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
 
                       Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 10,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(6),
+                              color: const Color(0xFFDDF3FF),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFB2E7FC), width: 1),
                             ),
                             child: Text(
                               jenjang,
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.primaryDark,
+                              style: GoogleFonts.nunitoSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 10,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFFDE68A), width: 1),
                             ),
                             child: Text(
                               '⭐ $totalPoin XP',
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFD97706),
+                              style: GoogleFonts.nunitoSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFB45309),
                               ),
                             ),
                           ),
@@ -519,28 +553,32 @@ class _StudentPageState extends State<StudentPage> {
           ),
 
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: const BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(14),
-                bottomRight: Radius.circular(14),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+              border: Border(
+                top: BorderSide(color: Color(0xFFE2F0FD), width: 1.2),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.badge_outlined,
                   size: 15,
                   color: AppColors.textSecondary,
                 ),
 
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
 
                 Text(
-                  'Siswa Terdaftar',
-                  style: TextStyle(
-                    fontSize: 10,
+                  'Siswa Pembelajar Terdaftar',
+                  style: GoogleFonts.nunitoSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -556,17 +594,35 @@ class _StudentPageState extends State<StudentPage> {
     return Container(
       width: 48,
       height: 48,
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(12),
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [Colors.white, Color(0xFF67D7FC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 2),
+            blurRadius: 0,
+          ),
+        ],
       ),
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
+      padding: const EdgeInsets.all(2.5),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFFDDF3FF),
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          initials,
+          style: GoogleFonts.nunitoSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            color: AppColors.primary,
+          ),
         ),
       ),
     );
@@ -578,8 +634,12 @@ class _StudentPageState extends State<StudentPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: active ? const Color(0xFF63E6B2) : const Color(0xFFE5EAF3),
-        borderRadius: BorderRadius.circular(12),
+        color: active ? const Color(0xFFD1FAE5) : const Color(0xFFEFF1F7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: active ? const Color(0xFFA7F3D0) : const Color(0xFFDCEFFF),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -588,17 +648,17 @@ class _StudentPageState extends State<StudentPage> {
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF00875A) : AppColors.textSecondary,
+              color: active ? const Color(0xFF059669) : AppColors.textSecondary,
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 4),
           Text(
             status,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: active ? const Color(0xFF006B4A) : AppColors.textSecondary,
+            style: GoogleFonts.nunitoSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: active ? const Color(0xFF059669) : AppColors.textSecondary,
             ),
           ),
         ],

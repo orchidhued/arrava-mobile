@@ -678,10 +678,13 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                 ),
                 const SizedBox(height: 10),
 
-                // Meta row: Jenjang + Mapel + XP + Quiz status
-                Row(
+                // Meta row: Jenjang + Mapel + XP + Quiz status (Wrap agar tidak overflow)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    if (modul.namaJenjang != null) ...[
+                    if (modul.namaJenjang != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -700,9 +703,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                    ],
-                    if (modul.namaMapel != null && modul.namaMapel!.isNotEmpty) ...[
+                    if (modul.namaMapel != null && modul.namaMapel!.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -721,8 +722,6 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                    ],
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -752,8 +751,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                         ],
                       ),
                     ),
-                    if (modul.idQuiz != null) ...[
-                      const SizedBox(width: 8),
+                    if (modul.idQuiz != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -783,7 +781,6 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                           ],
                         ),
                       ),
-                    ],
                   ],
                 ),
                 const SizedBox(height: 14),

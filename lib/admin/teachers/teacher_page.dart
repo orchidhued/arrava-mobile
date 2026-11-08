@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../services/dashboard_service.dart';
@@ -230,12 +231,19 @@ class _TeacherPageState extends State<TeacherPage> {
     required Color badgeTextColor,
   }) {
     return Container(
-      height: 122,
+      height: 126,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow3D,
+            offset: Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,26 +251,27 @@ class _TeacherPageState extends State<TeacherPage> {
           Row(
             children: [
               Container(
-                width: 37,
-                height: 37,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: iconBackground,
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFB2E7FC), width: 1),
                 ),
                 child: Icon(icon, size: 20, color: iconColor),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: badgeColor,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   badge,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
+                  style: GoogleFonts.nunitoSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
                     color: badgeTextColor,
                   ),
                 ),
@@ -274,10 +283,10 @@ class _TeacherPageState extends State<TeacherPage> {
 
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 27,
+            style: GoogleFonts.nunitoSans(
+              fontSize: 26,
               height: 1,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w900,
               color: AppColors.textPrimary,
             ),
           ),
@@ -286,8 +295,9 @@ class _TeacherPageState extends State<TeacherPage> {
 
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
+            style: GoogleFonts.nunitoSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,
             ),
           ),
@@ -331,16 +341,16 @@ class _TeacherPageState extends State<TeacherPage> {
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
@@ -375,14 +385,21 @@ class _TeacherPageState extends State<TeacherPage> {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border, width: 1.5),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.shadow3D,
+              offset: Offset(0, 4),
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,7 +409,7 @@ class _TeacherPageState extends State<TeacherPage> {
               children: [
                 _buildAvatar(initials),
 
-                const SizedBox(width: 11),
+                const SizedBox(width: 12),
 
                 Expanded(
                   child: Column(
@@ -405,9 +422,9 @@ class _TeacherPageState extends State<TeacherPage> {
                               name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: GoogleFonts.nunitoSans(
                                 fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w800,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -423,8 +440,9 @@ class _TeacherPageState extends State<TeacherPage> {
 
                       Text(
                         'NIK / NIP: $nik',
-                        style: const TextStyle(
-                          fontSize: 11,
+                        style: GoogleFonts.nunitoSans(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -452,19 +470,37 @@ class _TeacherPageState extends State<TeacherPage> {
 
   Widget _buildAvatar(String initials) {
     return Container(
-      width: 50,
-      height: 50,
+      width: 48,
+      height: 48,
       decoration: const BoxDecoration(
-        color: AppColors.primaryLight,
         shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [Colors.white, Color(0xFF67D7FC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 2),
+            blurRadius: 0,
+          ),
+        ],
       ),
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
+      padding: const EdgeInsets.all(2.5),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFFDDF3FF),
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          initials,
+          style: GoogleFonts.nunitoSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            color: AppColors.primary,
+          ),
         ),
       ),
     );
@@ -474,8 +510,9 @@ class _TeacherPageState extends State<TeacherPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF63E6B2),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFFD1FAE5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFA7F3D0), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -484,17 +521,17 @@ class _TeacherPageState extends State<TeacherPage> {
             width: 6,
             height: 6,
             decoration: const BoxDecoration(
-              color: Color(0xFF00875A),
+              color: Color(0xFF059669),
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 4),
           Text(
             status,
-            style: const TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF006B4A),
+            style: GoogleFonts.nunitoSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF059669),
             ),
           ),
         ],
@@ -504,19 +541,23 @@ class _TeacherPageState extends State<TeacherPage> {
 
   Widget _buildTag(String text, {required bool primary}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: primary ? AppColors.primaryLight : const Color(0xFFE5EAF3),
-        borderRadius: BorderRadius.circular(6),
+        color: primary ? const Color(0xFFDDF3FF) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: primary ? const Color(0xFFB2E7FC) : const Color(0xFFDCEFFF),
+          width: 1,
+        ),
       ),
       child: Text(
         text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 10,
+        style: GoogleFonts.nunitoSans(
+          fontSize: 10.5,
           color: primary ? AppColors.primaryDark : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

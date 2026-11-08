@@ -28,6 +28,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   Map<String, dynamic>? _profileData;
   bool _isSoundEnabled = true;
   bool _isHapticEnabled = true;
+  int _photoRevision = DateTime.now().millisecondsSinceEpoch;
 
   @override
   void initState() {
@@ -319,7 +320,12 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       ),
     );
     if (saved && mounted) {
-      setState(() => _profileData = updatedProfile);
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      setState(() {
+        _profileData = updatedProfile;
+        _photoRevision = DateTime.now().millisecondsSinceEpoch;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto profil berhasil diperbarui.')),
       );
@@ -653,7 +659,13 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   );
 
   Widget _avatar(Map<String, dynamic> user, {double size = 94}) {
-    final url = ApiConstants.resolveMediaUrl(user['foto_profil']?.toString());
+    final rawUrl = user['foto_profil']?.toString();
+    final resolvedUrl = ApiConstants.resolveMediaUrl(rawUrl);
+    final url = resolvedUrl != null
+        ? (resolvedUrl.contains('?')
+            ? '$resolvedUrl&v=$_photoRevision'
+            : '$resolvedUrl?v=$_photoRevision')
+        : null;
     return Container(
       width: size,
       height: size,
@@ -675,18 +687,22 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       ),
       child: ClipOval(
         child: url == null
-            ? Image.asset(
-                'assets/images/auth/login-illustration.png',
-                fit: BoxFit.cover,
+            ? Container(
+                color: const Color(0xFFDDF3FF),
+                alignment: Alignment.center,
+                child: _text(_value(user, 'nama', 'S')[0].toUpperCase(), size: 32),
               )
             : Image.network(
                 url,
                 fit: BoxFit.cover,
-                errorBuilder: (_, error, stack) => Container(
-                  color: const Color(0xFFDDF3FF),
-                  alignment: Alignment.center,
-                  child: _text(_value(user, 'nama', 'S')[0], size: 32),
-                ),
+                errorBuilder: (_, error, stack) {
+                  debugPrint('[AVATAR ERROR] Failed loading image from: $url | Error: $error');
+                  return Container(
+                    color: const Color(0xFFDDF3FF),
+                    alignment: Alignment.center,
+                    child: _text(_value(user, 'nama', 'S')[0].toUpperCase(), size: 32),
+                  );
+                },
               ),
       ),
     );
