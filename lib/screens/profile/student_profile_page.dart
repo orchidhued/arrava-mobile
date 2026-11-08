@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'student_qr_sheet.dart';
+import '../leaderboard/leaderboard_screen.dart';
 
 import '../../core/constants/api_constants.dart';
 import '../../core/services/audio_service.dart';
@@ -885,6 +886,15 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                       'Juara Kelas',
                                       const Color(0xFFFFF9EC),
                                       const Color(0xFF946B00),
+                                      onTap: () {
+                                        final jId = int.tryParse(user['id_jenjang']?.toString() ?? '');
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                          ),
+                                        );
+                                      },
                                     ),
                                     const SizedBox(width: 8),
                                     _stat(
@@ -907,6 +917,15 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                       'Bintang XP',
                                       const Color(0xFFEFF4FF),
                                       const Color(0xFF2455E6),
+                                      onTap: () {
+                                        final jId = int.tryParse(user['id_jenjang']?.toString() ?? '');
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
@@ -1207,27 +1226,32 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     String value,
     String label,
     Color bg,
-    Color color,
-  ) => Expanded(
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: color.withValues(alpha: .18)),
-      ),
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: color.withValues(alpha: .12),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 5),
-          _text(value, size: 17, color: color, align: TextAlign.center),
-          const SizedBox(height: 5),
-          _text(label, size: 10, color: _muted),
-        ],
+    Color color, {
+    VoidCallback? onTap,
+  }) => Expanded(
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(28),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: color.withValues(alpha: .18)),
+        ),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: color.withValues(alpha: .12),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 5),
+            _text(value, size: 17, color: color, align: TextAlign.center),
+            const SizedBox(height: 5),
+            _text(label, size: 10, color: _muted),
+          ],
+        ),
       ),
     ),
   );

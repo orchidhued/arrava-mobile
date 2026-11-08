@@ -11,6 +11,7 @@ void main() {
       expect(ApiConstants.quizzes, '/quizzes');
       expect(ApiConstants.studentDashboard, '/student/dashboard');
       expect(ApiConstants.parentDashboard, '/parent/dashboard');
+      expect(ApiConstants.leaderboard, '/leaderboard');
       expect(ApiConstants.adminDashboard, '/admin/dashboard');
       expect(ApiConstants.teachers, '/teachers');
       expect(ApiConstants.students, '/students');

@@ -23,6 +23,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter =
       'Semua'; // 'Semua', 'Video', 'PDF', 'Belum Tuntas', 'Tuntas'
+  String _selectedJenjangFilter = 'Jenjang Saya'; // 'Jenjang Saya', 'Semua', 'SD', 'SMP', 'SMA'
   int? _userJenjangId;
 
   @override
@@ -38,12 +39,36 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
     if (mounted) {
       setState(() {
         _userJenjangId = int.tryParse(jenjangStr ?? '');
+        if (_userJenjangId == null) {
+          _selectedJenjangFilter = 'Semua';
+        }
       });
       context.read<ModuleProvider>().fetchModules(
         status: 'published',
         jenjang: _userJenjangId,
       );
     }
+  }
+
+  void _onSelectJenjang(String filter) {
+    setState(() => _selectedJenjangFilter = filter);
+    int? targetJenjangId;
+    if (filter == 'SD') {
+      targetJenjangId = 1;
+    } else if (filter == 'SMP') {
+      targetJenjangId = 2;
+    } else if (filter == 'SMA') {
+      targetJenjangId = 3;
+    } else if (filter == 'Jenjang Saya') {
+      targetJenjangId = _userJenjangId;
+    } else if (filter == 'Semua') {
+      targetJenjangId = 0;
+    }
+
+    context.read<ModuleProvider>().fetchModules(
+      status: 'published',
+      jenjang: targetJenjangId,
+    );
   }
 
   @override
@@ -75,7 +100,18 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
         matchFilter = modul.isTuntas;
       }
 
-      return matchQuery && matchFilter;
+      bool matchJenjang = true;
+      if (_selectedJenjangFilter == 'SD') {
+        matchJenjang = modul.idJenjang == 1 || (modul.namaJenjang?.toUpperCase() == 'SD');
+      } else if (_selectedJenjangFilter == 'SMP') {
+        matchJenjang = modul.idJenjang == 2 || (modul.namaJenjang?.toUpperCase() == 'SMP');
+      } else if (_selectedJenjangFilter == 'SMA') {
+        matchJenjang = modul.idJenjang == 3 || (modul.namaJenjang?.toUpperCase() == 'SMA');
+      } else if (_selectedJenjangFilter == 'Jenjang Saya' && _userJenjangId != null) {
+        matchJenjang = modul.idJenjang == _userJenjangId;
+      }
+
+      return matchQuery && matchFilter && matchJenjang;
     }).toList();
   }
 
@@ -193,6 +229,48 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
+                    // Filter Jenjang
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          'Jenjang Saya',
+                          'Semua',
+                          'SD',
+                          'SMP',
+                          'SMA',
+                        ].map((jenjang) {
+                          final isSelected = _selectedJenjangFilter == jenjang;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: FilterChip(
+                              label: Text(jenjang),
+                              selected: isSelected,
+                              onSelected: (_) => _onSelectJenjang(jenjang),
+                              selectedColor: const Color(0xFF2563EB),
+                              checkmarkColor: Colors.white,
+                              showCheckmark: false,
+                              labelStyle: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: isSelected ? Colors.white : const Color(0xFF1D4ED8),
+                              ),
+                              backgroundColor: const Color(0xFFEFF6FF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? const Color(0xFF2563EB)
+                                      : const Color(0xFFBFDBFE),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Filter Tipe Modul
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(

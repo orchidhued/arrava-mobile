@@ -42,6 +42,7 @@ class SamudraHeroSection extends StatefulWidget {
   final Map<String, dynamic>? stats;
   final VoidCallback? onExploreTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onLeaderboardTap;
 
   const SamudraHeroSection({
     super.key,
@@ -49,6 +50,7 @@ class SamudraHeroSection extends StatefulWidget {
     this.stats,
     this.onExploreTap,
     this.onProfileTap,
+    this.onLeaderboardTap,
   });
 
   @override
@@ -544,8 +546,10 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
 
           const SizedBox(width: 8),
 
-          // Bar EXP Pill: Menggantikan Bar Santai dengan Bar EXP
-          Container(
+          // Bar EXP Pill: Menggantikan Bar Santai dengan Bar EXP (Tap untuk Leaderboard)
+          GestureDetector(
+            onTap: widget.onLeaderboardTap,
+            child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: 9,
               vertical: 4,
@@ -611,10 +615,11 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _fishWidget(Fish f) {
     final bob = math.sin(_t * 1.2 + f.seed) * 3;

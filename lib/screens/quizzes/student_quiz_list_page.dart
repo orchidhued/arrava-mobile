@@ -23,7 +23,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatusFilter =
       'Semua'; // 'Semua', 'Belum Dikerjakan', 'Lulus', 'Belum Lulus'
-  final String _selectedJenjang = 'Semua';
+  String _selectedJenjang = 'Jenjang Saya'; // 'Jenjang Saya', 'Semua', 'SD', 'SMP', 'SMA'
   int? _userJenjangId;
 
   @override
@@ -39,12 +39,36 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     if (mounted) {
       setState(() {
         _userJenjangId = int.tryParse(jenjangStr ?? '');
+        if (_userJenjangId == null) {
+          _selectedJenjang = 'Semua';
+        }
       });
       context.read<QuizProvider>().fetchQuizzes(
         status: 'tersedia',
         jenjang: _userJenjangId,
       );
     }
+  }
+
+  void _onSelectJenjang(String filter) {
+    setState(() => _selectedJenjang = filter);
+    int? targetJenjangId;
+    if (filter == 'SD') {
+      targetJenjangId = 1;
+    } else if (filter == 'SMP') {
+      targetJenjangId = 2;
+    } else if (filter == 'SMA') {
+      targetJenjangId = 3;
+    } else if (filter == 'Jenjang Saya') {
+      targetJenjangId = _userJenjangId;
+    } else if (filter == 'Semua') {
+      targetJenjangId = 0;
+    }
+
+    context.read<QuizProvider>().fetchQuizzes(
+      status: 'tersedia',
+      jenjang: targetJenjangId,
+    );
   }
 
   @override
@@ -55,7 +79,6 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 
   List<QuizModel> _filterQuizzes(List<QuizModel> list) {
     final query = _searchController.text.toLowerCase().trim();
-    final selJenjang = _selectedJenjang.toLowerCase().trim();
 
     return list.where((quiz) {
       if (quiz.isDraft) {
@@ -68,12 +91,17 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
           (quiz.namaMapel?.toLowerCase().contains(query) ?? false) ||
           (quiz.deskripsi?.toLowerCase().contains(query) ?? false);
 
-      final quizJenjang = (quiz.namaJenjang ?? '').toLowerCase().trim();
-      final matchJenjang =
-          _selectedJenjang == 'Semua' ||
-          quizJenjang == selJenjang ||
-          selJenjang.contains(quizJenjang) ||
-          quizJenjang.contains(selJenjang);
+      final quizJenjang = (quiz.namaJenjang ?? '').toUpperCase().trim();
+      bool matchJenjang = true;
+      if (_selectedJenjang == 'SD') {
+        matchJenjang = quiz.idJenjang == 1 || quizJenjang == 'SD';
+      } else if (_selectedJenjang == 'SMP') {
+        matchJenjang = quiz.idJenjang == 2 || quizJenjang == 'SMP';
+      } else if (_selectedJenjang == 'SMA') {
+        matchJenjang = quiz.idJenjang == 3 || quizJenjang == 'SMA';
+      } else if (_selectedJenjang == 'Jenjang Saya' && _userJenjangId != null) {
+        matchJenjang = quiz.idJenjang == _userJenjangId;
+      }
 
       bool matchStatus = true;
       if (_selectedStatusFilter == 'Belum Dikerjakan') {
@@ -552,6 +580,48 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
+                    // Filter Jenjang
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          'Jenjang Saya',
+                          'Semua',
+                          'SD',
+                          'SMP',
+                          'SMA',
+                        ].map((jenjang) {
+                          final isSelected = _selectedJenjang == jenjang;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: FilterChip(
+                              label: Text(jenjang),
+                              selected: isSelected,
+                              onSelected: (_) => _onSelectJenjang(jenjang),
+                              selectedColor: const Color(0xFF2563EB),
+                              checkmarkColor: Colors.white,
+                              showCheckmark: false,
+                              labelStyle: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: isSelected ? Colors.white : const Color(0xFF1D4ED8),
+                              ),
+                              backgroundColor: const Color(0xFFEFF6FF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? const Color(0xFF2563EB)
+                                      : const Color(0xFFBFDBFE),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Filter Status Kuis
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(

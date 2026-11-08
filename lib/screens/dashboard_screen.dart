@@ -5,6 +5,7 @@ import '../services/dashboard_service.dart';
 import '../shared/utils/logout_dialog.dart';
 import '../shared/widgets/samudra_hero_section.dart';
 import '../shared/widgets/tween_float_background.dart';
+import 'leaderboard/leaderboard_screen.dart';
 import 'modules/student_module_list_page.dart';
 import 'profile/student_profile_page.dart';
 import 'profile/student_qr_sheet.dart';
@@ -137,9 +138,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // ===================================================
-                          // 1. TOP HEADER BAR: 'ARRAVA' & Log Out Saja
+                          // 1. TOP HEADER BAR: 'ARRAVA', Leaderboard & Log Out
                           // ===================================================
-                          _buildTopHeader(),
+                          _buildTopHeader(user),
 
                           const SizedBox(height: 16),
 
@@ -154,6 +155,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             },
                             onProfileTap: () {
                               setState(() => _currentIndex = 3);
+                            },
+                            onLeaderboardTap: () {
+                              final jId = int.tryParse(user?['id_jenjang']?.toString() ?? '');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                ),
+                              );
                             },
                           ),
 
@@ -223,7 +233,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // WIDGET BUILDERS
   // ===========================================================================
 
-  Widget _buildTopHeader() {
+  Widget _buildTopHeader(Map<String, dynamic>? user) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -278,37 +288,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
 
-          // Tombol Logout
-          InkWell(
-            onTap: () => showLogoutConfirmationDialog(context),
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEE2E2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFECACA)),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.logout_rounded,
-                    color: Color(0xFFDC2626),
-                    size: 16,
-                  ),
-                  SizedBox(width: 5),
-                  Text(
-                    'Keluar',
-                    style: TextStyle(
-                      color: Color(0xFFDC2626),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
+          // Action Buttons: Leaderboard & Logout
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Tombol Leaderboard
+              InkWell(
+                onTap: () {
+                  final jId = int.tryParse(user?['id_jenjang']?.toString() ?? '');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LeaderboardScreen(initialJenjangId: jId),
                     ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
-                ],
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.emoji_events_rounded, color: Color(0xFFD97706), size: 16),
+                      SizedBox(width: 4),
+                      Text(
+                        'Peringkat',
+                        style: TextStyle(
+                          color: Color(0xFFB45309),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+
+              // Tombol Logout
+              InkWell(
+                onTap: () => showLogoutConfirmationDialog(context),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFFECACA)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        color: Color(0xFFDC2626),
+                        size: 16,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Keluar',
+                        style: TextStyle(
+                          color: Color(0xFFDC2626),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

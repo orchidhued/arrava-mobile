@@ -66,6 +66,19 @@ class DashboardService {
     return {};
   }
 
+  static Future<Map<String, dynamic>> fetchLeaderboard({int? jenjangId}) async {
+    final query = (jenjangId != null && jenjangId > 0)
+        ? '?jenjang=$jenjangId'
+        : (jenjangId == 0 ? '?jenjang=all' : '');
+    final response = await ApiClient.get('${ApiConstants.leaderboard}$query');
+    if (response is Map &&
+        response['success'] == true &&
+        response['data'] != null) {
+      return Map<String, dynamic>.from(response['data']);
+    }
+    return {};
+  }
+
   static Future<List<Map<String, dynamic>>> fetchTeachers() async {
     final response = await ApiClient.get(ApiConstants.teachers);
     if (response is Map &&
