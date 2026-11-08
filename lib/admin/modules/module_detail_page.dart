@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/widgets/app_header.dart';
+import '../../shared/widgets/notification_sheet.dart';
 
 class ModuleDetailPage extends StatelessWidget {
   final String moduleName;
@@ -36,9 +37,7 @@ class ModuleDetailPage extends StatelessWidget {
             children: [
               AppHeader(
                 title: 'Detail Modul',
-                onNotificationTap: () {
-                  // TODO: notifikasi
-                },
+                onNotificationTap: () => NotificationSheet.show(context),
               ),
 
               const SizedBox(height: 20),

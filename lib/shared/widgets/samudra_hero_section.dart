@@ -445,18 +445,20 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                     child: Builder(
                       builder: (context) {
                         final rawPhoto = user?['foto_profil']?.toString();
-                        final resolvedPhoto =
-                            ApiConstants.resolveMediaUrl(rawPhoto);
+                        final resolvedPhoto = ApiConstants.resolveMediaUrl(
+                          rawPhoto,
+                        );
                         final avatarRadius = isCompact ? 21.0 : 24.0;
-                        if (resolvedPhoto != null &&
-                            resolvedPhoto.isNotEmpty) {
+                        if (resolvedPhoto != null && resolvedPhoto.isNotEmpty) {
                           return Image.network(
                             resolvedPhoto,
                             width: avatarRadius * 2,
                             height: avatarRadius * 2,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, error, ___) {
-                              debugPrint('[HERO AVATAR ERROR] Failed loading: $resolvedPhoto | Error: $error');
+                            errorBuilder: (_, error, _) {
+                              debugPrint(
+                                '[HERO AVATAR ERROR] Failed loading: $resolvedPhoto | Error: $error',
+                              );
                               return Container(
                                 width: avatarRadius * 2,
                                 height: avatarRadius * 2,
@@ -621,9 +623,11 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: List.generate(5, (index) {
-                            final int filledSegments = ((progressPercent / 100) * 5)
-                                .round()
-                                .clamp(1, 5);
+                            final int filledSegments =
+                                ((progressPercent / 100) * 5).round().clamp(
+                                  1,
+                                  5,
+                                );
                             final bool isFilled = index < filledSegments;
                             return Container(
                               width: 6,

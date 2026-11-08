@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/storage/secure_storage.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../services/dashboard_service.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/tween_float_background.dart';
@@ -829,7 +828,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               style: GoogleFonts.nunitoSans(
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
-                color: isDraft ? AppColors.textSecondary : const Color(0xFF059669),
+                color: isDraft
+                    ? AppColors.textSecondary
+                    : const Color(0xFF059669),
               ),
             ),
           ),

@@ -30,7 +30,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   int? _selectedStudentId;
 
   static const Color _primary = AppColors.primary;
-  static const Color _indigo = AppColors.primaryDark;
 
   @override
   void initState() {

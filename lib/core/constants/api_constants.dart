@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConstants {
   // Jika di Web / Chrome, atau di Android via USB adb reverse (adb reverse tcp:8000 tcp:8000): gunakan 127.0.0.1
   // Jika di Android via Wi-Fi langsung: gunakan IP Wi-Fi PC (192.168.18.4)
@@ -67,8 +65,8 @@ class ApiConstants {
       final prefix = cleanPath.startsWith('api/storage/')
           ? cleanPath
           : (cleanPath.startsWith('storage/')
-              ? 'api/$cleanPath'
-              : 'api/storage/$cleanPath');
+                ? 'api/$cleanPath'
+                : 'api/storage/$cleanPath');
       final portPart = baseUri.hasPort ? ':${baseUri.port}' : '';
       return '${baseUri.scheme}://${baseUri.host}$portPart/$prefix';
     } catch (_) {
