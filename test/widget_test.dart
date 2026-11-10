@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:arrava_mobile/main.dart';
+import 'package:arrava_mobile/shared/screens/splash_screen.dart';
 import 'package:arrava_mobile/admin/modules/providers/module_provider.dart';
 import 'package:arrava_mobile/admin/quizzes/providers/quiz_provider.dart';
 
@@ -23,7 +24,10 @@ void main() {
       ),
     );
 
-    // Gunakan pump dengan durasi tertentu karena halaman login memiliki continuous ticker animasi
+    expect(find.byType(SplashScreen), findsOneWidget);
+    // The startup timeout must also reach login if asset loading stalls.
+    await tester.pump(const Duration(seconds: 9));
+    // Login has a continuous animation, so avoid pumpAndSettle.
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verifikasi bahwa aplikasi berhasil membuka halaman Login
