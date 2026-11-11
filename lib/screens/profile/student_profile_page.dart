@@ -112,10 +112,14 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                   ),
                   child: const Icon(Icons.camera_alt_rounded, color: _blue),
                 ),
-                title: const Text('Ambil dari Kamera',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                subtitle: const Text('Foto langsung menggunakan kamera HP',
-                    style: TextStyle(fontSize: 12, color: _muted)),
+                title: const Text(
+                  'Ambil dari Kamera',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'Foto langsung menggunakan kamera HP',
+                  style: TextStyle(fontSize: 12, color: _muted),
+                ),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               const SizedBox(height: 6),
@@ -131,10 +135,14 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                   ),
                   child: const Icon(Icons.photo_library_rounded, color: _blue),
                 ),
-                title: const Text('Pilih dari Galeri',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                subtitle: const Text('Pilih foto dari penyimpanan galeri',
-                    style: TextStyle(fontSize: 12, color: _muted)),
+                title: const Text(
+                  'Pilih dari Galeri',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'Pilih foto dari penyimpanan galeri',
+                  style: TextStyle(fontSize: 12, color: _muted),
+                ),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
             ],
@@ -666,8 +674,8 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     final resolvedUrl = ApiConstants.resolveMediaUrl(rawUrl);
     final url = resolvedUrl != null
         ? (resolvedUrl.contains('?')
-            ? '$resolvedUrl&v=$_photoRevision'
-            : '$resolvedUrl?v=$_photoRevision')
+              ? '$resolvedUrl&v=$_photoRevision'
+              : '$resolvedUrl?v=$_photoRevision')
         : null;
     return Container(
       width: size,
@@ -693,17 +701,25 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
             ? Container(
                 color: const Color(0xFFDDF3FF),
                 alignment: Alignment.center,
-                child: _text(_value(user, 'nama', 'S')[0].toUpperCase(), size: 32),
+                child: _text(
+                  _value(user, 'nama', 'S')[0].toUpperCase(),
+                  size: 32,
+                ),
               )
             : Image.network(
                 url,
                 fit: BoxFit.cover,
                 errorBuilder: (_, error, stack) {
-                  debugPrint('[AVATAR ERROR] Failed loading image from: $url | Error: $error');
+                  debugPrint(
+                    '[AVATAR ERROR] Failed loading image from: $url | Error: $error',
+                  );
                   return Container(
                     color: const Color(0xFFDDF3FF),
                     alignment: Alignment.center,
-                    child: _text(_value(user, 'nama', 'S')[0].toUpperCase(), size: 32),
+                    child: _text(
+                      _value(user, 'nama', 'S')[0].toUpperCase(),
+                      size: 32,
+                    ),
                   );
                 },
               ),
@@ -902,15 +918,19 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                     _stat(
                                       Icons.emoji_events_rounded,
                                       _value(stats, 'peringkat_kelas', '-'),
-                                      'Juara Kelas',
+                                      'Peringkat',
                                       const Color(0xFFFFF9EC),
                                       const Color(0xFF946B00),
                                       onTap: () {
-                                        final jId = int.tryParse(user['id_jenjang']?.toString() ?? '');
+                                        final jId = int.tryParse(
+                                          user['id_jenjang']?.toString() ?? '',
+                                        );
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                            builder: (_) => LeaderboardScreen(
+                                              initialJenjangId: jId,
+                                            ),
                                           ),
                                         );
                                       },
@@ -943,11 +963,15 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                         filterQuality: FilterQuality.none,
                                       ),
                                       onTap: () {
-                                        final jId = int.tryParse(user['id_jenjang']?.toString() ?? '');
+                                        final jId = int.tryParse(
+                                          user['id_jenjang']?.toString() ?? '',
+                                        );
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                            builder: (_) => LeaderboardScreen(
+                                              initialJenjangId: jId,
+                                            ),
                                           ),
                                         );
                                       },
@@ -1111,7 +1135,6 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                             {
                               'Jenjang': _value(user, 'nama_jenjang'),
                               'Sekolah': _value(user, 'asal_sekolah'),
-                              'Kelas': _value(user, 'kelas'),
                             },
                           ),
                           const SizedBox(height: 10),

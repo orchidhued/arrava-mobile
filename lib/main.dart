@@ -6,6 +6,7 @@ import 'package:arrava_mobile/admin/quizzes/providers/quiz_provider.dart';
 import 'package:arrava_mobile/providers/notification_provider.dart';
 import 'package:arrava_mobile/auth/login.dart';
 import 'package:arrava_mobile/core/theme/app_theme.dart';
+import 'package:arrava_mobile/shared/screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routes: {'/login': (_) => const LoginScreen()},
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
