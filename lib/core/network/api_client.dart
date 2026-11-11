@@ -82,21 +82,31 @@ class ApiClient {
     }
   }
 
-  static Future<dynamic> post(
+  static Future<dynamic> _sendJson(
+    String method,
     String endpoint, {
     Map<String, dynamic>? body,
   }) async {
     final url = _buildUri(endpoint);
     try {
-      if (kDebugMode) debugPrint('[API POST] Requesting: $url | Body: $body');
+      if (kDebugMode) debugPrint('[API $method] Requesting: $url');
       final headers = await _getHeaders();
-      final response = await http
-          .post(
-            url,
-            headers: headers,
-            body: body != null ? jsonEncode(body) : null,
-          )
-          .timeout(_timeout);
+      final encoded = body != null ? jsonEncode(body) : null;
+      final Future<http.Response> req;
+      switch (method) {
+        case 'POST':
+          req = http.post(url, headers: headers, body: encoded);
+          break;
+        case 'PUT':
+          req = http.put(url, headers: headers, body: encoded);
+          break;
+        case 'PATCH':
+          req = http.patch(url, headers: headers, body: encoded);
+          break;
+        default:
+          throw ArgumentError('Unsupported HTTP method: $method');
+      }
+      final response = await req.timeout(_timeout);
       return _handleResponse(response, url);
     } on TimeoutException catch (_) {
       throw Exception(
@@ -110,33 +120,23 @@ class ApiClient {
     }
   }
 
+  static Future<dynamic> post(
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) =>
+      _sendJson('POST', endpoint, body: body);
+
   static Future<dynamic> put(
     String endpoint, {
     Map<String, dynamic>? body,
-  }) async {
-    final url = _buildUri(endpoint);
-    try {
-      if (kDebugMode) debugPrint('[API PUT] Requesting: $url');
-      final headers = await _getHeaders();
-      final response = await http
-          .put(
-            url,
-            headers: headers,
-            body: body != null ? jsonEncode(body) : null,
-          )
-          .timeout(_timeout);
-      return _handleResponse(response, url);
-    } on TimeoutException catch (_) {
-      throw Exception(
-        'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
-      );
-    } on http.ClientException catch (e) {
-      throw Exception(_clientExceptionMessage(e, url));
-    } catch (e) {
-      if (e.toString().contains('Exception:')) rethrow;
-      throw Exception('Gagal menghubungi API ($url): $e');
-    }
-  }
+  }) =>
+      _sendJson('PUT', endpoint, body: body);
+
+  static Future<dynamic> patch(
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) =>
+      _sendJson('PATCH', endpoint, body: body);
 
   static Future<dynamic> delete(String endpoint) async {
     final url = _buildUri(endpoint);

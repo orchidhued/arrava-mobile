@@ -1,5 +1,6 @@
 import '../core/constants/api_constants.dart';
 import '../core/network/api_client.dart';
+import '../core/storage/preferences_service.dart';
 
 class DashboardService {
   static Future<Map<String, dynamic>> uploadStudentPhoto({
@@ -15,22 +16,40 @@ class DashboardService {
     return profile;
   }
 
+  static String normalizeHeroTheme(dynamic raw) {
+    final value = raw?.toString().trim().toLowerCase();
+    return value == 'galaksi' ? 'galaksi' : 'samudra';
+  }
+
+  static Future<void> _syncCachedHeroTheme(Map<String, dynamic> payload) async {
+    final user = payload['user'];
+    if (user is Map && user['hero_theme'] != null) {
+      await PreferencesService.setHeroTheme(
+        normalizeHeroTheme(user['hero_theme']),
+      );
+    }
+  }
+
   static Future<Map<String, dynamic>> fetchStudentDashboard() async {
     final response = await ApiClient.get(ApiConstants.studentDashboard);
     if (response is Map &&
         response['success'] == true &&
         response['data'] != null) {
-      return Map<String, dynamic>.from(response['data']);
+      final data = Map<String, dynamic>.from(response['data']);
+      await _syncCachedHeroTheme(data);
+      return data;
     }
     return {};
   }
 
   static Future<Map<String, dynamic>> fetchStudentProfile() async {
-    final response = await ApiClient.get('/student/profile');
+    final response = await ApiClient.get(ApiConstants.studentProfile);
     if (response is Map &&
         response['success'] == true &&
         response['data'] != null) {
-      return Map<String, dynamic>.from(response['data']);
+      final data = Map<String, dynamic>.from(response['data']);
+      await _syncCachedHeroTheme(data);
+      return data;
     }
     return {};
   }
@@ -38,11 +57,38 @@ class DashboardService {
   static Future<Map<String, dynamic>> updateStudentProfile(
     Map<String, dynamic> data,
   ) async {
-    final response = await ApiClient.put('/student/profile', body: data);
+    final response = await ApiClient.put(ApiConstants.studentProfile, body: data);
     if (response is Map && response['success'] == true) {
       return Map<String, dynamic>.from(response);
     }
     throw Exception(response['message'] ?? 'Gagal memperbarui profil.');
+  }
+
+  static Future<Map<String, dynamic>> updateStudentHeroTheme(
+    String theme,
+  ) async {
+    final normalized = normalizeHeroTheme(theme);
+    final response = await ApiClient.patch(
+      ApiConstants.studentHeroTheme,
+      body: {'hero_theme': normalized},
+    );
+    if (response is Map && response['success'] == true) {
+      await PreferencesService.setHeroTheme(normalized);
+      final data = response['data'] is Map
+          ? Map<String, dynamic>.from(response['data'])
+          : <String, dynamic>{};
+      return {
+        'hero_theme': normalizeHeroTheme(data['hero_theme'] ?? normalized),
+        'label': data['label']?.toString() ??
+            (normalized == 'galaksi' ? 'Galaksi Piksel' : 'Samudra Piksel'),
+        'message': response['message']?.toString() ??
+            'Tema hero berhasil diperbarui.',
+      };
+    }
+    throw Exception(
+      (response is Map ? response['message'] : null) ??
+          'Gagal mengubah tema hero.',
+    );
   }
 
   static Future<Map<String, dynamic>> fetchAdminDashboard() async {

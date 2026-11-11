@@ -714,42 +714,44 @@ class QuizProperties extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          RadioListTile<String>(
-            value: 'lengkap',
+          RadioGroup<String>(
             groupValue: opsiPreview,
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            activeColor: const Color(0xFF2563EB),
-            title: const Text(
-              'Preview Soal Lengkap',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
-            ),
-            subtitle: const Text(
-              'Menampilkan ringkasan jenis soal, estimasi waktu, poin, dan cuplikan pertanyaan.',
-              style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B)),
-            ),
             onChanged: (val) {
               if (val != null) onChangedOpsiPreview(val);
             },
-          ),
-          const Divider(height: 8),
-          RadioListTile<String>(
-            value: 'tipe_saja',
-            groupValue: opsiPreview,
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            activeColor: const Color(0xFF2563EB),
-            title: const Text(
-              'Hanya Tipe Soal Saja',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+            child: Column(
+              children: const [
+                RadioListTile<String>(
+                  value: 'lengkap',
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: Color(0xFF2563EB),
+                  title: Text(
+                    'Preview Soal Lengkap',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                  ),
+                  subtitle: Text(
+                    'Menampilkan ringkasan jenis soal, estimasi waktu, poin, dan cuplikan pertanyaan.',
+                    style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B)),
+                  ),
+                ),
+                Divider(height: 8),
+                RadioListTile<String>(
+                  value: 'tipe_saja',
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: Color(0xFF2563EB),
+                  title: Text(
+                    'Hanya Tipe Soal Saja',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                  ),
+                  subtitle: Text(
+                    'Hanya menampilkan ringkasan jenis soal. Pertanyaan dirahasiakan sebelum mulai kuis.',
+                    style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B)),
+                  ),
+                ),
+              ],
             ),
-            subtitle: const Text(
-              'Hanya menampilkan ringkasan jenis soal. Pertanyaan dirahasiakan sebelum mulai kuis.',
-              style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B)),
-            ),
-            onChanged: (val) {
-              if (val != null) onChangedOpsiPreview(val);
-            },
           ),
         ],
       ),
@@ -943,7 +945,7 @@ class QuizProperties extends StatelessWidget {
                         : Image.network(
                             ApiConstants.resolveMediaUrl(coverUrl) ?? '',
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Center(
+                            errorBuilder: (_, _, _) => const Center(
                               child: Icon(Icons.broken_image, color: Color(0xFF94A3B8)),
                             ),
                           ),

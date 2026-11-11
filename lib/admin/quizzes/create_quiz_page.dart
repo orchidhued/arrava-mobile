@@ -41,7 +41,6 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
 
   // Cover image
   Uint8List? _coverBytes;
-  String? _coverName;
   String? _coverUrl;
   bool _deleteCover = false;
 
@@ -143,7 +142,6 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
         final bytes = await picked.readAsBytes();
         setState(() {
           _coverBytes = bytes;
-          _coverName = picked.name;
           _deleteCover = false;
         });
       }
@@ -159,7 +157,6 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
   void _removeCoverImage() {
     setState(() {
       _coverBytes = null;
-      _coverName = null;
       _deleteCover = true;
     });
   }

@@ -15,7 +15,9 @@ import '../../services/dashboard_service.dart';
 import '../../shared/utils/logout_dialog.dart';
 
 class StudentProfilePage extends StatefulWidget {
-  const StudentProfilePage({super.key});
+  final ValueChanged<String>? onHeroThemeChanged;
+
+  const StudentProfilePage({super.key, this.onHeroThemeChanged});
 
   @override
   State<StudentProfilePage> createState() => _StudentProfilePageState();
@@ -24,8 +26,10 @@ class StudentProfilePage extends StatefulWidget {
 class _StudentProfilePageState extends State<StudentProfilePage> {
   bool _isLoading = true;
   bool _isPickingPhoto = false;
+  bool _isUpdatingHeroTheme = false;
   String? _error;
   Map<String, dynamic>? _profileData;
+  String _heroTheme = 'samudra';
   bool _isSoundEnabled = true;
   bool _isHapticEnabled = true;
   int _photoRevision = DateTime.now().millisecondsSinceEpoch;
@@ -45,12 +49,20 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     try {
       final sound = await PreferencesService.isSoundEnabled();
       final haptic = await PreferencesService.isHapticEnabled();
+      final cachedTheme = await PreferencesService.getHeroTheme();
       final data = await DashboardService.fetchStudentProfile();
+      final apiTheme = data['user'] is Map
+          ? (data['user'] as Map)['hero_theme']
+          : null;
+      final resolvedTheme = apiTheme != null
+          ? DashboardService.normalizeHeroTheme(apiTheme)
+          : cachedTheme;
       if (mounted) {
         setState(() {
           _isSoundEnabled = sound;
           _isHapticEnabled = haptic;
           _profileData = data;
+          _heroTheme = resolvedTheme;
           _isLoading = false;
         });
       }
@@ -60,6 +72,54 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           _error = e.toString().replaceFirst('Exception: ', '');
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _selectHeroTheme(String targetTheme) async {
+    final normalized = DashboardService.normalizeHeroTheme(targetTheme);
+    if (_isUpdatingHeroTheme || normalized == _heroTheme) return;
+
+    setState(() => _isUpdatingHeroTheme = true);
+    try {
+      final result = await DashboardService.updateStudentHeroTheme(normalized);
+      final updatedTheme = DashboardService.normalizeHeroTheme(
+        result['hero_theme'] ?? normalized,
+      );
+      if (mounted) {
+        setState(() {
+          _heroTheme = updatedTheme;
+          final userMap = _profileData?['user'];
+          if (userMap is Map<String, dynamic>) {
+            userMap['hero_theme'] = updatedTheme;
+          } else if (userMap is Map) {
+            _profileData!['user'] = Map<String, dynamic>.from(userMap)
+              ..['hero_theme'] = updatedTheme;
+          }
+          _isUpdatingHeroTheme = false;
+        });
+        widget.onHeroThemeChanged?.call(updatedTheme);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['message']?.toString() ??
+                  'Tema hero dashboard berhasil diperbarui.',
+            ),
+            backgroundColor: _blue,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUpdatingHeroTheme = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: const Color(0xFFFF454D),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -667,10 +727,9 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   );
 
   Widget _avatar(Map<String, dynamic> user, {double size = 94}) {
-    final rawUrl = (user['foto_profil'] ??
-            user['foto_profil_url'] ??
-            user['foto'])
-        ?.toString();
+    final rawUrl =
+        (user['foto_profil'] ?? user['foto_profil_url'] ?? user['foto'])
+            ?.toString();
     final resolvedUrl = ApiConstants.resolveMediaUrl(rawUrl);
     final url = resolvedUrl != null
         ? (resolvedUrl.contains('?')
@@ -895,10 +954,18 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _button(
-                            'Edit Profil',
-                            Icons.edit_outlined,
-                            () => _showEditProfileSheet(user),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 10,
+                            runSpacing: 8,
+                            children: [
+                              _button(
+                                'Edit Profil',
+                                Icons.edit_outlined,
+                                () => _showEditProfileSheet(user),
+                              ),
+                              _heroQuickToggleButton(),
+                            ],
                           ),
                         ],
                       ),
@@ -981,7 +1048,8 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                 const SizedBox(height: 18),
                                 // Header EXP status (persis Web profil_siswa.blade.php)
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -1028,27 +1096,41 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                         height: 12,
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFDDF3FF),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           border: Border.all(
                                             color: const Color(0xFFB2E7FC),
                                           ),
                                         ),
                                         child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                           child: LayoutBuilder(
                                             builder: (_, c) => Stack(
                                               children: [
                                                 Container(
-                                                  width: c.maxWidth * progress.clamp(0.0, 1.0),
-                                                  decoration: const BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        Color(0xFFFBBF24),
-                                                        Color(0xFFFB923C),
-                                                        Color(0xFFF59E0B),
-                                                      ],
-                                                    ),
-                                                  ),
+                                                  width:
+                                                      c.maxWidth *
+                                                      progress.clamp(0.0, 1.0),
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                        gradient:
+                                                            LinearGradient(
+                                                              colors: [
+                                                                Color(
+                                                                  0xFFFBBF24,
+                                                                ),
+                                                                Color(
+                                                                  0xFFFB923C,
+                                                                ),
+                                                                Color(
+                                                                  0xFFF59E0B,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -1070,7 +1152,8 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                 const SizedBox(height: 6),
                                 // Subtitle / Footer Keterangan Sisa EXP
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -1102,6 +1185,8 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 18),
+                          _buildHeroThemeSection(),
                           const SizedBox(height: 18),
                           _medals(achievements),
                           const SizedBox(height: 18),
@@ -1650,4 +1735,334 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       ],
     ),
   );
+
+  Widget _heroQuickToggleButton() {
+    final nextTheme = _heroTheme == 'galaksi' ? 'samudra' : 'galaksi';
+    final nextShort = nextTheme == 'galaksi' ? 'Galaksi' : 'Samudra';
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(color: Color(0xFFB2E7FC), offset: Offset(0, 4)),
+        ],
+      ),
+      child: OutlinedButton.icon(
+        onPressed: _isUpdatingHeroTheme
+            ? null
+            : () => _selectHeroTheme(nextTheme),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xFFF8FCFF),
+          foregroundColor: const Color(0xFF007FBE),
+          side: const BorderSide(color: Color(0xFF8FD6FA)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          minimumSize: const Size(0, 42),
+          shape: const StadiumBorder(),
+        ),
+        icon: _isUpdatingHeroTheme
+            ? const SizedBox(
+                width: 15,
+                height: 15,
+                child: CircularProgressIndicator(strokeWidth: 2, color: _blue),
+              )
+            : Icon(
+                nextTheme == 'galaksi'
+                    ? Icons.auto_awesome_rounded
+                    : Icons.water_rounded,
+                size: 16,
+              ),
+        label: Text(
+          'Ganti Hero ke $nextShort',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroThemeSection() {
+    final activeLabel = _heroTheme == 'galaksi'
+        ? 'Galaksi Piksel'
+        : 'Samudra Piksel';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _card(radius: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _text('Tema Hero Dashboard 🎨', size: 15),
+                    const SizedBox(height: 2),
+                    _text(
+                      'Pilih suasana hero dashboard yang tampil di halaman beranda.',
+                      size: 11,
+                      color: _muted,
+                      weight: FontWeight.w500,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0F3FF),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFB2E7FC)),
+                ),
+                child: Text(
+                  activeLabel,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: _blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final useRow = constraints.maxWidth >= 460;
+              final samudraCard = _buildHeroThemeOptionCard(
+                themeKey: 'samudra',
+                title: 'Samudra Piksel',
+                description: 'Suasana bawah laut dengan ikan piksel berenang.',
+                actionLabel: 'Gunakan Samudra →',
+                bgColor: const Color(0xFF0C4A6E),
+                previewBuilder: () => Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      'assets/widget/cards/underwaterHeroSection.webp',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.bottomCenter,
+                      filterQuality: FilterQuality.none,
+                    ),
+                    Positioned(
+                      right: 14,
+                      top: 22,
+                      child: Image.asset(
+                        'assets/widget/cards/fish3.webp',
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.none,
+                      ),
+                    ),
+                    Positioned(
+                      left: 18,
+                      bottom: 14,
+                      child: Image.asset(
+                        'assets/widget/cards/fish1.webp',
+                        width: 30,
+                        height: 30,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.none,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              final galaksiCard = _buildHeroThemeOptionCard(
+                themeKey: 'galaksi',
+                title: 'Galaksi Piksel',
+                description: 'Luar angkasa dengan planet mengorbit & asteroid interaktif.',
+                actionLabel: 'Gunakan Galaksi →',
+                bgColor: const Color(0xFF05060F),
+                previewBuilder: () => Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      'assets/widget/cards/herosection/herosection2/BackgroundSpace.webp',
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.none,
+                    ),
+                    Image.asset(
+                      'assets/widget/cards/herosection/herosection2/layer4_celestial.webp',
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.none,
+                    ),
+                    Positioned(
+                      right: 16,
+                      top: 16,
+                      child: Image.asset(
+                        'assets/widget/cards/herosection/herosection2/prop-planet-big.webp',
+                        width: 34,
+                        height: 34,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.none,
+                      ),
+                    ),
+                    Positioned(
+                      left: 20,
+                      bottom: 14,
+                      child: Image.asset(
+                        'assets/widget/cards/herosection/herosection2/asteroid-1.webp',
+                        width: 26,
+                        height: 22,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.none,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              if (useRow) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: samudraCard),
+                    const SizedBox(width: 12),
+                    Expanded(child: galaksiCard),
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  samudraCard,
+                  const SizedBox(height: 12),
+                  galaksiCard,
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroThemeOptionCard({
+    required String themeKey,
+    required String title,
+    required String description,
+    required String actionLabel,
+    required Color bgColor,
+    required Widget Function() previewBuilder,
+  }) {
+    final isActive = _heroTheme == themeKey;
+
+    return Material(
+      color: isActive ? const Color(0xFFF0F9FF) : const Color(0xFFF8FAFC),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: _isUpdatingHeroTheme ? null : () => _selectHeroTheme(themeKey),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isActive ? _blue : const Color(0xFFDCEFFF),
+              width: isActive ? 2 : 1.2,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 92,
+                width: double.infinity,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    color: bgColor,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        previewBuilder(),
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? const Color(0xFF059669)
+                                  : Colors.black.withValues(alpha: 0.58),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isActive
+                                    ? const Color(0xFF6EE7B7)
+                                    : Colors.white.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: Text(
+                              isActive ? '✓ Aktif' : 'Pilih',
+                              style: const TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w900,
+                  color: _ink,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _muted,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text(
+                    isActive ? 'Sedang Digunakan' : actionLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: isActive ? const Color(0xFF059669) : _blue,
+                    ),
+                  ),
+                  if (_isUpdatingHeroTheme && !isActive) ...[
+                    const SizedBox(width: 6),
+                    const SizedBox(
+                      width: 11,
+                      height: 11,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.8,
+                        color: _blue,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -5,6 +5,7 @@ class PreferencesService {
   static const String _keySoundEnabled = 'pref_sound_enabled';
   static const String _keyHapticEnabled = 'pref_haptic_enabled';
   static const String _keyBgmEnabled = 'pref_bgm_enabled';
+  static const String _keyHeroTheme = 'pref_hero_theme';
   static const String _draftPrefix = 'quiz_draft_';
 
   static SharedPreferences? _prefs;
@@ -116,6 +117,20 @@ class PreferencesService {
   static Future<bool> hasQuizDraft(int quizId) async {
     final prefs = await _getInstance();
     return prefs.containsKey('$_draftPrefix$quizId');
+  }
+
+  /// Memeriksa tema hero dashboard yang tersimpan (default: 'samudra').
+  static Future<String> getHeroTheme() async {
+    final prefs = await _getInstance();
+    final saved = prefs.getString(_keyHeroTheme);
+    return saved == 'galaksi' ? 'galaksi' : 'samudra';
+  }
+
+  /// Menyimpan tema hero dashboard ('samudra' atau 'galaksi').
+  static Future<void> setHeroTheme(String theme) async {
+    final normalized = theme == 'galaksi' ? 'galaksi' : 'samudra';
+    final prefs = await _getInstance();
+    await prefs.setString(_keyHeroTheme, normalized);
   }
 
   /// Menghapus draft kuis (misal setelah berhasil submit)

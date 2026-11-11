@@ -240,7 +240,7 @@ class QuizQuestionEditor extends StatelessWidget {
                   : Image.network(
                       ApiConstants.resolveMediaUrl(question.existingFotoUrl) ?? '',
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Center(
+                      errorBuilder: (_, _, _) => const Center(
                         child: Icon(Icons.broken_image, color: Color(0xFF94A3B8), size: 40),
                       ),
                     ),
@@ -359,7 +359,6 @@ class QuizQuestionEditor extends StatelessWidget {
       case JenisSoal.isianSingkat:
         return _buildIsianSingkatAnswer();
       case JenisSoal.kuis:
-      default:
         return _buildMultipleChoiceAnswers();
     }
   }

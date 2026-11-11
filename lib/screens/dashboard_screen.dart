@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../core/storage/preferences_service.dart';
 import '../providers/notification_provider.dart';
 import '../services/dashboard_service.dart';
 import '../shared/utils/logout_dialog.dart';
 import '../shared/widgets/arrava_logo.dart';
+import '../shared/widgets/galaksi_hero_section.dart';
 import '../shared/widgets/menu_pintasan_belajar.dart';
 import '../shared/widgets/notification_sheet.dart';
 import '../shared/widgets/samudra_hero_section.dart';
@@ -34,27 +36,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const _bg = Color(0xFFF0F6FF);
 
   bool _isLoading = true;
+  bool _isSwitchingHero = false;
+  String _heroTheme = 'samudra';
   Map<String, dynamic>? _dashboardData;
 
   @override
   void initState() {
     super.initState();
-    _loadDashboard();
+    _initHeroThemeAndDashboard();
+  }
+
+  Future<void> _initHeroThemeAndDashboard() async {
+    final cached = await PreferencesService.getHeroTheme();
+    if (mounted) {
+      setState(() => _heroTheme = cached);
+    }
+    await _loadDashboard();
   }
 
   Future<void> _loadDashboard() async {
     try {
       context.read<NotificationProvider>().fetchNotifications(silent: true);
       final data = await DashboardService.fetchStudentDashboard();
+      final apiTheme = data['user'] is Map
+          ? (data['user'] as Map)['hero_theme']
+          : null;
       if (mounted) {
         setState(() {
           _dashboardData = data;
+          if (apiTheme != null) {
+            _heroTheme = DashboardService.normalizeHeroTheme(apiTheme);
+          }
           _isLoading = false;
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _toggleHeroTheme() async {
+    if (_isSwitchingHero) return;
+    final nextTheme = _heroTheme == 'galaksi' ? 'samudra' : 'galaksi';
+    setState(() => _isSwitchingHero = true);
+    try {
+      final result = await DashboardService.updateStudentHeroTheme(nextTheme);
+      final updatedTheme = DashboardService.normalizeHeroTheme(
+        result['hero_theme'] ?? nextTheme,
+      );
+      if (mounted) {
+        setState(() {
+          _heroTheme = updatedTheme;
+          final userMap = _dashboardData?['user'];
+          if (userMap is Map<String, dynamic>) {
+            userMap['hero_theme'] = updatedTheme;
+          } else if (userMap is Map) {
+            _dashboardData!['user'] = Map<String, dynamic>.from(userMap)
+              ..['hero_theme'] = updatedTheme;
+          }
+          _isSwitchingHero = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['message']?.toString() ??
+                  'Tema hero dashboard berhasil diganti.',
+            ),
+            backgroundColor: _blue,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSwitchingHero = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: const Color(0xFFFF454D),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -93,7 +157,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_currentIndex == 3) {
       return Scaffold(
         backgroundColor: _bg,
-        body: const SafeArea(child: StudentProfilePage()),
+        body: SafeArea(
+          child: StudentProfilePage(
+            onHeroThemeChanged: (theme) {
+              if (!mounted) return;
+              final normalized = DashboardService.normalizeHeroTheme(theme);
+              setState(() {
+                _heroTheme = normalized;
+                final userMap = _dashboardData?['user'];
+                if (userMap is Map<String, dynamic>) {
+                  userMap['hero_theme'] = normalized;
+                } else if (userMap is Map && _dashboardData != null) {
+                  _dashboardData!['user'] = Map<String, dynamic>.from(userMap)
+                    ..['hero_theme'] = normalized;
+                }
+              });
+            },
+          ),
+        ),
         bottomNavigationBar: _buildBottomNav(),
       );
     }
@@ -158,32 +239,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(height: 16),
 
                           // ===================================================
-                          // 2. SAMUDRA HERO SECTION (Menimpa: Avatar, Nama, Bar EXP, Search Bar & Ikan Piksel)
+                          // 2. HERO SECTION AKTIF (Samudra Piksel / Galaksi Piksel)
                           // ===================================================
-                          SamudraHeroSection(
-                            user: user,
-                            stats: stats,
-                            modulCount: stats?['kursus_aktif'] ?? materiList.length,
-                            quizCount: stats?['total_quiz'] ?? 0,
-                            onExploreTap: () {
-                              setState(() => _currentIndex = 1);
-                            },
-                            onQuizTap: () {
-                              setState(() => _currentIndex = 2);
-                            },
-                            onProfileTap: () {
-                              setState(() => _currentIndex = 3);
-                            },
-                            onLeaderboardTap: () {
-                              final jId = int.tryParse(user?['id_jenjang']?.toString() ?? '');
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => LeaderboardScreen(initialJenjangId: jId),
-                                ),
-                              );
-                            },
-                            onNotificationTap: () => _openNotificationSheet(),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 280),
+                            child: _heroTheme == 'galaksi'
+                                ? GalaksiHeroSection(
+                                    key: const ValueKey('hero-galaksi'),
+                                    user: user,
+                                    stats: stats,
+                                    modulCount: stats?['kursus_aktif'] ?? materiList.length,
+                                    quizCount: stats?['total_quiz'] ?? 0,
+                                    onExploreTap: () {
+                                      setState(() => _currentIndex = 1);
+                                    },
+                                    onQuizTap: () {
+                                      setState(() => _currentIndex = 2);
+                                    },
+                                    onProfileTap: () {
+                                      setState(() => _currentIndex = 3);
+                                    },
+                                    onLeaderboardTap: () {
+                                      final jId = int.tryParse(user?['id_jenjang']?.toString() ?? '');
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                        ),
+                                      );
+                                    },
+                                    onNotificationTap: () => _openNotificationSheet(),
+                                    onToggleHeroTheme: _toggleHeroTheme,
+                                    isHeroSwitching: _isSwitchingHero,
+                                  )
+                                : SamudraHeroSection(
+                                    key: const ValueKey('hero-samudra'),
+                                    user: user,
+                                    stats: stats,
+                                    modulCount: stats?['kursus_aktif'] ?? materiList.length,
+                                    quizCount: stats?['total_quiz'] ?? 0,
+                                    onExploreTap: () {
+                                      setState(() => _currentIndex = 1);
+                                    },
+                                    onQuizTap: () {
+                                      setState(() => _currentIndex = 2);
+                                    },
+                                    onProfileTap: () {
+                                      setState(() => _currentIndex = 3);
+                                    },
+                                    onLeaderboardTap: () {
+                                      final jId = int.tryParse(user?['id_jenjang']?.toString() ?? '');
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                        ),
+                                      );
+                                    },
+                                    onNotificationTap: () => _openNotificationSheet(),
+                                    onToggleHeroTheme: _toggleHeroTheme,
+                                    isHeroSwitching: _isSwitchingHero,
+                                  ),
                           ),
 
                           const SizedBox(height: 16),

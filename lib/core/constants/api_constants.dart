@@ -13,6 +13,8 @@ class ApiConstants {
   static const String quizzes = '/quizzes';
   static const String mapel = '/mapel';
   static const String studentDashboard = '/student/dashboard';
+  static const String studentProfile = '/student/profile';
+  static const String studentHeroTheme = '/student/hero-theme';
   static const String parentDashboard = '/parent/dashboard';
   static const String leaderboard = '/leaderboard';
   static const String adminDashboard = '/admin/dashboard';
