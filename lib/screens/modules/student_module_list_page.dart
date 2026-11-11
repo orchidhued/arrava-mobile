@@ -734,14 +734,15 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.bolt,
-                            size: 12,
-                            color: Color(0xFFD97706),
+                          Image.asset(
+                            'assets/widget/exp.png',
+                            width: 13,
+                            height: 13,
+                            filterQuality: FilterQuality.none,
                           ),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: 3),
                           Text(
-                            '+${modul.poinModul} XP',
+                            '+${modul.poinModul} EXP',
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,

@@ -44,7 +44,10 @@ class Fish {
 class SamudraHeroSection extends StatefulWidget {
   final Map<String, dynamic>? user;
   final Map<String, dynamic>? stats;
+  final int modulCount;
+  final int quizCount;
   final VoidCallback? onExploreTap;
+  final VoidCallback? onQuizTap;
   final VoidCallback? onProfileTap;
   final VoidCallback? onLeaderboardTap;
   final VoidCallback? onNotificationTap;
@@ -53,7 +56,10 @@ class SamudraHeroSection extends StatefulWidget {
     super.key,
     this.user,
     this.stats,
+    this.modulCount = 0,
+    this.quizCount = 0,
     this.onExploreTap,
+    this.onQuizTap,
     this.onProfileTap,
     this.onLeaderboardTap,
     this.onNotificationTap,
@@ -301,13 +307,19 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
     }
   }
 
+  String _formatNumber(int n) {
+    final s = n.toString();
+    final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return s.replaceAllMapped(reg, (m) => '${m[1]},');
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cardW = constraints.maxWidth;
-        // Tinggi card samudra yang proporsional dan tidak mendesak konten bawah
-        final cardH = cardW < 500 ? 230.0 : (cardW < 800 ? 260.0 : 290.0);
+        // Tinggi card samudra proporsional yang memuat Profil, Kartu EXP Glassmorphic & Sapaan Aksi
+        final cardH = cardW < 500 ? 325.0 : (cardW < 800 ? 295.0 : 270.0);
 
         final size = Size(cardW, cardH);
         _syncLayout(size);
@@ -316,10 +328,12 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
           width: size.width,
           height: size.height,
           decoration: BoxDecoration(
+            color: const Color(0xFF0C4A6E),
             borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFDCEFFF)),
             boxShadow: const [
               BoxShadow(
-                color: Color.fromRGBO(6, 32, 63, .16),
+                color: Color.fromRGBO(6, 32, 63, .18),
                 blurRadius: 20,
                 offset: Offset(0, 6),
               ),
@@ -352,7 +366,7 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
             ),
           ),
 
-          // 2. Efek Overlay Gradasi Cahaya
+          // 2. Efek Overlay Gradasi Cahaya Atas
           Positioned.fill(
             child: IgnorePointer(
               child: DecoratedBox(
@@ -360,10 +374,10 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: const [0, .35],
-                    colors: const [
-                      Color.fromRGBO(255, 255, 255, .18),
-                      Color.fromRGBO(255, 255, 255, 0),
+                    stops: const [0, .40],
+                    colors: [
+                      Colors.white.withValues(alpha: 0.20),
+                      Colors.transparent,
                     ],
                   ),
                 ),
@@ -398,180 +412,177 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
             ),
           ),
 
-          // 5. Konten Menimpa: Profil, Bar EXP, & Pencarian Materi
-          Positioned(left: 0, right: 0, top: 0, child: _buildOverlaidContent()),
+          // 5. Konten Menimpa: Profil Siswa, Kartu Peringkat & EXP, serta Sapaan Hangat & Quick Actions
+          Positioned.fill(
+            child: _buildOverlaidContent(),
+          ),
         ],
       ),
     );
   }
 
-  /// Konten Profil, Bar EXP & Info Siswa yang menimpa samudra
+  /// Konten Profil Siswa, Kartu Peringkat & EXP, dan Quick Action Shortcuts yang menimpa samudra
   Widget _buildOverlaidContent() {
     final user = widget.user;
     final stats = widget.stats;
-    final level = stats?['level'] ?? 1;
-    final totalXp = user?['total_xp'] ?? stats?['total_xp'] ?? 0;
+
+    // Ekstraksi data rank_tier / stats
+    final rankInfo = (user?['rank_tier'] as Map<String, dynamic>?) ??
+        (user?['rank'] as Map<String, dynamic>?) ??
+        <String, dynamic>{};
+
+    final currentRank = rankInfo['current_rank']?.toString() ?? 'Pemula';
+    final currentBadgeUrl = rankInfo['current_badge_url']?.toString();
+    final nextRank = rankInfo['next_rank']?.toString() ?? 'Lanjutan';
+    final currentPoints = (rankInfo['current_points'] as num?)?.toInt() ??
+        (user?['total_xp'] as num?)?.toInt() ??
+        (stats?['total_xp'] as num?)?.toInt() ??
+        0;
+    final nextPoints = (rankInfo['next_points'] as num?)?.toInt() ?? 100;
+    final pointsNeeded = (rankInfo['points_needed'] as num?)?.toInt() ??
+        (nextPoints > currentPoints ? nextPoints - currentPoints : 0);
+    final percent = ((rankInfo['percent'] as num?)?.toInt() ??
+            (stats?['progress_percent'] as num?)?.toInt() ??
+            0)
+        .clamp(0, 100);
+    final isMax = rankInfo['is_max'] == true;
+
     final kuisLulus = stats?['kuis_lulus'] ?? 0;
-    final progressPercent =
-        (stats?['progress_percent'] as num?)?.toDouble() ?? 0.0;
+    final modulCount = widget.modulCount > 0
+        ? widget.modulCount
+        : (stats?['kursus_aktif'] ?? 0);
+    final jenjangName = user?['jenjang']?.toString() ?? 'SD';
+    final studentName = user?['nama']?.toString() ?? 'Siswa Arrava';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+      padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 410;
-          final showSegments = constraints.maxWidth >= 450;
+          final isCompact = constraints.maxWidth < 390;
+          final isVeryCompact = constraints.maxWidth < 340;
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Foto Profil Siswa
-              GestureDetector(
-                onTap: widget.onProfileTap,
-                child: Container(
-                  padding: const EdgeInsets.all(2.5),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.16),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: Builder(
-                      builder: (context) {
-                        final rawPhoto = user?['foto_profil']?.toString();
-                        final resolvedPhoto = ApiConstants.resolveMediaUrl(
-                          rawPhoto,
-                        );
-                        final avatarRadius = isCompact ? 21.0 : 24.0;
-                        if (resolvedPhoto != null && resolvedPhoto.isNotEmpty) {
-                          return Image.network(
-                            resolvedPhoto,
-                            width: avatarRadius * 2,
-                            height: avatarRadius * 2,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, error, _) {
-                              debugPrint(
-                                '[HERO AVATAR ERROR] Failed loading: $resolvedPhoto | Error: $error',
-                              );
-                              return Container(
-                                width: avatarRadius * 2,
-                                height: avatarRadius * 2,
-                                color: const Color(0xFFF97316),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.sentiment_very_satisfied_rounded,
-                                  color: Colors.white,
-                                  size: isCompact ? 22 : 26,
-                                ),
-                              );
-                            },
-                          );
-                        }
-                        return Container(
-                          width: avatarRadius * 2,
-                          height: avatarRadius * 2,
-                          color: const Color(0xFFF97316),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.sentiment_very_satisfied_rounded,
-                            color: Colors.white,
-                            size: isCompact ? 22 : 26,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
+              // Bagian 1: Profil Siswa & Level
+              _buildTopProfileRow(
+                isCompact: isCompact,
+                isVeryCompact: isVeryCompact,
+                studentName: studentName,
+                jenjangName: jenjangName,
+                currentRank: currentRank,
+                kuisLulus: kuisLulus,
+                modulCount: modulCount,
+                user: user,
               ),
 
-              const SizedBox(width: 8),
+              // Bagian 2: Peleburan Kartu Peringkat & EXP (Glassmorphic persis Web)
+              _buildRankExpCard(
+                isCompact: isCompact,
+                currentRank: currentRank,
+                currentBadgeUrl: currentBadgeUrl,
+                currentPoints: currentPoints,
+                nextRank: nextRank,
+                nextPoints: nextPoints,
+                pointsNeeded: pointsNeeded,
+                percent: percent,
+                isMax: isMax,
+              ),
 
-              // Info Siswa: Nama, Badge Jenjang, & Level
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            user != null && user['nama'] != null
-                                ? user['nama'].toString()
-                                : 'Siswa Arrava',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: isCompact ? 13.5 : 15,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              shadows: const [
-                                Shadow(
-                                  color: Colors.black54,
-                                  blurRadius: 4,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD1FAE5),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 4,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.check_circle_rounded,
-                                size: 10,
-                                color: Color(0xFF059669),
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                user?['jenjang'] != null
-                                    ? '${user!['jenjang']}'
-                                    : 'SD',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF047857),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Level $level • $kuisLulus Kuis Selesai',
+              // Bagian 3: Sapaan Hangat & Quick Actions (Mulai Belajar & Latihan Kuis)
+              _buildBottomActionRow(
+                isCompact: isCompact,
+                studentName: studentName,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Baris Atas: Foto Profil Siswa, Nama, Badge Jenjang, Level & Notifikasi
+  Widget _buildTopProfileRow({
+    required bool isCompact,
+    required bool isVeryCompact,
+    required String studentName,
+    required String jenjangName,
+    required String currentRank,
+    required dynamic kuisLulus,
+    required dynamic modulCount,
+    required Map<String, dynamic>? user,
+  }) {
+    final avatarRadius = isCompact ? 20.0 : 23.0;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Avatar Siswa dengan gradient ring
+        GestureDetector(
+          onTap: widget.onProfileTap,
+          child: Container(
+            padding: const EdgeInsets.all(2.0),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Builder(
+                builder: (context) {
+                  final rawPhoto = (user?['foto_profil'] ??
+                          user?['foto_profil_url'] ??
+                          user?['foto'])
+                      ?.toString();
+                  final resolvedPhoto = ApiConstants.resolveMediaUrl(rawPhoto);
+                  if (resolvedPhoto != null && resolvedPhoto.isNotEmpty) {
+                    return Image.network(
+                      resolvedPhoto,
+                      width: avatarRadius * 2,
+                      height: avatarRadius * 2,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, error, _) {
+                        debugPrint(
+                          '[HERO AVATAR ERROR] Failed loading: $resolvedPhoto | Error: $error',
+                        );
+                        return _buildAvatarFallback(studentName, avatarRadius);
+                      },
+                    );
+                  }
+                  return _buildAvatarFallback(studentName, avatarRadius);
+                },
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // Info Siswa: Nama, Badge Jenjang, & Level Subtitle
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      studentName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: isCompact ? 10 : 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.95),
+                        fontSize: isCompact ? 13.5 : 15,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
                         shadows: const [
                           Shadow(
                             color: Colors.black54,
@@ -581,23 +592,117 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Bar EXP Pill: Menggantikan Bar Santai dengan Bar EXP (Tap untuk Leaderboard)
-              GestureDetector(
-                onTap: widget.onLeaderboardTap,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isCompact ? 7 : 9,
-                    vertical: 4,
                   ),
+                  const SizedBox(width: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5.5,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD1FAE5),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFF6EE7B7)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 9.5,
+                          color: Color(0xFF059669),
+                        ),
+                        const SizedBox(width: 2.5),
+                        Text(
+                          jenjangName,
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF047857),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2.5),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 4,
+                runSpacing: 2,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      'Level: $currentRank',
+                      style: const TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '• $kuisLulus Kuis',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.95),
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black45,
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isVeryCompact)
+                    Text(
+                      '• $modulCount Modul',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.95),
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black45,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Tombol Notifikasi Presensi
+        if (widget.onNotificationTap != null) ...[
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: widget.onNotificationTap,
+            child: Consumer<NotificationProvider>(
+              builder: (context, notifProvider, _) {
+                final unread = notifProvider.unreadCount;
+                return Container(
+                  padding: const EdgeInsets.all(5.5),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(20),
+                    shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.12),
@@ -606,125 +711,539 @@ class _SamudraHeroSectionState extends State<SamudraHeroSection>
                       ),
                     ],
                   ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(
+                        Icons.notifications_outlined,
+                        size: 17,
+                        color: Color(0xFF12233F),
+                      ),
+                      if (unread > 0)
+                        Positioned(
+                          top: -3,
+                          right: -3,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 12,
+                              minHeight: 12,
+                            ),
+                            child: Text(
+                              unread > 9 ? '9+' : '$unread',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 7.5,
+                                fontWeight: FontWeight.w900,
+                                height: 1.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAvatarFallback(String name, double radius) {
+    return Container(
+      width: radius * 2,
+      height: radius * 2,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF007FBE), Color(0xFF51CDF4)],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : 'S',
+        style: TextStyle(
+          fontSize: radius * 0.9,
+          fontWeight: FontWeight.w900,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  /// Bagian 2: Kartu Glassmorphic Peringkat & EXP (Peleburan persis Elearning Web)
+  Widget _buildRankExpCard({
+    required bool isCompact,
+    required String currentRank,
+    required String? currentBadgeUrl,
+    required int currentPoints,
+    required String nextRank,
+    required int nextPoints,
+    required int pointsNeeded,
+    required int percent,
+    required bool isMax,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 10 : 12,
+        vertical: isCompact ? 7 : 8.5,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Baris 1: Label PERINGKAT & EXP + Pill Tombol Leaderboard
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'PERINGKAT & EXP',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.8,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ),
+              GestureDetector(
+                onTap: widget.onLeaderboardTap,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (currentBadgeUrl != null &&
+                          currentBadgeUrl.isNotEmpty)
+                        Image.network(
+                          currentBadgeUrl,
+                          width: 13,
+                          height: 13,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Text(
+                            '★',
+                            style: TextStyle(
+                              color: Color(0xFFD97706),
+                              fontSize: 11,
+                            ),
+                          ),
+                        )
+                      else
+                        const Text(
+                          '★',
+                          style: TextStyle(
+                            color: Color(0xFFD97706),
+                            fontSize: 11,
+                          ),
+                        ),
+                      const SizedBox(width: 3),
                       Text(
-                        '$totalXp EXP',
-                        style: TextStyle(
-                          fontSize: isCompact ? 9.5 : 10.5,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
-                        ),
-                      ),
-                      if (showSegments) ...[
-                        const SizedBox(width: 5),
-                        // Progress bar mini bersegmen 5 segmen
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: List.generate(5, (index) {
-                            final int filledSegments =
-                                ((progressPercent / 100) * 5).round().clamp(
-                                  1,
-                                  5,
-                                );
-                            final bool isFilled = index < filledSegments;
-                            return Container(
-                              width: 6,
-                              height: 4,
-                              margin: const EdgeInsets.symmetric(horizontal: 1),
-                              decoration: BoxDecoration(
-                                color: isFilled
-                                    ? const Color(0xFF2563EB)
-                                    : const Color(0xFFCBD5E1),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            );
-                          }),
-                        ),
-                      ],
-                      const SizedBox(width: 4),
-                      Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFFFEE2E2),
-                        ),
-                        child: const Icon(
-                          Icons.local_fire_department_rounded,
-                          size: 11,
-                          color: Color(0xFFEF4444),
+                        currentRank,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFB45309),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              if (widget.onNotificationTap != null) ...[
-                const SizedBox(width: 6),
-                GestureDetector(
-                  onTap: widget.onNotificationTap,
-                  child: Consumer<NotificationProvider>(
-                    builder: (context, notifProvider, _) {
-                      final unread = notifProvider.unreadCount;
-                      return Container(
-                        padding: const EdgeInsets.all(5.5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.95),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+            ],
+          ),
+          const SizedBox(height: 5),
+
+          // Baris 2: EXP Points Besar + Target Rank
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    _formatNumber(currentPoints),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: isCompact ? 20 : 23,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'EXP',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFFDE047),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              Flexible(
+                child: isMax
+                    ? const Text(
+                        'Tingkat Tertinggi 👑',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF6EE7B7),
                         ),
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            const Icon(
-                              Icons.notifications_outlined,
-                              size: 17,
-                              color: Color(0xFF12233F),
-                            ),
-                            if (unread > 0)
-                              Positioned(
-                                top: -3,
-                                right: -3,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFEF4444),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 12,
-                                    minHeight: 12,
-                                  ),
-                                  child: Text(
-                                    unread > 9 ? '9+' : '$unread',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 7.5,
-                                      fontWeight: FontWeight.w900,
-                                      height: 1.0,
-                                    ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RichText(
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                              ),
+                              children: [
+                                const TextSpan(text: 'Menuju '),
+                                TextSpan(
+                                  text: nextRank,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
                                   ),
                                 ),
-                              ),
-                          ],
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${_formatNumber(currentPoints)} / ${_formatNumber(nextPoints)}',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.75),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Baris 3: Icon EXP widget + Animated Progress Bar + Persentase
+          Row(
+            children: [
+              Image.asset(
+                'assets/widget/exp.png',
+                width: 17,
+                height: 17,
+                filterQuality: FilterQuality.none,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  height: 8.5,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: (percent / 100).clamp(0.02, 1.0),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFFFBBF24),
+                              Color(0xFFFB923C),
+                              Color(0xFFF59E0B),
+                            ],
+                          ),
                         ),
-                      );
-                    },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 32,
+                child: Text(
+                  '$percent%',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFFDE047),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5.5),
+
+          // Baris 4: Footer Sisa EXP & Link Leaderboard
+          Container(
+            padding: const EdgeInsets.only(top: 4.5),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.18),
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: isMax
+                      ? const Text(
+                          'Hebat! Semua tingkat terbuka.',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF6EE7B7),
+                          ),
+                        )
+                      : RichText(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              color: Colors.white.withValues(alpha: 0.90),
+                            ),
+                            children: [
+                              const TextSpan(text: 'Sisa '),
+                              TextSpan(
+                                text: '${_formatNumber(pointsNeeded)} EXP',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const TextSpan(text: ' lagi'),
+                            ],
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: widget.onLeaderboardTap,
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Lihat leaderboard',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFFDE047),
+                        ),
+                      ),
+                      SizedBox(width: 2),
+                      Text(
+                        '→',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFFDE047),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ],
-          );
-        },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Bagian 3: Sapaan Hangat Siswa & Quick Action Shortcuts
+  Widget _buildBottomActionRow({
+    required bool isCompact,
+    required String studentName,
+  }) {
+    return Container(
+      padding: const EdgeInsets.only(top: 5),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.16),
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Halo, $studentName 👋',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: isCompact ? 12.5 : 13.5,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black54,
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  'Jelajahi materi & raih ranking teratas!',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.90),
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Tombol Mulai Belajar (Glass White Pill)
+          GestureDetector(
+            onTap: widget.onExploreTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.menu_book_rounded,
+                    size: 12,
+                    color: Color(0xFF007FBE),
+                  ),
+                  SizedBox(width: 3.5),
+                  Text(
+                    'Belajar',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF007FBE),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 5),
+          // Tombol Latihan Kuis (3D Blue Pill)
+          GestureDetector(
+            onTap: widget.onQuizTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF007FBE),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFF00628E)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0xFF00628E),
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 12,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 3.5),
+                  Text(
+                    'Kuis',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

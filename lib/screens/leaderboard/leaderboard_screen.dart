@@ -371,13 +371,25 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(
-            '⚡ $pts XP',
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFFFEF08A),
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/widget/exp.png',
+                width: 12,
+                height: 12,
+                filterQuality: FilterQuality.none,
+              ),
+              const SizedBox(width: 3),
+              Text(
+                '$pts EXP',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFFEF08A),
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -526,19 +538,31 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
           // XP Points
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
             decoration: BoxDecoration(
               color: const Color(0xFFFFFBEB),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFFDE68A)),
             ),
-            child: Text(
-              '⚡ $pts XP',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFFB45309),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/widget/exp.png',
+                  width: 13,
+                  height: 13,
+                  filterQuality: FilterQuality.none,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '$pts EXP',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFB45309),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -637,19 +661,31 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
               decoration: BoxDecoration(
                 color: const Color(0xFFEFF6FF),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFFBFDBFE)),
               ),
-              child: Text(
-                '⚡ $pts XP',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: _primary,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/widget/exp.png',
+                    width: 14,
+                    height: 14,
+                    filterQuality: FilterQuality.none,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$pts EXP',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: _primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

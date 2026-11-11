@@ -825,18 +825,30 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  '+${modul.poinModul} EXP',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFB45309),
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/widget/exp.png',
+                      width: 14,
+                      height: 14,
+                      filterQuality: FilterQuality.none,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '+${modul.poinModul} EXP',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFB45309),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Container(
@@ -908,36 +920,68 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Bar Syarat
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isVeryCompact = constraints.maxWidth < 320;
+              final badge = Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: isTuntas
+                      ? const Color(0xFF059669)
+                      : const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: isTuntas
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFDDF3FF),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          isTuntas ? Icons.check : Icons.track_changes_rounded,
-                          color:
-                              isTuntas ? Colors.white : _blue,
-                          size: 18,
-                        ),
+                    Image.asset(
+                      'assets/widget/exp.png',
+                      width: 14,
+                      height: 14,
+                      filterQuality: FilterQuality.none,
+                    ),
+                    const SizedBox(width: 3.5),
+                    Text(
+                      '+${modul.poinModul} EXP',
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: isTuntas ? Colors.white : const Color(0xFF92400E),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
+                  ],
+                ),
+              );
+
+              if (isVeryCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: isTuntas
+                                ? const Color(0xFF059669)
+                                : const Color(0xFFDDF3FF),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              isTuntas
+                                  ? Icons.check
+                                  : Icons.track_changes_rounded,
+                              color: isTuntas ? Colors.white : _blue,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
                             isTuntas
                                 ? 'Modul Tuntas Sempurna!'
                                 : 'Syarat Penyelesaian Modul',
@@ -946,55 +990,92 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
-                              color: isTuntas
-                                  ? const Color(0xFF065F46)
-                                  : _ink,
+                              color: isTuntas ? const Color(0xFF065F46) : _ink,
                             ),
                           ),
-                          Text(
-                            isTuntas
-                                ? 'Materi & evaluasi kuis modul tuntas.'
-                                : 'Selesaikan 2 langkah untuk klaim EXP.',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isTuntas
-                                  ? const Color(0xFF047857)
-                                  : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
+                        ),
+                        const SizedBox(width: 6),
+                        badge,
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isTuntas
+                          ? 'Materi & evaluasi kuis modul tuntas.'
+                          : 'Selesaikan 2 langkah untuk klaim EXP.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isTuntas
+                            ? const Color(0xFF047857)
+                            : const Color(0xFF64748B),
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                fit: FlexFit.loose,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isTuntas
-                        ? const Color(0xFF059669)
-                        : const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '🏆 +${modul.poinModul} EXP',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: isTuntas ? Colors.white : const Color(0xFF92400E),
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isTuntas
+                          ? const Color(0xFF059669)
+                          : const Color(0xFFDDF3FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        isTuntas
+                            ? Icons.check
+                            : Icons.track_changes_rounded,
+                        color: isTuntas ? Colors.white : _blue,
+                        size: 18,
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isTuntas
+                              ? 'Modul Tuntas Sempurna!'
+                              : 'Syarat Penyelesaian Modul',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: isTuntas ? const Color(0xFF065F46) : _ink,
+                          ),
+                        ),
+                        Text(
+                          isTuntas
+                              ? 'Materi & evaluasi kuis modul tuntas.'
+                              : 'Selesaikan 2 langkah untuk klaim EXP.',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isTuntas
+                                ? const Color(0xFF047857)
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  badge,
+                ],
+              );
+            },
           ),
           const SizedBox(height: 14),
 

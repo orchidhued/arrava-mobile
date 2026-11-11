@@ -659,7 +659,10 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   );
 
   Widget _avatar(Map<String, dynamic> user, {double size = 94}) {
-    final rawUrl = user['foto_profil']?.toString();
+    final rawUrl = (user['foto_profil'] ??
+            user['foto_profil_url'] ??
+            user['foto'])
+        ?.toString();
     final resolvedUrl = ApiConstants.resolveMediaUrl(rawUrl);
     final url = resolvedUrl != null
         ? (resolvedUrl.contains('?')
@@ -930,9 +933,15 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                     _stat(
                                       Icons.bolt_rounded,
                                       points,
-                                      'Bintang XP',
+                                      'Bintang EXP',
                                       const Color(0xFFEFF4FF),
                                       const Color(0xFF2455E6),
+                                      customIcon: Image.asset(
+                                        'assets/widget/exp.png',
+                                        width: 20,
+                                        height: 20,
+                                        filterQuality: FilterQuality.none,
+                                      ),
                                       onTap: () {
                                         final jId = int.tryParse(user['id_jenjang']?.toString() ?? '');
                                         Navigator.push(
@@ -946,56 +955,125 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                                   ],
                                 ),
                                 const SizedBox(height: 18),
+                                // Header EXP status (persis Web profil_siswa.blade.php)
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Icon(
-                                      Icons.rocket_launch_outlined,
-                                      size: 15,
-                                      color: _blue,
-                                    ),
-                                    const SizedBox(width: 4),
                                     Expanded(
-                                      child: _text(
+                                      child: Text(
                                         rank['is_max'] == true
-                                            ? 'Level tertinggi tercapai!'
-                                            : 'Menuju level berikutnya',
-                                        size: 11,
+                                            ? 'Peringkat Tertinggi (MAX TIER) 👑'
+                                            : 'Menuju ${rank['next_rank'] ?? 'Lanjutan'}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: rank['is_max'] == true
+                                              ? const Color(0xFF059669)
+                                              : const Color(0xFF465673),
+                                        ),
                                       ),
                                     ),
-                                    _text(
-                                      '$points / $next XP',
-                                      size: 10,
-                                      color: _blue,
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      rank['is_max'] == true
+                                          ? 'MAX ($points EXP)'
+                                          : '$points / $next EXP',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF082765),
+                                      ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 9),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: SizedBox(
-                                    height: 11,
-                                    child: LayoutBuilder(
-                                      builder: (_, c) => Stack(
-                                        children: [
-                                          Container(
-                                            color: const Color(0xFFDCEFFC),
+                                const SizedBox(height: 8),
+                                // Baris EXP Bar dengan Icon Widget exp.png di sebelahnya
+                                Row(
+                                  children: [
+                                    Image.asset(
+                                      'assets/widget/exp.png',
+                                      width: 24,
+                                      height: 24,
+                                      filterQuality: FilterQuality.none,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Container(
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFDDF3FF),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: const Color(0xFFB2E7FC),
                                           ),
-                                          Container(
-                                            width: c.maxWidth * progress,
-                                            decoration: const BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  Color(0xFF00A5ED),
-                                                  Color(0xFF51CDF4),
-                                                  Color(0xFFFFC832),
-                                                ],
-                                              ),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(20),
+                                          child: LayoutBuilder(
+                                            builder: (_, c) => Stack(
+                                              children: [
+                                                Container(
+                                                  width: c.maxWidth * progress.clamp(0.0, 1.0),
+                                                  decoration: const BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        Color(0xFFFBBF24),
+                                                        Color(0xFFFB923C),
+                                                        Color(0xFFF59E0B),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${(progress * 100).round()}%',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w900,
+                                        color: Color(0xFFD97706),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                // Subtitle / Footer Keterangan Sisa EXP
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        rank['is_max'] == true
+                                            ? 'Luar biasa! Semua tingkat terbuka.'
+                                            : 'Kurang ${rank['points_needed'] ?? 0} EXP lagi',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: rank['is_max'] == true
+                                              ? const Color(0xFF059669)
+                                              : const Color(0xFF72839E),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${(progress * 100).round()}% menuju pangkat baru',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF72839E),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -1244,6 +1322,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     Color bg,
     Color color, {
     VoidCallback? onTap,
+    Widget? customIcon,
   }) => Expanded(
     child: InkWell(
       onTap: onTap,
@@ -1260,7 +1339,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
             CircleAvatar(
               radius: 16,
               backgroundColor: color.withValues(alpha: .12),
-              child: Icon(icon, color: color, size: 20),
+              child: customIcon ?? Icon(icon, color: color, size: 20),
             ),
             const SizedBox(height: 5),
             _text(value, size: 17, color: color, align: TextAlign.center),

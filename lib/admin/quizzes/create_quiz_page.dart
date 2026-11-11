@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'models/quiz_model.dart';
@@ -19,10 +23,29 @@ class CreateQuizPage extends StatefulWidget {
 }
 
 class _CreateQuizPageState extends State<CreateQuizPage> {
+  // Title & Quiz Controllers
   final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _tokenController = TextEditingController();
+
+  // Quiz-level settings
+  String _level = 'SMA / MA / SMK Sederajat';
+  int? _idMapel;
+  String _difficulty = 'Mudah';
+  String _modePengerjaan = 'wayground';
+  int _durasiTotalMenit = 30;
+  String _opsiPreview = 'lengkap';
+  bool _neverExpire = true;
+  DateTime? _expiryDate;
+  bool _useToken = false;
+
+  // Cover image
+  Uint8List? _coverBytes;
+  String? _coverName;
+  String? _coverUrl;
+  bool _deleteCover = false;
 
   int _currentQuestion = 0;
-
   final List<QuizQuestion> _questions = [];
 
   QuizQuestion get _question {
@@ -35,26 +58,47 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
   @override
   void initState() {
     super.initState();
+
     if (_isEditing) {
       final q = widget.quizToEdit!;
       _titleController.text = q.judul;
+      _descriptionController.text = q.deskripsi ?? '';
+      _level = q.namaJenjang ?? 'SMA / MA / SMK Sederajat';
+      _idMapel = q.idMapel;
+      _difficulty = q.namaTingkat ?? 'Mudah';
+      _modePengerjaan = q.modePengerjaan.isNotEmpty ? q.modePengerjaan : 'wayground';
+      _durasiTotalMenit = q.durasiTotalMenit ?? 30;
+      _opsiPreview = q.opsiPreview.isNotEmpty ? q.opsiPreview : 'lengkap';
+      _neverExpire = q.waktuKadaluarsa == null || q.waktuKadaluarsa!.isEmpty;
+      _expiryDate = q.waktuKadaluarsa != null ? DateTime.tryParse(q.waktuKadaluarsa!) : null;
+      _useToken = q.token != null && q.token!.isNotEmpty;
+      _tokenController.text = q.token ?? '';
+      _coverUrl = q.fotoQuiz ?? q.coverUrl;
+
       if (q.soal.isNotEmpty) {
         for (final item in q.soal) {
           final choices = item.pilihan.map((p) => p.teksPilihan).toList();
           while (choices.length < 4) {
             choices.add('');
           }
+
+          int correctIdx = 0;
+          if (item.jenisSoal == JenisSoal.trueFalse) {
+            correctIdx = (item.jawabanBenar == 'B' || item.correctAnswerIndex == 1) ? 1 : 0;
+          } else {
+            correctIdx = item.correctAnswerIndex >= 0 ? item.correctAnswerIndex : 0;
+          }
+
           _questions.add(
             QuizQuestion(
               question: item.pertanyaan,
+              jenisSoal: item.jenisSoal,
+              shortAnswer: item.jenisSoal == JenisSoal.isianSingkat ? (item.jawabanBenar ?? '') : '',
               answers: choices,
-              correctAnswer: item.correctAnswerIndex >= 0 ? item.correctAnswerIndex : 0,
-              level: q.namaJenjang ?? 'SMA / MA / SMK Sederajat',
-              idMapel: q.idMapel,
-              namaMapel: q.namaMapel,
-              difficulty: q.namaTingkat ?? 'Mudah',
+              correctAnswer: correctIdx,
               timeLimit: item.durasiDetik,
               points: item.poin,
+              existingFotoUrl: item.fotoSoal,
             ),
           );
         }
@@ -75,12 +119,129 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
   @override
   void dispose() {
     _titleController.dispose();
+    _descriptionController.dispose();
+    _tokenController.dispose();
 
     for (final question in _questions) {
       question.dispose();
     }
 
     super.dispose();
+  }
+
+  // Cover image picking
+  Future<void> _pickCoverImage() async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1600,
+        maxHeight: 900,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        setState(() {
+          _coverBytes = bytes;
+          _coverName = picked.name;
+          _deleteCover = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memilih gambar cover: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeCoverImage() {
+    setState(() {
+      _coverBytes = null;
+      _coverName = null;
+      _deleteCover = true;
+    });
+  }
+
+  // Question photo picking
+  Future<void> _pickQuestionPhoto() async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        setState(() {
+          _question.fotoBytes = bytes;
+          _question.fotoName = picked.name;
+          _question.removeFoto = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memilih gambar soal: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeQuestionPhoto() {
+    setState(() {
+      _question.fotoBytes = null;
+      _question.fotoName = null;
+      _question.removeFoto = true;
+    });
+  }
+
+  // Token generator
+  void _generateRandomToken() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rand = Random();
+    final token = List.generate(6, (index) => chars[rand.nextInt(chars.length)]).join();
+    setState(() {
+      _tokenController.text = token;
+    });
+  }
+
+  void _addQuestion() {
+    setState(() {
+      _questions.add(QuizQuestion());
+      _currentQuestion = _questions.length - 1;
+    });
+  }
+
+  void _duplicateQuestion() {
+    final original = _question;
+    final copy = original.copy();
+
+    setState(() {
+      _questions.insert(_currentQuestion + 1, copy);
+      _currentQuestion++;
+    });
+  }
+
+  void _deleteQuestion() {
+    if (_questions.length <= 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quiz minimal harus memiliki 1 soal!')),
+      );
+      return;
+    }
+
+    setState(() {
+      final removed = _questions.removeAt(_currentQuestion);
+      removed.dispose();
+
+      if (_currentQuestion >= _questions.length) {
+        _currentQuestion = _questions.length - 1;
+      }
+    });
   }
 
   @override
@@ -113,41 +274,104 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                           _question.correctAnswer = index;
                         });
                       },
+                      onChangedJenisSoal: (jenis) {
+                        setState(() {
+                          _question.jenisSoal = jenis;
+                          if (jenis == JenisSoal.trueFalse) {
+                            if (_question.answers[0].text.isEmpty) {
+                              _question.answers[0].text = 'Benar';
+                            }
+                            if (_question.answers[1].text.isEmpty) {
+                              _question.answers[1].text = 'Salah';
+                            }
+                            if (_question.correctAnswer > 1) {
+                              _question.correctAnswer = 0;
+                            }
+                          }
+                        });
+                      },
+                      onPickPhoto: _pickQuestionPhoto,
+                      onRemovePhoto: _removeQuestionPhoto,
                     ),
                     const SizedBox(height: 14),
                     QuizProperties(
                       question: _question,
                       availableMapels: context.watch<QuizProvider>().mapels,
-                      onChangedLevel: (level) {
+                      level: _level,
+                      idMapel: _idMapel,
+                      difficulty: _difficulty,
+                      modePengerjaan: _modePengerjaan,
+                      durasiTotalMenit: _durasiTotalMenit,
+                      opsiPreview: _opsiPreview,
+                      neverExpire: _neverExpire,
+                      expiryDate: _expiryDate,
+                      descriptionController: _descriptionController,
+                      useToken: _useToken,
+                      tokenController: _tokenController,
+                      coverBytes: _coverBytes,
+                      coverUrl: _coverUrl,
+                      deleteCover: _deleteCover,
+                      onChangedTimeLimit: (limit) {
                         setState(() {
-                          _question.level = level;
+                          _question.timeLimit = limit;
                         });
                       },
-                      onChangedMapel: (idMapel) {
+                      onChangedPoints: (pts) {
                         setState(() {
-                          _question.idMapel = idMapel;
+                          _question.points = pts;
                         });
                       },
-                      onChangedDifficulty: (difficulty) {
+                      onChangedLevel: (lvl) {
                         setState(() {
-                          _question.difficulty = difficulty;
+                          _level = lvl;
                         });
                       },
-                      onChangedTimeLimit: (timeLimit) {
+                      onChangedMapel: (mId) {
                         setState(() {
-                          _question.timeLimit = timeLimit;
+                          _idMapel = mId;
                         });
                       },
-                      onChangedPoints: (points) {
+                      onChangedDifficulty: (diff) {
                         setState(() {
-                          _question.points = points;
+                          _difficulty = diff;
                         });
                       },
-                      onChangedNeverExpire: (neverExpire) {
+                      onChangedMode: (m) {
                         setState(() {
-                          _question.neverExpire = neverExpire;
+                          _modePengerjaan = m;
                         });
                       },
+                      onChangedDurasiTotal: (d) {
+                        setState(() {
+                          _durasiTotalMenit = d;
+                        });
+                      },
+                      onChangedOpsiPreview: (op) {
+                        setState(() {
+                          _opsiPreview = op;
+                        });
+                      },
+                      onChangedNeverExpire: (ne) {
+                        setState(() {
+                          _neverExpire = ne;
+                        });
+                      },
+                      onChangedExpiryDate: (dt) {
+                        setState(() {
+                          _expiryDate = dt;
+                        });
+                      },
+                      onChangedUseToken: (ut) {
+                        setState(() {
+                          _useToken = ut;
+                          if (ut && _tokenController.text.trim().isEmpty) {
+                            _generateRandomToken();
+                          }
+                        });
+                      },
+                      onGenerateToken: _generateRandomToken,
+                      onPickCover: _pickCoverImage,
+                      onRemoveCover: _removeCoverImage,
                     ),
                     const SizedBox(height: 12),
                     _buildQuestionActions(),
@@ -180,7 +404,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
             child: OutlinedButton.icon(
               onPressed: _duplicateQuestion,
               icon: const Icon(Icons.content_copy, size: 16),
-              label: const Text('Gandakan', style: TextStyle(fontSize: 10)),
+              label: const Text('Gandakan Soal', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF475569),
                 backgroundColor: Colors.white,
@@ -199,7 +423,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
             child: OutlinedButton.icon(
               onPressed: _deleteQuestion,
               icon: const Icon(Icons.delete_outline, size: 16),
-              label: const Text('Hapus Soal', style: TextStyle(fontSize: 10)),
+              label: const Text('Hapus Soal', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFBE123C),
                 backgroundColor: const Color(0xFFFFF1F2),
@@ -213,51 +437,6 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
         ),
       ],
     );
-  }
-
-  void _addQuestion() {
-    setState(() {
-      _questions.add(QuizQuestion());
-      _currentQuestion = _questions.length - 1;
-    });
-  }
-
-  void _duplicateQuestion() {
-    final original = _question;
-
-    final copy = QuizQuestion(
-      question: original.questionController.text,
-      answers: original.answers.map((controller) => controller.text).toList(),
-      correctAnswer: original.correctAnswer,
-      level: original.level,
-      difficulty: original.difficulty,
-      timeLimit: original.timeLimit,
-      points: original.points,
-      neverExpire: original.neverExpire,
-    );
-
-    setState(() {
-      _questions.insert(_currentQuestion + 1, copy);
-      _currentQuestion++;
-    });
-  }
-
-  void _deleteQuestion() {
-    if (_questions.length == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Minimal harus ada 1 soal.')),
-      );
-      return;
-    }
-
-    setState(() {
-      final removed = _questions.removeAt(_currentQuestion);
-      removed.dispose();
-
-      if (_currentQuestion >= _questions.length) {
-        _currentQuestion = _questions.length - 1;
-      }
-    });
   }
 
   void _saveQuiz() {
@@ -381,6 +560,81 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
 
+    // VALIDASI SEPERTI DI WEB create.blade.php
+    if (!isDraft) {
+      if (_useToken && _tokenController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Harap masukkan token kuis atau matikan opsi token!'),
+            backgroundColor: Color(0xFFE11D48),
+          ),
+        );
+        return;
+      }
+
+      if (_modePengerjaan == 'biasa' && _durasiTotalMenit < 1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Total durasi kuis minimal 1 menit!'),
+            backgroundColor: Color(0xFFE11D48),
+          ),
+        );
+        return;
+      }
+
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final no = i + 1;
+        final qText = q.questionController.text.trim();
+
+        if (qText.isEmpty) {
+          setState(() => _currentQuestion = i);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Soal #$no: Teks pertanyaan wajib diisi sebelum kuis dipublikasikan!'),
+              backgroundColor: const Color(0xFFE11D48),
+            ),
+          );
+          return;
+        }
+
+        if (q.jenisSoal == JenisSoal.isianSingkat) {
+          if (q.shortAnswerController.text.trim().isEmpty) {
+            setState(() => _currentQuestion = i);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Soal #$no: Kunci jawaban isian singkat wajib diisi!'),
+                backgroundColor: const Color(0xFFE11D48),
+              ),
+            );
+            return;
+          }
+        } else if (q.jenisSoal == JenisSoal.kuis) {
+          final filledChoices = q.answers.where((a) => a.text.trim().isNotEmpty).toList();
+          if (filledChoices.length < 2) {
+            setState(() => _currentQuestion = i);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Soal #$no: Pilihan ganda harus memiliki minimal 2 pilihan jawaban yang terisi!'),
+                backgroundColor: const Color(0xFFE11D48),
+              ),
+            );
+            return;
+          }
+          if (q.correctAnswer >= q.answers.length || q.answers[q.correctAnswer].text.trim().isEmpty) {
+            setState(() => _currentQuestion = i);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Soal #$no: Kunci jawaban yang dipilih tidak boleh kosong!'),
+                backgroundColor: const Color(0xFFE11D48),
+              ),
+            );
+            return;
+          }
+        }
+      }
+    }
+
     final jenjangMap = {
       'SD / MI': 1,
       'SMP / MTs': 2,
@@ -398,28 +652,86 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
 
     final soalList = _questions.map((q) {
       final qText = q.questionController.text.trim();
-      return {
-        'pertanyaan': qText.isEmpty ? 'Pertanyaan' : qText,
-        'jenis_soal': 'kuis',
-        'poin': q.points,
-        'durasi_detik': q.timeLimit,
-        'pilihan': List.generate(4, (i) {
+      final typeStr = q.jenisSoal.apiValue;
+
+      // Handle photo
+      String? fotoVal;
+      if (q.fotoBytes != null) {
+        fotoVal = 'data:image/jpeg;base64,${base64Encode(q.fotoBytes!)}';
+      } else if (q.existingFotoUrl != null && !q.removeFoto) {
+        fotoVal = q.existingFotoUrl;
+      }
+
+      List<Map<String, dynamic>> pilihan = [];
+      String jawabanBenar = 'A';
+
+      if (q.jenisSoal == JenisSoal.trueFalse) {
+        jawabanBenar = q.correctAnswer == 1 ? 'B' : 'A';
+        pilihan = [
+          {'label': 'A', 'teks_pilihan': 'Benar', 'is_correct': q.correctAnswer == 0},
+          {'label': 'B', 'teks_pilihan': 'Salah', 'is_correct': q.correctAnswer == 1},
+        ];
+      } else if (q.jenisSoal == JenisSoal.isianSingkat) {
+        jawabanBenar = q.shortAnswerController.text.trim();
+      } else {
+        jawabanBenar = labels[q.correctAnswer.clamp(0, 3)];
+        pilihan = List.generate(4, (i) {
           final text = i < q.answers.length ? q.answers[i].text.trim() : '';
           return {
             'label': labels[i],
             'teks_pilihan': text,
             'is_correct': q.correctAnswer == i,
           };
-        }),
+        });
+      }
+
+      final item = <String, dynamic>{
+        'pertanyaan': qText.isEmpty ? 'Pertanyaan' : qText,
+        'jenis_soal': typeStr,
+        'poin': q.points,
+        'durasi_detik': q.timeLimit,
+        'jawaban_benar': jawabanBenar,
+        'pilihan': pilihan,
       };
+
+      if (q.jenisSoal == JenisSoal.isianSingkat) {
+        item['jawaban_singkat'] = q.shortAnswerController.text.trim();
+      }
+
+      if (fotoVal != null) {
+        item['foto_soal'] = fotoVal;
+      }
+      if (q.removeFoto) {
+        item['remove_foto'] = true;
+      }
+
+      return item;
     }).toList();
 
-    final payload = {
+    // Cover image handling
+    String? coverVal;
+    if (_coverBytes != null) {
+      coverVal = 'data:image/jpeg;base64,${base64Encode(_coverBytes!)}';
+    } else if (_coverUrl != null && !_deleteCover) {
+      coverVal = _coverUrl;
+    }
+
+    final payload = <String, dynamic>{
       'judul': title,
-      'id_jenjang': jenjangMap[_question.level] ?? 3,
-      'id_mapel': _question.idMapel,
-      'id_tingkatquiz': difficultyMap[_question.difficulty] ?? 1,
-      'mode_pengerjaan': 'wayground',
+      'deskripsi': _descriptionController.text.trim().isNotEmpty ? _descriptionController.text.trim() : null,
+      'id_jenjang': jenjangMap[_level] ?? 3,
+      'id_mapel': _idMapel,
+      'id_tingkatquiz': difficultyMap[_difficulty] ?? 1,
+      'mode_pengerjaan': _modePengerjaan,
+      'durasi_total_menit': _modePengerjaan == 'biasa' ? _durasiTotalMenit : null,
+      'opsi_preview': _opsiPreview,
+      'waktu_kadaluarsa': (!_neverExpire && _expiryDate != null)
+          ? '${_expiryDate!.year.toString().padLeft(4, '0')}-${_expiryDate!.month.toString().padLeft(2, '0')}-${_expiryDate!.day.toString().padLeft(2, '0')} ${_expiryDate!.hour.toString().padLeft(2, '0')}:${_expiryDate!.minute.toString().padLeft(2, '0')}:00'
+          : null,
+      'use_token': _useToken,
+      'token': _useToken ? _tokenController.text.trim().toUpperCase() : null,
+      'foto_quiz': coverVal,
+      'hapus_foto_quiz': _deleteCover,
       'action_type': isDraft ? 'draft' : 'publish',
       'soal': soalList,
     };

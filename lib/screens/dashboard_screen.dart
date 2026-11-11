@@ -6,6 +6,7 @@ import '../providers/notification_provider.dart';
 import '../services/dashboard_service.dart';
 import '../shared/utils/logout_dialog.dart';
 import '../shared/widgets/arrava_logo.dart';
+import '../shared/widgets/menu_pintasan_belajar.dart';
 import '../shared/widgets/notification_sheet.dart';
 import '../shared/widgets/samudra_hero_section.dart';
 import '../shared/widgets/tween_float_background.dart';
@@ -162,8 +163,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           SamudraHeroSection(
                             user: user,
                             stats: stats,
+                            modulCount: stats?['kursus_aktif'] ?? materiList.length,
+                            quizCount: stats?['total_quiz'] ?? 0,
                             onExploreTap: () {
                               setState(() => _currentIndex = 1);
+                            },
+                            onQuizTap: () {
+                              setState(() => _currentIndex = 2);
                             },
                             onProfileTap: () {
                               setState(() => _currentIndex = 3);
@@ -178,6 +184,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               );
                             },
                             onNotificationTap: () => _openNotificationSheet(),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // ===================================================
+                          // 3. MENU PINTASAN BELAJAR (Akses Cepat)
+                          // ===================================================
+                          MenuPintasanBelajar(
+                            modulCount: (stats?['kursus_aktif'] as num?)?.toInt() ?? materiList.length,
+                            quizCount: (stats?['total_quiz'] as num?)?.toInt() ?? 0,
+                            currentRank: ((user?['rank_tier'] as Map?)?['current_rank'] ??
+                                    (user?['rank'] as Map?)?['current_rank'] ??
+                                    'Pemula')
+                                .toString(),
+                            onMateriTap: () {
+                              setState(() => _currentIndex = 1);
+                            },
+                            onKuisTap: () {
+                              setState(() => _currentIndex = 2);
+                            },
+                            onPresensiTap: () => _showAttendanceQr(),
+                            onPeringkatTap: () {
+                              final jId = int.tryParse(user?['id_jenjang']?.toString() ?? '');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => LeaderboardScreen(initialJenjangId: jId),
+                                ),
+                              );
+                            },
                           ),
 
                           const SizedBox(height: 16),

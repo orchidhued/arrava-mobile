@@ -2,7 +2,8 @@ class ApiConstants {
   // Jika di Web / Chrome, atau di Android via USB adb reverse (adb reverse tcp:8000 tcp:8000): gunakan 127.0.0.1
   // Jika di Android via Wi-Fi langsung: gunakan IP Wi-Fi PC (192.168.18.4)
   static String get baseUrl {
-    return 'http://127.0.0.1:8000/api';
+    //return 'http://127.0.0.1:8000/api';
+    return 'http://192.168.18.4:8000/api';
   }
 
   static const String login = '/login';
@@ -27,7 +28,12 @@ class ApiConstants {
 
   /// Memformat URL gambar atau media agar selalu dapat diakses dari Web maupun HP fisik Android
   static String? resolveMediaUrl(String? url) {
-    if (url == null || url.trim().isEmpty) return null;
+    if (url == null ||
+        url.trim().isEmpty ||
+        url.trim().toLowerCase() == 'null' ||
+        url.trim().toLowerCase() == 'undefined') {
+      return null;
+    }
     final trimmed = url.trim();
 
     try {
