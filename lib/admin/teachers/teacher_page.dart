@@ -439,6 +439,10 @@ class _TeacherPageState extends State<TeacherPage> {
     final rawStatus = teacher['status']?.toString().trim() ?? '';
     final status = rawStatus.isNotEmpty ? rawStatus : 'Aktif';
     final initials = _getInitials(name);
+    final jumlahModul =
+        int.tryParse(teacher['jumlah_modul']?.toString() ?? '0') ?? 0;
+    final jumlahQuiz =
+        int.tryParse(teacher['jumlah_quiz']?.toString() ?? '0') ?? 0;
 
     return InkWell(
       onTap: () {
@@ -531,6 +535,8 @@ class _TeacherPageState extends State<TeacherPage> {
               runSpacing: 6,
               children: [
                 _buildTag('Tenaga Pengajar', primary: true),
+                _buildTag('📚 $jumlahModul Modul', primary: false),
+                _buildTag('🧩 $jumlahQuiz Kuis', primary: false),
                 if (phone != '-' && phone.trim().isNotEmpty)
                   _buildTag('📞 $phone', primary: false),
                 if (email.isNotEmpty) _buildTag('✉️ $email', primary: false),

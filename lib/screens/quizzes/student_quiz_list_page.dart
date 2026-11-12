@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../admin/quizzes/models/quiz_model.dart';
 import '../../admin/quizzes/providers/quiz_provider.dart';
 import '../../services/auth_service.dart';
+import '../../shared/widgets/student_style_filter_bar.dart';
 import '../../core/constants/api_constants.dart';
 import 'student_quiz_player_page.dart';
 
@@ -23,6 +24,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatusFilter =
       'Semua'; // 'Semua', 'Belum Dikerjakan', 'Lulus', 'Belum Lulus'
+  String _selectedMapel = 'Semua Mapel';
   int? _userJenjangId;
 
   @override
@@ -52,8 +54,27 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
     super.dispose();
   }
 
-  List<QuizModel> _filterQuizzes(List<QuizModel> list) {
+  List<String> _getMapels(List<QuizModel> list) {
+    final mapels = list
+        .where(
+          (quiz) =>
+              !quiz.isDraft &&
+              (_userJenjangId == null || quiz.idJenjang == _userJenjangId),
+        )
+        .map((quiz) => quiz.namaMapel?.trim())
+        .whereType<String>()
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+    mapels.sort();
+    return mapels;
+  }
+
+  List<QuizModel> _filterQuizzes(List<QuizModel> list, List<String> mapels) {
     final query = _searchController.text.toLowerCase().trim();
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
 
     return list.where((quiz) {
       if (quiz.isDraft) {
@@ -78,7 +99,10 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
         matchStatus = quiz.hasTaken && !quiz.isPassed;
       }
 
-      return matchQuery && matchJenjang && matchStatus;
+      final matchMapel =
+          activeMapel == 'Semua Mapel' || quiz.namaMapel?.trim() == activeMapel;
+
+      return matchQuery && matchJenjang && matchStatus && matchMapel;
     }).toList();
   }
 
@@ -431,7 +455,11 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
   @override
   Widget build(BuildContext context) {
     final quizProvider = context.watch<QuizProvider>();
-    final quizzes = _filterQuizzes(quizProvider.quizzes);
+    final mapels = _getMapels(quizProvider.quizzes);
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
+    final quizzes = _filterQuizzes(quizProvider.quizzes, mapels);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -587,6 +615,15 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                             }).toList(),
                       ),
                     ),
+                    if (mapels.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      StudentStyleFilterChipBar(
+                        options: ['Semua Mapel', ...mapels],
+                        selectedOption: activeMapel,
+                        onSelected: (value) =>
+                            setState(() => _selectedMapel = value),
+                      ),
+                    ],
                   ],
                 ),
               ),

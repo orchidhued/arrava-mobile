@@ -6,6 +6,7 @@ import '../../admin/modules/models/module_model.dart';
 import '../../admin/modules/providers/module_provider.dart';
 import '../../core/constants/api_constants.dart';
 import '../../services/auth_service.dart';
+import '../../shared/widgets/student_style_filter_bar.dart';
 import 'student_module_detail_page.dart';
 
 class StudentModuleListPage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter =
       'Semua'; // 'Semua', 'Video', 'PDF', 'Belum Tuntas', 'Tuntas'
+  String _selectedMapel = 'Semua Mapel';
   int? _userJenjangId;
 
   @override
@@ -52,8 +54,30 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
     super.dispose();
   }
 
-  List<ModuleModel> _filterModules(List<ModuleModel> list) {
+  List<String> _getMapels(List<ModuleModel> list) {
+    final mapels = list
+        .where(
+          (modul) =>
+              !modul.isDraft &&
+              (_userJenjangId == null || modul.idJenjang == _userJenjangId),
+        )
+        .map((modul) => modul.namaMapel?.trim())
+        .whereType<String>()
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+    mapels.sort();
+    return mapels;
+  }
+
+  List<ModuleModel> _filterModules(
+    List<ModuleModel> list,
+    List<String> mapels,
+  ) {
     final query = _searchController.text.toLowerCase().trim();
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
 
     return list.where((modul) {
       if (modul.isDraft) return false;
@@ -78,14 +102,21 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
       final matchJenjang =
           _userJenjangId == null || modul.idJenjang == _userJenjangId;
 
-      return matchQuery && matchFilter && matchJenjang;
+      final matchMapel =
+          activeMapel == 'Semua Mapel' || modul.namaMapel?.trim() == activeMapel;
+
+      return matchQuery && matchFilter && matchJenjang && matchMapel;
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final moduleProvider = context.watch<ModuleProvider>();
-    final modules = _filterModules(moduleProvider.modules);
+    final mapels = _getMapels(moduleProvider.modules);
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
+    final modules = _filterModules(moduleProvider.modules, mapels);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -238,6 +269,15 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                             }).toList(),
                       ),
                     ),
+                    if (mapels.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      StudentStyleFilterChipBar(
+                        options: ['Semua Mapel', ...mapels],
+                        selectedOption: activeMapel,
+                        onSelected: (value) =>
+                            setState(() => _selectedMapel = value),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -10,6 +10,8 @@ class ModuleModel {
   final String? namaJenjang;
   final int? idMapel;
   final String? namaMapel;
+  final int? idPembuat;
+  final String? namaPembuat;
   final int? idQuiz;
   final String? quizJudul;
   final String? progressModul;
@@ -46,6 +48,8 @@ class ModuleModel {
     this.namaJenjang,
     this.idMapel,
     this.namaMapel,
+    this.idPembuat,
+    this.namaPembuat,
     this.idQuiz,
     this.quizJudul,
     this.progressModul,
@@ -105,6 +109,8 @@ class ModuleModel {
     String? namaJenjang,
     int? idMapel,
     String? namaMapel,
+    int? idPembuat,
+    String? namaPembuat,
     int? idQuiz,
     String? quizJudul,
     String? progressModul,
@@ -137,6 +143,8 @@ class ModuleModel {
       namaJenjang: namaJenjang ?? this.namaJenjang,
       idMapel: idMapel ?? this.idMapel,
       namaMapel: namaMapel ?? this.namaMapel,
+      idPembuat: idPembuat ?? this.idPembuat,
+      namaPembuat: namaPembuat ?? this.namaPembuat,
       idQuiz: idQuiz ?? this.idQuiz,
       quizJudul: quizJudul ?? this.quizJudul,
       progressModul: progressModul ?? this.progressModul,
@@ -193,6 +201,10 @@ class ModuleModel {
           ? int.tryParse(json['id_mapel'].toString())
           : null,
       namaMapel: json['nama_mapel']?.toString(),
+      idPembuat: json['id_pembuat'] != null
+          ? int.tryParse(json['id_pembuat'].toString())
+          : null,
+      namaPembuat: json['nama_pembuat']?.toString(),
       idQuiz: json['id_quiz'] != null
           ? int.tryParse(json['id_quiz'].toString())
           : null,

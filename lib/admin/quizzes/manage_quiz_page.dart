@@ -45,12 +45,14 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
   String _selectedStatus = 'Semua';
   String _selectedJenjang = 'Semua Jenjang';
   String _selectedDifficulty = 'Semua Tingkat';
+  String _selectedMapel = 'Semua Mapel';
   String _selectedSort = 'terbaru';
 
   bool get _hasActiveFilters =>
       _selectedStatus != 'Semua' ||
       _selectedJenjang != 'Semua Jenjang' ||
       _selectedDifficulty != 'Semua Tingkat' ||
+      _selectedMapel != 'Semua Mapel' ||
       _selectedSort != 'terbaru' ||
       _searchController.text.isNotEmpty;
 
@@ -60,6 +62,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
       _selectedStatus = 'Semua';
       _selectedJenjang = 'Semua Jenjang';
       _selectedDifficulty = 'Semua Tingkat';
+      _selectedMapel = 'Semua Mapel';
       _selectedSort = 'terbaru';
     });
   }
@@ -67,9 +70,11 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
   @override
   void initState() {
     super.initState();
-    // Memuat data kuis dari database Laragon saat halaman dibuka
+    // Memuat data kuis dan mata pelajaran dari database Laragon saat halaman dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<QuizProvider>().fetchQuizzes();
+      final quizProvider = context.read<QuizProvider>();
+      quizProvider.fetchQuizzes();
+      quizProvider.fetchMapels();
     });
   }
 
@@ -79,15 +84,36 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
     super.dispose();
   }
 
-  List<QuizModel> _filterQuizzes(List<QuizModel> allQuizzes) {
+  List<String> _getMapels(QuizProvider quizProvider) {
+    final mapels = <String>{
+      ...quizProvider.mapels
+          .map((m) => m.namaMapel.trim())
+          .where((s) => s.isNotEmpty),
+      ...quizProvider.quizzes
+          .map((q) => q.namaMapel?.trim())
+          .whereType<String>()
+          .where((s) => s.isNotEmpty),
+    }.toList();
+    mapels.sort();
+    return mapels;
+  }
+
+  List<QuizModel> _filterQuizzes(
+    List<QuizModel> allQuizzes,
+    List<String> mapels,
+  ) {
     final query = _searchController.text.toLowerCase().trim();
     final selDiff = _selectedDifficulty.toLowerCase().trim();
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
 
     var list = allQuizzes.where((quiz) {
       final matchQuery =
           query.isEmpty ||
           quiz.judul.toLowerCase().contains(query) ||
           (quiz.namaMapel?.toLowerCase().contains(query) ?? false) ||
+          (quiz.namaPembuat?.toLowerCase().contains(query) ?? false) ||
           (quiz.deskripsi?.toLowerCase().contains(query) ?? false) ||
           (quiz.kodeQuiz?.toLowerCase().contains(query) ?? false) ||
           (quiz.namaJenjang?.toLowerCase().contains(query) ?? false);
@@ -125,7 +151,14 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
           quizDiff == selDiff ||
           (quizDiff.isEmpty && selDiff == 'mudah');
 
-      return matchQuery && matchStatus && matchJenjang && matchDifficulty;
+      final matchMapel =
+          activeMapel == 'Semua Mapel' || quiz.namaMapel?.trim() == activeMapel;
+
+      return matchQuery &&
+          matchStatus &&
+          matchJenjang &&
+          matchDifficulty &&
+          matchMapel;
     }).toList();
 
     if (_selectedSort == 'terlama') {
@@ -138,7 +171,8 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
   @override
   Widget build(BuildContext context) {
     final quizProvider = context.watch<QuizProvider>();
-    final filtered = _filterQuizzes(quizProvider.quizzes);
+    final mapels = _getMapels(quizProvider);
+    final filtered = _filterQuizzes(quizProvider.quizzes, mapels);
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       body: SafeArea(
@@ -523,12 +557,18 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
 
   // 2. Filter & Search Bar
   Widget _buildFilterSection() {
+    final quizProvider = context.watch<QuizProvider>();
+    final mapels = _getMapels(quizProvider);
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         StudentStyleSearchField(
           controller: _searchController,
-          hintText: 'Cari judul, kode, atau mapel kuis...',
+          hintText: 'Cari judul, kode, mapel, atau pengajar...',
           hasQuery: _searchController.text.isNotEmpty,
           onChanged: (_) => setState(() {}),
           onClear: () {
@@ -554,6 +594,14 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
           selectedOption: _selectedDifficulty,
           onSelected: (val) => setState(() => _selectedDifficulty = val),
         ),
+        if (mapels.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          StudentStyleFilterChipBar(
+            options: ['Semua Mapel', ...mapels],
+            selectedOption: activeMapel,
+            onSelected: (val) => setState(() => _selectedMapel = val),
+          ),
+        ],
       ],
     );
   }
@@ -803,6 +851,63 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                     color: Color(0xFF2563EB),
                   ),
                 ),
+
+                if ((quiz.namaMapel != null && quiz.namaMapel!.trim().isNotEmpty) ||
+                    (quiz.namaPembuat != null && quiz.namaPembuat!.trim().isNotEmpty)) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (quiz.namaMapel != null &&
+                          quiz.namaMapel!.trim().isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFFBFDBFE),
+                            ),
+                          ),
+                          child: Text(
+                            '📖 ${quiz.namaMapel}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1D4ED8),
+                            ),
+                          ),
+                        ),
+                      if (quiz.namaPembuat != null &&
+                          quiz.namaPembuat!.trim().isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Text(
+                            '👤 ${quiz.namaPembuat}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
 
                 const SizedBox(height: 4),
 

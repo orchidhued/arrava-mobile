@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/student_style_filter_bar.dart';
+import '../quizzes/providers/quiz_provider.dart';
 import 'models/module_model.dart';
 import 'providers/module_provider.dart';
 
@@ -47,6 +48,14 @@ class _ModulePageContentState extends State<_ModulePageContent> {
   String _selectedMapel = 'Semua Mapel';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<QuizProvider>().fetchMapels();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -71,13 +80,19 @@ class _ModulePageContentState extends State<_ModulePageContent> {
     });
   }
 
-  List<String> _getMapels(List<ModuleModel> modules) {
-    final mapels = modules
-        .map((m) => m.namaMapel?.trim())
-        .whereType<String>()
-        .where((s) => s.isNotEmpty)
-        .toSet()
-        .toList();
+  List<String> _getMapels(
+    List<ModuleModel> modules,
+    List<String> masterMapelNames,
+  ) {
+    final mapels = <String>{
+      ...masterMapelNames
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty),
+      ...modules
+          .map((m) => m.namaMapel?.trim())
+          .whereType<String>()
+          .where((s) => s.isNotEmpty),
+    }.toList();
     mapels.sort();
     return mapels;
   }
@@ -96,6 +111,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
           query.isEmpty ||
           m.judulModul.toLowerCase().contains(query) ||
           (m.namaMapel?.toLowerCase().contains(query) ?? false) ||
+          (m.namaPembuat?.toLowerCase().contains(query) ?? false) ||
           (m.namaJenjang?.toLowerCase().contains(query) ?? false) ||
           (m.namaTipe?.toLowerCase().contains(query) ?? false);
 
@@ -142,8 +158,12 @@ class _ModulePageContentState extends State<_ModulePageContent> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ModuleProvider>();
+    final quizProvider = context.watch<QuizProvider>();
     final modules = provider.modules;
-    final mapels = _getMapels(modules);
+    final mapels = _getMapels(
+      modules,
+      quizProvider.mapels.map((e) => e.namaMapel).toList(),
+    );
     final filteredModules = _getFilteredModules(modules, mapels);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
@@ -322,7 +342,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
       children: [
         StudentStyleSearchField(
           controller: _searchController,
-          hintText: 'Cari judul, mapel, atau jenjang modul...',
+          hintText: 'Cari judul, mapel, jenjang, atau pengajar...',
           hasQuery: _searchController.text.isNotEmpty,
           onChanged: (_) => setState(() {}),
           onClear: () {
@@ -577,6 +597,24 @@ class _ModulePageContentState extends State<_ModulePageContent> {
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF1D4ED8),
+                    ),
+                  ),
+                ),
+              if (module.namaPembuat != null &&
+                  module.namaPembuat!.trim().isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Text(
+                    '👤 ${module.namaPembuat}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF475569),
                     ),
                   ),
                 ),

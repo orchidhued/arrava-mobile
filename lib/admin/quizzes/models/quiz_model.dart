@@ -369,6 +369,8 @@ class QuizModel {
   final String? namaJenjang;
   final int? idMapel;
   final String? namaMapel;
+  final int? idPembuat;
+  final String? namaPembuat;
   final int? idTingkatQuiz;
   final String? namaTingkat;
   final int? idTipeQuiz;
@@ -445,6 +447,8 @@ class QuizModel {
     this.namaJenjang,
     this.idMapel,
     this.namaMapel,
+    this.idPembuat,
+    this.namaPembuat,
     this.idTingkatQuiz,
     this.namaTingkat,
     this.idTipeQuiz,
@@ -479,6 +483,8 @@ class QuizModel {
       namaJenjang: _toStringOrNull(json['nama_jenjang']),
       idMapel: _toIntOrNull(json['id_mapel']),
       namaMapel: _toStringOrNull(json['nama_mapel']),
+      idPembuat: _toIntOrNull(json['id_pembuat']),
+      namaPembuat: _toStringOrNull(json['nama_pembuat']),
       idTingkatQuiz: _toIntOrNull(json['id_tingkatquiz']),
       namaTingkat: _toStringOrNull(json['nama_tingkat']),
       idTipeQuiz: _toIntOrNull(json['id_tipequiz']),
@@ -540,6 +546,8 @@ class QuizModel {
     String? namaJenjang,
     int? idMapel,
     String? namaMapel,
+    int? idPembuat,
+    String? namaPembuat,
     int? idTingkatQuiz,
     String? namaTingkat,
     int? idTipeQuiz,
@@ -570,6 +578,8 @@ class QuizModel {
       namaJenjang: namaJenjang ?? this.namaJenjang,
       idMapel: idMapel ?? this.idMapel,
       namaMapel: namaMapel ?? this.namaMapel,
+      idPembuat: idPembuat ?? this.idPembuat,
+      namaPembuat: namaPembuat ?? this.namaPembuat,
       idTingkatQuiz: idTingkatQuiz ?? this.idTingkatQuiz,
       namaTingkat: namaTingkat ?? this.namaTingkat,
       idTipeQuiz: idTipeQuiz ?? this.idTipeQuiz,
