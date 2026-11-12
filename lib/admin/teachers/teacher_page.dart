@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/dashboard_service.dart';
 import '../../shared/widgets/app_header.dart';
+import '../../shared/widgets/student_style_filter_bar.dart';
 import 'teacher_detail_page.dart';
 
 class TeacherPage extends StatefulWidget {
@@ -14,10 +15,31 @@ class TeacherPage extends StatefulWidget {
 }
 
 class _TeacherPageState extends State<TeacherPage> {
+  static const List<String> _filters = [
+    'Semua',
+    'Aktif',
+    'Nonaktif',
+    'Tanpa Akun',
+    'Ada Email',
+    'Ada Telepon',
+  ];
+
   bool _isLoading = true;
   List<Map<String, dynamic>> _teachers = [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String _selectedFilter = 'Semua';
+
+  bool get _hasActiveFilters =>
+      _searchQuery.isNotEmpty || _selectedFilter != 'Semua';
+
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      _selectedFilter = 'Semua';
+    });
+  }
 
   @override
   void initState() {
@@ -57,13 +79,45 @@ class _TeacherPageState extends State<TeacherPage> {
   }
 
   List<Map<String, dynamic>> _getFilteredTeachers() {
-    if (_searchQuery.isEmpty) return _teachers;
     final q = _searchQuery.toLowerCase();
+
     return _teachers.where((t) {
       final name = (t['nama'] ?? '').toString().toLowerCase();
       final nik = (t['nik'] ?? '').toString().toLowerCase();
-      final phone = (t['no_telepon'] ?? '').toString().toLowerCase();
-      return name.contains(q) || nik.contains(q) || phone.contains(q);
+      final phone = (t['no_telepon'] ?? '').toString().trim();
+      final email = (t['email'] ?? '').toString().trim();
+      final rawStatus = (t['status'] ?? 'Aktif').toString().trim();
+      final statusLower = rawStatus.isEmpty ? 'aktif' : rawStatus.toLowerCase();
+
+      final matchQuery =
+          q.isEmpty ||
+          name.contains(q) ||
+          nik.contains(q) ||
+          phone.toLowerCase().contains(q) ||
+          email.toLowerCase().contains(q);
+
+      final bool matchFilter;
+      switch (_selectedFilter) {
+        case 'Aktif':
+          matchFilter = statusLower == 'aktif';
+          break;
+        case 'Nonaktif':
+          matchFilter = statusLower == 'nonaktif';
+          break;
+        case 'Tanpa Akun':
+          matchFilter = statusLower == 'tanpa akun';
+          break;
+        case 'Ada Email':
+          matchFilter = email.isNotEmpty && email != '-';
+          break;
+        case 'Ada Telepon':
+          matchFilter = phone.isNotEmpty && phone != '-';
+          break;
+        default:
+          matchFilter = true;
+      }
+
+      return matchQuery && matchFilter;
     }).toList();
   }
 
@@ -96,7 +150,49 @@ class _TeacherPageState extends State<TeacherPage> {
 
                     _buildSearchField(),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 10),
+
+                    StudentStyleFilterChipBar(
+                      options: _filters,
+                      selectedOption: _selectedFilter,
+                      onSelected: (val) => setState(() => _selectedFilter = val),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    Row(
+                      children: [
+                        Text(
+                          'Menampilkan ${filtered.length} guru',
+                          style: GoogleFonts.nunitoSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: kStudentFilterMuted,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (_hasActiveFilters)
+                          TextButton.icon(
+                            onPressed: _resetFilters,
+                            icon: const Icon(Icons.refresh_rounded, size: 15),
+                            label: const Text(
+                              'Reset Filter',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: kStudentFilterBlue,
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 32),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
 
                     if (_isLoading && _teachers.isEmpty)
                       const Center(
@@ -119,12 +215,20 @@ class _TeacherPageState extends State<TeacherPage> {
                             Icon(Icons.person_off_outlined, size: 40, color: Colors.grey[400]),
                             const SizedBox(height: 10),
                             Text(
-                              _searchQuery.isNotEmpty
-                                  ? 'Tidak ada guru yang cocok dengan "$_searchQuery"'
+                              _hasActiveFilters
+                                  ? 'Tidak ada guru yang cocok dengan filter atau kata kunci saat ini.'
                                   : 'Belum ada data guru di database',
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                             ),
+                            if (_hasActiveFilters) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: _resetFilters,
+                                icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+                                label: const Text('Reset Filter'),
+                              ),
+                            ],
                           ],
                         ),
                       )
@@ -311,52 +415,15 @@ class _TeacherPageState extends State<TeacherPage> {
   // ============================================================
 
   Widget _buildSearchField() {
-    return TextField(
+    return StudentStyleSearchField(
       controller: _searchController,
-      onChanged: (val) {
-        setState(() {
-          _searchQuery = val.trim();
-        });
+      hintText: 'Cari nama, email, NIK, atau telepon guru...',
+      hasQuery: _searchQuery.isNotEmpty,
+      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+      onClear: () {
+        _searchController.clear();
+        setState(() => _searchQuery = '');
       },
-      decoration: InputDecoration(
-        hintText: 'Cari nama atau NIK guru...',
-        hintStyle: const TextStyle(
-          fontSize: 13,
-          color: AppColors.textSecondary,
-        ),
-        prefixIcon: const Icon(
-          Icons.search,
-          size: 21,
-          color: AppColors.textSecondary,
-        ),
-        suffixIcon: _searchQuery.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear, size: 18),
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() => _searchQuery = '');
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: AppColors.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 13,
-        ),
-      ),
     );
   }
 
@@ -368,6 +435,9 @@ class _TeacherPageState extends State<TeacherPage> {
     final name = teacher['nama']?.toString() ?? 'Guru';
     final nik = teacher['nik']?.toString() ?? '-';
     final phone = teacher['no_telepon']?.toString() ?? '-';
+    final email = teacher['email']?.toString().trim() ?? '';
+    final rawStatus = teacher['status']?.toString().trim() ?? '';
+    final status = rawStatus.isNotEmpty ? rawStatus : 'Aktif';
     final initials = _getInitials(name);
 
     return InkWell(
@@ -378,9 +448,11 @@ class _TeacherPageState extends State<TeacherPage> {
             builder: (_) => TeacherDetailPage(
               name: name,
               nip: nik,
-              subject: phone != '-' ? 'Telp: $phone' : 'Guru Pendidik',
+              subject: email.isNotEmpty
+                  ? email
+                  : (phone != '-' ? 'Telp: $phone' : 'Guru Pendidik'),
               role: 'Tenaga Pendidik',
-              status: 'Aktif',
+              status: status,
             ),
           ),
         );
@@ -432,7 +504,7 @@ class _TeacherPageState extends State<TeacherPage> {
 
                           const SizedBox(width: 6),
 
-                          _buildStatus('Aktif'),
+                          _buildStatus(status),
                         ],
                       ),
 
@@ -454,12 +526,14 @@ class _TeacherPageState extends State<TeacherPage> {
 
             const SizedBox(height: 12),
 
-            Row(
+            Wrap(
+              spacing: 7,
+              runSpacing: 6,
               children: [
-                Flexible(child: _buildTag('Tenaga Pengajar', primary: true)),
-                const SizedBox(width: 7),
-                if (phone != '-')
-                  Flexible(child: _buildTag('📞 $phone', primary: false)),
+                _buildTag('Tenaga Pengajar', primary: true),
+                if (phone != '-' && phone.trim().isNotEmpty)
+                  _buildTag('📞 $phone', primary: false),
+                if (email.isNotEmpty) _buildTag('✉️ $email', primary: false),
               ],
             ),
           ],
@@ -507,12 +581,30 @@ class _TeacherPageState extends State<TeacherPage> {
   }
 
   Widget _buildStatus(String status) {
+    final normalized = status.trim().toLowerCase();
+    final Color bg;
+    final Color border;
+    final Color fg;
+    if (normalized == 'nonaktif') {
+      bg = const Color(0xFFFFE4E6);
+      border = const Color(0xFFFECDD3);
+      fg = const Color(0xFFE11D48);
+    } else if (normalized == 'tanpa akun') {
+      bg = const Color(0xFFFEF3C7);
+      border = const Color(0xFFFDE68A);
+      fg = const Color(0xFFD97706);
+    } else {
+      bg = const Color(0xFFD1FAE5);
+      border = const Color(0xFFA7F3D0);
+      fg = const Color(0xFF059669);
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFFD1FAE5),
+        color: bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFA7F3D0), width: 1),
+        border: Border.all(color: border, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -520,10 +612,7 @@ class _TeacherPageState extends State<TeacherPage> {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: Color(0xFF059669),
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(
@@ -531,7 +620,7 @@ class _TeacherPageState extends State<TeacherPage> {
             style: GoogleFonts.nunitoSans(
               fontSize: 10,
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF059669),
+              color: fg,
             ),
           ),
         ],

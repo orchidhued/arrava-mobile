@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/student_style_filter_bar.dart';
 import 'models/module_model.dart';
 import 'providers/module_provider.dart';
 
@@ -26,40 +27,124 @@ class _ModulePageContent extends StatefulWidget {
 }
 
 class _ModulePageContentState extends State<_ModulePageContent> {
+  static const List<String> _primaryFilters = [
+    'Semua',
+    'Terbit',
+    'Draft',
+    'Video',
+    'PDF',
+  ];
+  static const List<String> _jenjangFilters = [
+    'Semua Jenjang',
+    'SD',
+    'SMP',
+    'SMA',
+  ];
+
+  final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'Semua';
+  String _selectedJenjang = 'Semua Jenjang';
+  String _selectedMapel = 'Semua Mapel';
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadModules() async {
     await context.read<ModuleProvider>().fetchModules();
   }
 
-  List<String> _getFilters(List<ModuleModel> modules) {
+  bool get _hasActiveFilters =>
+      _searchController.text.trim().isNotEmpty ||
+      _selectedFilter != 'Semua' ||
+      _selectedJenjang != 'Semua Jenjang' ||
+      _selectedMapel != 'Semua Mapel';
+
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _selectedFilter = 'Semua';
+      _selectedJenjang = 'Semua Jenjang';
+      _selectedMapel = 'Semua Mapel';
+    });
+  }
+
+  List<String> _getMapels(List<ModuleModel> modules) {
     final mapels = modules
-        .map((m) => m.namaMapel)
+        .map((m) => m.namaMapel?.trim())
         .whereType<String>()
-        .where((s) => s.trim().isNotEmpty)
+        .where((s) => s.isNotEmpty)
         .toSet()
         .toList();
     mapels.sort();
-    return ['Semua', ...mapels];
+    return mapels;
   }
 
-  List<ModuleModel> _getFilteredModules(List<ModuleModel> modules) {
-    if (_selectedFilter == 'Semua') {
-      return modules;
-    }
-    return modules.where((m) => m.namaMapel == _selectedFilter).toList();
+  List<ModuleModel> _getFilteredModules(
+    List<ModuleModel> modules,
+    List<String> mapels,
+  ) {
+    final query = _searchController.text.trim().toLowerCase();
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
+
+    return modules.where((m) {
+      final matchQuery =
+          query.isEmpty ||
+          m.judulModul.toLowerCase().contains(query) ||
+          (m.namaMapel?.toLowerCase().contains(query) ?? false) ||
+          (m.namaJenjang?.toLowerCase().contains(query) ?? false) ||
+          (m.namaTipe?.toLowerCase().contains(query) ?? false);
+
+      final isVideo =
+          m.isVideo ||
+          m.idTipeModul == 1 ||
+          (m.namaTipe?.toLowerCase().contains('video') ?? false);
+      final isPdf =
+          m.isPdf ||
+          m.idTipeModul == 2 ||
+          (m.namaTipe?.toLowerCase().contains('pdf') ?? false);
+
+      final bool matchPrimary;
+      switch (_selectedFilter) {
+        case 'Terbit':
+          matchPrimary = !m.isDraft;
+          break;
+        case 'Draft':
+          matchPrimary = m.isDraft;
+          break;
+        case 'Video':
+          matchPrimary = isVideo;
+          break;
+        case 'PDF':
+          matchPrimary = isPdf;
+          break;
+        default:
+          matchPrimary = true;
+      }
+
+      final matchJenjang = matchesJenjangFilter(
+        m.namaJenjang,
+        _selectedJenjang,
+        idJenjang: m.idJenjang,
+      );
+
+      final matchMapel =
+          activeMapel == 'Semua Mapel' || m.namaMapel?.trim() == activeMapel;
+
+      return matchQuery && matchPrimary && matchJenjang && matchMapel;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ModuleProvider>();
     final modules = provider.modules;
-    final filteredModules = _getFilteredModules(modules);
+    final mapels = _getMapels(modules);
+    final filteredModules = _getFilteredModules(modules, mapels);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
       body: SafeArea(
@@ -70,15 +155,49 @@ class _ModulePageContentState extends State<_ModulePageContent> {
             children: [
               _buildHeader(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               _buildStats(modules),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              _buildFilter(modules),
+              _buildFilter(mapels),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  Text(
+                    'Menampilkan ${filteredModules.length} modul',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: kStudentFilterMuted,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_hasActiveFilters)
+                    TextButton.icon(
+                      onPressed: _resetFilters,
+                      icon: const Icon(Icons.refresh_rounded, size: 15),
+                      label: const Text(
+                        'Reset Filter',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: kStudentFilterBlue,
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
 
               _buildContent(provider, filteredModules),
             ],
@@ -128,9 +247,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
           child: _buildStatCard(
             title: 'Modul Aktif',
             value: modules
-                .where(
-                  (module) => module.progressModul?.toLowerCase() == 'tersedia',
-                )
+                .where((module) => !module.isDraft)
                 .length
                 .toString(),
             icon: Icons.check_circle_outline,
@@ -195,41 +312,45 @@ class _ModulePageContentState extends State<_ModulePageContent> {
     );
   }
 
-  Widget _buildFilter(List<ModuleModel> modules) {
-    final filters = _getFilters(modules);
-    return SizedBox(
-      height: 42,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: filters.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = filter == _selectedFilter;
+  Widget _buildFilter(List<String> mapels) {
+    final activeMapel = mapels.contains(_selectedMapel)
+        ? _selectedMapel
+        : 'Semua Mapel';
 
-          return ChoiceChip(
-            label: Text(filter),
-            selected: isSelected,
-            onSelected: (_) {
-              setState(() {
-                _selectedFilter = filter;
-              });
-            },
-            selectedColor: AppColors.primary,
-            backgroundColor: Colors.white,
-            labelStyle: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-              fontWeight: FontWeight.w700,
-            ),
-            side: BorderSide(
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.border,
-              width: 1.2,
-            ),
-          );
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StudentStyleSearchField(
+          controller: _searchController,
+          hintText: 'Cari judul, mapel, atau jenjang modul...',
+          hasQuery: _searchController.text.isNotEmpty,
+          onChanged: (_) => setState(() {}),
+          onClear: () {
+            _searchController.clear();
+            setState(() {});
+          },
+        ),
+        const SizedBox(height: 12),
+        StudentStyleFilterChipBar(
+          options: _primaryFilters,
+          selectedOption: _selectedFilter,
+          onSelected: (value) => setState(() => _selectedFilter = value),
+        ),
+        const SizedBox(height: 8),
+        StudentStyleFilterChipBar(
+          options: _jenjangFilters,
+          selectedOption: _selectedJenjang,
+          onSelected: (value) => setState(() => _selectedJenjang = value),
+        ),
+        if (mapels.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          StudentStyleFilterChipBar(
+            options: ['Semua Mapel', ...mapels],
+            selectedOption: activeMapel,
+            onSelected: (value) => setState(() => _selectedMapel = value),
+          ),
+        ],
+      ],
     );
   }
 
@@ -260,6 +381,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
   }
 
   Widget _buildEmptyState() {
+    final hasFilters = _hasActiveFilters;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 50),
       decoration: BoxDecoration(
@@ -285,15 +407,17 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
           const SizedBox(height: 16),
 
-          const Text(
-            'Belum ada modul',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          Text(
+            hasFilters ? 'Modul tidak ditemukan' : 'Belum ada modul',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
 
           const SizedBox(height: 8),
 
           Text(
-            'Data modul dari database belum tersedia.',
+            hasFilters
+                ? 'Coba ubah kata kunci pencarian atau filter di atas.'
+                : 'Data modul dari database belum tersedia.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
@@ -301,9 +425,9 @@ class _ModulePageContentState extends State<_ModulePageContent> {
           const SizedBox(height: 20),
 
           OutlinedButton.icon(
-            onPressed: _loadModules,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Muat Ulang'),
+            onPressed: hasFilters ? _resetFilters : _loadModules,
+            icon: Icon(hasFilters ? Icons.filter_alt_off_rounded : Icons.refresh),
+            label: Text(hasFilters ? 'Reset Filter' : 'Muat Ulang'),
           ),
         ],
       ),
@@ -404,19 +528,42 @@ class _ModulePageContentState extends State<_ModulePageContent> {
 
           const SizedBox(height: 8),
 
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Icon(Icons.tag, size: 16, color: Colors.grey.shade500),
-
-              const SizedBox(width: 5),
-
-              Text(
-                'ID Modul: ${module.idModul}',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.tag, size: 16, color: Colors.grey.shade500),
+                  const SizedBox(width: 5),
+                  Text(
+                    'ID Modul: ${module.idModul}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
               ),
-
-              if (module.namaMapel != null && module.namaMapel!.isNotEmpty) ...[
-                const SizedBox(width: 8),
+              if (module.namaJenjang != null &&
+                  module.namaJenjang!.trim().isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: Text(
+                    '🎓 ${module.namaJenjang}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF15803D),
+                    ),
+                  ),
+                ),
+              if (module.namaMapel != null &&
+                  module.namaMapel!.trim().isNotEmpty)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
@@ -433,7 +580,6 @@ class _ModulePageContentState extends State<_ModulePageContent> {
                     ),
                   ),
                 ),
-              ],
             ],
           ),
         ],
@@ -528,18 +674,19 @@ class _ModulePageContentState extends State<_ModulePageContent> {
   }
 
   Widget _buildStatusBadge(String status) {
+    final isDraft = status.toLowerCase() == 'draft';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
+        color: isDraft ? const Color(0xFFFEF3C7) : const Color(0xFFECFDF5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         status,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF047857),
+          color: isDraft ? const Color(0xFFB45309) : const Color(0xFF047857),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/dashboard_service.dart';
 import '../../shared/widgets/app_header.dart';
+import '../../shared/widgets/student_style_filter_bar.dart';
 
 class StudentPage extends StatefulWidget {
   const StudentPage({super.key});
@@ -13,13 +14,40 @@ class StudentPage extends StatefulWidget {
 }
 
 class _StudentPageState extends State<StudentPage> {
-  int _selectedFilter = 0;
-  final List<String> _filters = ['Semua', 'SD', 'SMP', 'SMA'];
+  static const List<String> _jenjangFilters = [
+    'Semua Jenjang',
+    'SD',
+    'SMP',
+    'SMA',
+    'Umum',
+  ];
+  static const List<String> _statusFilters = [
+    'Semua Status',
+    'Aktif',
+    'Nonaktif',
+  ];
+
+  String _selectedJenjang = 'Semua Jenjang';
+  String _selectedStatus = 'Semua Status';
 
   bool _isLoading = true;
   List<Map<String, dynamic>> _students = [];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  bool get _hasActiveFilters =>
+      _searchQuery.isNotEmpty ||
+      _selectedJenjang != 'Semua Jenjang' ||
+      _selectedStatus != 'Semua Status';
+
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      _selectedJenjang = 'Semua Jenjang';
+      _selectedStatus = 'Semua Status';
+    });
+  }
 
   @override
   void initState() {
@@ -35,7 +63,7 @@ class _StudentPageState extends State<StudentPage> {
 
   Future<void> _loadStudents() async {
     try {
-      final list = await DashboardService.fetchStudents(search: _searchQuery);
+      final list = await DashboardService.fetchStudents();
       if (mounted) {
         setState(() {
           _students = list;
@@ -59,17 +87,34 @@ class _StudentPageState extends State<StudentPage> {
   }
 
   List<Map<String, dynamic>> _getFilteredStudents() {
-    var result = _students;
+    final q = _searchQuery.toLowerCase();
 
-    if (_selectedFilter > 0) {
-      final selectedJenjang = _filters[_selectedFilter].toLowerCase();
-      result = result.where((s) {
-        final j = (s['jenjang'] ?? '').toString().toLowerCase();
-        return j == selectedJenjang;
-      }).toList();
-    }
+    return _students.where((s) {
+      final name = (s['nama'] ?? '').toString().toLowerCase();
+      final nisn = (s['nisn'] ?? '').toString().toLowerCase();
+      final email = (s['email'] ?? '').toString().toLowerCase();
+      final kelas = (s['kelas'] ?? '').toString().toLowerCase();
 
-    return result;
+      final matchQuery =
+          q.isEmpty ||
+          name.contains(q) ||
+          nisn.contains(q) ||
+          email.contains(q) ||
+          kelas.contains(q);
+
+      final matchJenjang = matchesJenjangFilter(
+        s['jenjang']?.toString(),
+        _selectedJenjang,
+      );
+
+      final rawStatus = (s['status'] ?? 'Aktif').toString().trim();
+      final statusLower = rawStatus.isEmpty ? 'aktif' : rawStatus.toLowerCase();
+      final matchStatus =
+          _selectedStatus == 'Semua Status' ||
+          statusLower == _selectedStatus.toLowerCase();
+
+      return matchQuery && matchJenjang && matchStatus;
+    }).toList();
   }
 
   @override
@@ -132,12 +177,20 @@ class _StudentPageState extends State<StudentPage> {
                             Icon(Icons.person_off_outlined, size: 40, color: Colors.grey[400]),
                             const SizedBox(height: 10),
                             Text(
-                              _searchQuery.isNotEmpty
-                                  ? 'Tidak ada siswa yang cocok dengan "$_searchQuery"'
+                              _hasActiveFilters
+                                  ? 'Tidak ada siswa yang cocok dengan filter atau kata kunci saat ini.'
                                   : 'Belum ada data siswa di database',
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                             ),
+                            if (_hasActiveFilters) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: _resetFilters,
+                                icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+                                label: const Text('Reset Filter'),
+                              ),
+                            ],
                           ],
                         ),
                       )
@@ -199,52 +252,16 @@ class _StudentPageState extends State<StudentPage> {
   // ============================================================
 
   Widget _buildSearch() {
-    return TextField(
+    return StudentStyleSearchField(
       controller: _searchController,
-      onSubmitted: (val) {
-        _searchQuery = val.trim();
-        _loadStudents();
+      hintText: 'Cari nama, NISN, kelas, atau email siswa...',
+      hasQuery: _searchQuery.isNotEmpty,
+      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+      onSubmitted: (val) => setState(() => _searchQuery = val.trim()),
+      onClear: () {
+        _searchController.clear();
+        setState(() => _searchQuery = '');
       },
-      decoration: InputDecoration(
-        hintText: 'Cari nama atau NISN siswa...',
-        hintStyle: const TextStyle(
-          fontSize: 13,
-          color: AppColors.textSecondary,
-        ),
-        prefixIcon: const Icon(
-          Icons.search,
-          size: 21,
-          color: AppColors.textSecondary,
-        ),
-        suffixIcon: _searchQuery.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear, size: 18),
-                onPressed: () {
-                  _searchController.clear();
-                  _searchQuery = '';
-                  _loadStudents();
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: AppColors.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 13,
-        ),
-      ),
     );
   }
 
@@ -253,51 +270,21 @@ class _StudentPageState extends State<StudentPage> {
   // ============================================================
 
   Widget _buildFilters() {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _filters.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final selected = _selectedFilter == index;
-
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedFilter = index;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primary : AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: selected ? AppColors.primaryDark : AppColors.border,
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: selected ? AppColors.primaryDark : AppColors.shadow3D,
-                    offset: const Offset(0, 2),
-                    blurRadius: 0,
-                  ),
-                ],
-              ),
-              child: Text(
-                _filters[index],
-                style: GoogleFonts.nunitoSans(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-                  color: selected ? Colors.white : AppColors.textSecondary,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StudentStyleFilterChipBar(
+          options: _jenjangFilters,
+          selectedOption: _selectedJenjang,
+          onSelected: (val) => setState(() => _selectedJenjang = val),
+        ),
+        const SizedBox(height: 8),
+        StudentStyleFilterChipBar(
+          options: _statusFilters,
+          selectedOption: _selectedStatus,
+          onSelected: (val) => setState(() => _selectedStatus = val),
+        ),
+      ],
     );
   }
 
@@ -413,6 +400,23 @@ class _StudentPageState extends State<StudentPage> {
             ),
           ),
         ),
+        if (_hasActiveFilters) ...[
+          TextButton.icon(
+            onPressed: _resetFilters,
+            icon: const Icon(Icons.refresh_rounded, size: 15),
+            label: const Text(
+              'Reset',
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: kStudentFilterBlue,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              minimumSize: const Size(0, 30),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
         Text(
           'Menampilkan $count siswa',
           style: GoogleFonts.nunitoSans(

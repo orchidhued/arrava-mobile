@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/api_constants.dart';
 import '../../shared/widgets/app_header.dart';
+import '../../shared/widgets/student_style_filter_bar.dart';
 import 'models/quiz_model.dart';
 import 'services/quiz_service.dart';
 
@@ -14,12 +15,32 @@ class QuestionBankPage extends StatefulWidget {
 }
 
 class _QuestionBankPageState extends State<QuestionBankPage> {
+  static const List<String> _filters = [
+    'Semua',
+    'Pilihan Ganda',
+    'Benar/Salah',
+    'Isian',
+    'Bergambar',
+  ];
+
   final TextEditingController _searchController = TextEditingController();
   final QuizService _service = QuizService();
 
   List<QuestionModel> _questions = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  String _selectedFilter = 'Semua';
+
+  bool get _hasActiveFilters =>
+      _searchQuery.isNotEmpty || _selectedFilter != 'Semua';
+
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      _selectedFilter = 'Semua';
+    });
+  }
 
   @override
   void initState() {
@@ -35,7 +56,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
 
   Future<void> _loadQuestions() async {
     try {
-      final list = await _service.fetchQuestionBankModels(search: _searchQuery);
+      final list = await _service.fetchQuestionBankModels();
       if (mounted) {
         setState(() {
           _questions = list;
@@ -49,8 +70,41 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
     }
   }
 
+  List<QuestionModel> _getFilteredQuestions() {
+    final qLower = _searchQuery.toLowerCase();
+    return _questions.where((q) {
+      final matchQuery =
+          qLower.isEmpty ||
+          q.pertanyaan.toLowerCase().contains(qLower) ||
+          q.pilihan.any(
+            (opt) => opt.teksPilihan.toLowerCase().contains(qLower),
+          );
+
+      final bool matchFilter;
+      switch (_selectedFilter) {
+        case 'Pilihan Ganda':
+          matchFilter = q.jenisSoal == JenisSoal.kuis;
+          break;
+        case 'Benar/Salah':
+          matchFilter = q.jenisSoal == JenisSoal.trueFalse;
+          break;
+        case 'Isian':
+          matchFilter = q.jenisSoal == JenisSoal.isianSingkat;
+          break;
+        case 'Bergambar':
+          matchFilter = (q.fotoSoal?.trim().isNotEmpty ?? false);
+          break;
+        default:
+          matchFilter = true;
+      }
+
+      return matchQuery && matchFilter;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filtered = _getFilteredQuestions();
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -98,7 +152,49 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
 
                     _buildSearchField(),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
+
+                    StudentStyleFilterChipBar(
+                      options: _filters,
+                      selectedOption: _selectedFilter,
+                      onSelected: (val) => setState(() => _selectedFilter = val),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Text(
+                          'Menampilkan ${filtered.length} soal',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: kStudentFilterMuted,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (_hasActiveFilters)
+                          TextButton.icon(
+                            onPressed: _resetFilters,
+                            icon: const Icon(Icons.refresh_rounded, size: 14),
+                            label: const Text(
+                              'Reset Filter',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: kStudentFilterBlue,
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 30),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
 
                     if (_isLoading && _questions.isEmpty)
                       const Center(
@@ -107,7 +203,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                           child: CircularProgressIndicator(color: AppColors.primary),
                         ),
                       )
-                    else if (_questions.isEmpty)
+                    else if (filtered.isEmpty)
                       Container(
                         padding: const EdgeInsets.all(28),
                         decoration: BoxDecoration(
@@ -120,16 +216,25 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                             Icon(Icons.quiz_outlined, size: 36, color: Colors.grey[400]),
                             const SizedBox(height: 10),
                             Text(
-                              _searchQuery.isNotEmpty
-                                  ? 'Tidak ada soal yang cocok dengan "$_searchQuery"'
+                              _hasActiveFilters
+                                  ? 'Tidak ada soal yang cocok dengan filter atau kata kunci saat ini.'
                                   : 'Belum ada butir soal di database',
+                              textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                             ),
+                            if (_hasActiveFilters) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: _resetFilters,
+                                icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+                                label: const Text('Reset Filter'),
+                              ),
+                            ],
                           ],
                         ),
                       )
                     else
-                      ..._questions.map(
+                      ...filtered.map(
                         (q) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _buildQuestionCard(q),
@@ -146,46 +251,15 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
   }
 
   Widget _buildSearchField() {
-    return TextField(
+    return StudentStyleSearchField(
       controller: _searchController,
-      onSubmitted: (val) {
-        setState(() {
-          _searchQuery = val.trim();
-          _isLoading = true;
-        });
-        _loadQuestions();
+      hintText: 'Cari pertanyaan atau pilihan jawaban...',
+      hasQuery: _searchQuery.isNotEmpty,
+      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+      onClear: () {
+        _searchController.clear();
+        setState(() => _searchQuery = '');
       },
-      decoration: InputDecoration(
-        hintText: 'Cari pertanyaan butir soal...',
-        hintStyle: const TextStyle(
-          fontSize: 13,
-          color: AppColors.textSecondary,
-        ),
-        prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
-        suffixIcon: _searchQuery.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear, size: 18),
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() {
-                    _searchQuery = '';
-                    _isLoading = true;
-                  });
-                  _loadQuestions();
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: AppColors.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-      ),
     );
   }
 

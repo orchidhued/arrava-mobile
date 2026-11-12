@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../shared/widgets/app_header.dart';
+import '../../shared/widgets/student_style_filter_bar.dart';
 import 'create_quiz_page.dart';
 import 'quiz_preview_player_page.dart';
 
@@ -17,11 +18,51 @@ class ManageQuizPage extends StatefulWidget {
 }
 
 class _ManageQuizPageState extends State<ManageQuizPage> {
+  static const List<String> _statusFilters = [
+    'Semua',
+    'Terbit',
+    'Draft',
+    'Kedaluwarsa',
+    'Wayground',
+    'Klasik',
+  ];
+  static const List<String> _jenjangFilters = [
+    'Semua Jenjang',
+    'SD',
+    'SMP',
+    'SMA',
+    'Umum',
+  ];
+  static const List<String> _difficultyFilters = [
+    'Semua Tingkat',
+    'Mudah',
+    'Sedang',
+    'Sulit',
+  ];
+
   final TextEditingController _searchController = TextEditingController();
 
-  String _selectedJenjang = 'Semua';
-  String _selectedDifficulty = 'Semua';
+  String _selectedStatus = 'Semua';
+  String _selectedJenjang = 'Semua Jenjang';
+  String _selectedDifficulty = 'Semua Tingkat';
   String _selectedSort = 'terbaru';
+
+  bool get _hasActiveFilters =>
+      _selectedStatus != 'Semua' ||
+      _selectedJenjang != 'Semua Jenjang' ||
+      _selectedDifficulty != 'Semua Tingkat' ||
+      _selectedSort != 'terbaru' ||
+      _searchController.text.isNotEmpty;
+
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _selectedStatus = 'Semua';
+      _selectedJenjang = 'Semua Jenjang';
+      _selectedDifficulty = 'Semua Tingkat';
+      _selectedSort = 'terbaru';
+    });
+  }
 
   @override
   void initState() {
@@ -40,7 +81,6 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
 
   List<QuizModel> _filterQuizzes(List<QuizModel> allQuizzes) {
     final query = _searchController.text.toLowerCase().trim();
-    final selJenjang = _selectedJenjang.toLowerCase().trim();
     final selDiff = _selectedDifficulty.toLowerCase().trim();
 
     var list = allQuizzes.where((quiz) {
@@ -49,22 +89,43 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
           quiz.judul.toLowerCase().contains(query) ||
           (quiz.namaMapel?.toLowerCase().contains(query) ?? false) ||
           (quiz.deskripsi?.toLowerCase().contains(query) ?? false) ||
-          (quiz.kodeQuiz?.toLowerCase().contains(query) ?? false);
+          (quiz.kodeQuiz?.toLowerCase().contains(query) ?? false) ||
+          (quiz.namaJenjang?.toLowerCase().contains(query) ?? false);
 
-      final quizJenjang = (quiz.namaJenjang ?? '').toLowerCase().trim();
-      final matchJenjang =
-          _selectedJenjang == 'Semua' ||
-          quizJenjang == selJenjang ||
-          selJenjang.contains(quizJenjang) ||
-          quizJenjang.contains(selJenjang);
+      final bool matchStatus;
+      switch (_selectedStatus) {
+        case 'Terbit':
+          matchStatus = !quiz.isDraft && !quiz.isExpired;
+          break;
+        case 'Draft':
+          matchStatus = quiz.isDraft;
+          break;
+        case 'Kedaluwarsa':
+          matchStatus = !quiz.isDraft && quiz.isExpired;
+          break;
+        case 'Wayground':
+          matchStatus = quiz.isWayground;
+          break;
+        case 'Klasik':
+          matchStatus = !quiz.isWayground;
+          break;
+        default:
+          matchStatus = true;
+      }
+
+      final matchJenjang = matchesJenjangFilter(
+        quiz.namaJenjang,
+        _selectedJenjang,
+        idJenjang: quiz.idJenjang,
+      );
 
       final quizDiff = (quiz.namaTingkat ?? '').toLowerCase().trim();
       final matchDifficulty =
-          _selectedDifficulty == 'Semua' ||
+          _selectedDifficulty == 'Semua Tingkat' ||
           quizDiff == selDiff ||
           (quizDiff.isEmpty && selDiff == 'mudah');
 
-      return matchQuery && matchJenjang && matchDifficulty;
+      return matchQuery && matchStatus && matchJenjang && matchDifficulty;
     }).toList();
 
     if (_selectedSort == 'terlama') {
@@ -210,7 +271,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
 
                           const SizedBox(height: 16),
 
-                          // Count indicator
+                          // Count indicator + Sort & Reset
                           Row(
                             children: [
                               Text(
@@ -222,28 +283,70 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                                 ),
                               ),
                               const Spacer(),
-                              if (_selectedJenjang != 'Semua' ||
-                                  _selectedDifficulty != 'Semua' ||
-                                  _searchController.text.isNotEmpty)
+                              if (_hasActiveFilters) ...[
                                 TextButton.icon(
-                                  onPressed: () {
-                                    setState(() {
-                                      _searchController.clear();
-                                      _selectedJenjang = 'Semua';
-                                      _selectedDifficulty = 'Semua';
-                                      _selectedSort = 'terbaru';
-                                    });
-                                  },
-                                  icon: const Icon(Icons.refresh, size: 14),
+                                  onPressed: _resetFilters,
+                                  icon: const Icon(Icons.refresh_rounded, size: 14),
                                   label: const Text(
-                                    'Reset Filter',
-                                    style: TextStyle(fontSize: 11),
+                                    'Reset',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF64748B),
-                                    padding: EdgeInsets.zero,
+                                    foregroundColor: kStudentFilterBlue,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    minimumSize: const Size(0, 30),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   ),
                                 ),
+                                const SizedBox(width: 4),
+                              ],
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedSort = _selectedSort == 'terbaru'
+                                        ? 'terlama'
+                                        : 'terbaru';
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: kStudentFilterBorder,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.swap_vert_rounded,
+                                        size: 14,
+                                        color: kStudentFilterBlue,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _selectedSort == 'terbaru'
+                                            ? 'Terbaru'
+                                            : 'Terlama',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: kStudentFilterMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
 
@@ -420,184 +523,36 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
 
   // 2. Filter & Search Bar
   Widget _buildFilterSection() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Search Box
-          TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: 'Cari kuis atau materi...',
-              hintStyle: const TextStyle(
-                fontSize: 12.5,
-                color: Color(0xFF94A3B8),
-              ),
-              prefixIcon: const Icon(
-                Icons.search,
-                size: 18,
-                color: Color(0xFF64748B),
-              ),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 16),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {});
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Dropdowns Row
-          Row(
-            children: [
-              // Jenjang Filter
-              Expanded(
-                child: _buildDropdownFilter(
-                  label: 'Jenjang',
-                  value: _selectedJenjang,
-                  items: const [
-                    'Semua',
-                    'SD / MI',
-                    'SMP / MTs',
-                    'SMA / MA / SMK Sederajat',
-                    'Perguruan Tinggi / Umum',
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedJenjang = val);
-                  },
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Kesulitan Filter
-              Expanded(
-                child: _buildDropdownFilter(
-                  label: 'Kesulitan',
-                  value: _selectedDifficulty,
-                  items: const ['Semua', 'Mudah', 'Sedang', 'Sulit'],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedDifficulty = val);
-                  },
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Urutkan Filter
-              Expanded(
-                child: _buildDropdownFilter(
-                  label: 'Urutkan',
-                  value: _selectedSort,
-                  items: const ['terbaru', 'terlama'],
-                  itemLabels: const {
-                    'terbaru': 'Terbaru',
-                    'terlama': 'Terlama',
-                  },
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedSort = val);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDropdownFilter({
-    required String label,
-    required String value,
-    required List<String> items,
-    Map<String, String>? itemLabels,
-    required ValueChanged<String?> onChanged,
-  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF64748B),
-          ),
+        StudentStyleSearchField(
+          controller: _searchController,
+          hintText: 'Cari judul, kode, atau mapel kuis...',
+          hasQuery: _searchController.text.isNotEmpty,
+          onChanged: (_) => setState(() {}),
+          onClear: () {
+            _searchController.clear();
+            setState(() {});
+          },
         ),
-        const SizedBox(height: 4),
-        DropdownButtonFormField<String>(
-          initialValue: value,
-          isExpanded: true,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFFF8FAFC),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 8,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(9),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-          ),
-          icon: const Icon(
-            Icons.expand_more,
-            size: 16,
-            color: Color(0xFF94A3B8),
-          ),
-          items: items.map((item) {
-            final display = itemLabels?[item] ?? item;
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(
-                display,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
+        const SizedBox(height: 12),
+        StudentStyleFilterChipBar(
+          options: _statusFilters,
+          selectedOption: _selectedStatus,
+          onSelected: (val) => setState(() => _selectedStatus = val),
+        ),
+        const SizedBox(height: 8),
+        StudentStyleFilterChipBar(
+          options: _jenjangFilters,
+          selectedOption: _selectedJenjang,
+          onSelected: (val) => setState(() => _selectedJenjang = val),
+        ),
+        const SizedBox(height: 8),
+        StudentStyleFilterChipBar(
+          options: _difficultyFilters,
+          selectedOption: _selectedDifficulty,
+          onSelected: (val) => setState(() => _selectedDifficulty = val),
         ),
       ],
     );
@@ -1042,6 +997,14 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
           ),
+          if (_hasActiveFilters) ...[
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: _resetFilters,
+              icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+              label: const Text('Reset Filter'),
+            ),
+          ],
         ],
       ),
     );
