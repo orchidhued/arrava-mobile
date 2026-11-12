@@ -2,8 +2,9 @@ class ApiConstants {
   // Jika di Web / Chrome, atau di Android via USB adb reverse (adb reverse tcp:8000 tcp:8000): gunakan 127.0.0.1
   // Jika di Android via Wi-Fi langsung: gunakan IP Wi-Fi PC (192.168.18.4)
   static String get baseUrl {
-    return 'http://127.0.0.1:8000/api';
+    //return 'http://127.0.0.1:8000/api';
     //return 'http://192.168.18.4:8000/api';
+    return 'http://10.10.5.22:8000/api';
   }
 
   static const String login = '/login';

@@ -27,6 +27,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   bool _isLoading = true;
   bool _isPickingPhoto = false;
   bool _isUpdatingHeroTheme = false;
+  int _heroThemeRevision = 0;
   String? _error;
   Map<String, dynamic>? _profileData;
   String _heroTheme = 'samudra';
@@ -41,6 +42,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   }
 
   Future<void> _loadProfile() async {
+    final revAtStart = _heroThemeRevision;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -62,7 +64,11 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           _isSoundEnabled = sound;
           _isHapticEnabled = haptic;
           _profileData = data;
-          _heroTheme = resolvedTheme;
+          if (revAtStart == _heroThemeRevision) {
+            _heroTheme = resolvedTheme;
+          } else if (data['user'] is Map) {
+            (data['user'] as Map)['hero_theme'] = _heroTheme;
+          }
           _isLoading = false;
         });
       }
@@ -88,6 +94,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       );
       if (mounted) {
         setState(() {
+          _heroThemeRevision++;
           _heroTheme = updatedTheme;
           final userMap = _profileData?['user'];
           if (userMap is Map<String, dynamic>) {

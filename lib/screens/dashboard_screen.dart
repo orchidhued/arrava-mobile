@@ -37,6 +37,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   bool _isLoading = true;
   bool _isSwitchingHero = false;
+  int _heroThemeRevision = 0;
+  int _dashboardLoadSeq = 0;
   String _heroTheme = 'samudra';
   Map<String, dynamic>? _dashboardData;
 
@@ -47,31 +49,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _initHeroThemeAndDashboard() async {
+    final revAtStart = _heroThemeRevision;
     final cached = await PreferencesService.getHeroTheme();
-    if (mounted) {
+    if (mounted && revAtStart == _heroThemeRevision) {
       setState(() => _heroTheme = cached);
     }
     await _loadDashboard();
   }
 
   Future<void> _loadDashboard() async {
+    final loadSeq = ++_dashboardLoadSeq;
+    final themeRevAtStart = _heroThemeRevision;
     try {
       context.read<NotificationProvider>().fetchNotifications(silent: true);
       final data = await DashboardService.fetchStudentDashboard();
+      if (!mounted || loadSeq != _dashboardLoadSeq) return;
+
       final apiTheme = data['user'] is Map
           ? (data['user'] as Map)['hero_theme']
           : null;
-      if (mounted) {
-        setState(() {
-          _dashboardData = data;
-          if (apiTheme != null) {
-            _heroTheme = DashboardService.normalizeHeroTheme(apiTheme);
-          }
-          _isLoading = false;
-        });
-      }
+
+      setState(() {
+        _dashboardData = data;
+        if (themeRevAtStart == _heroThemeRevision && apiTheme != null) {
+          _heroTheme = DashboardService.normalizeHeroTheme(apiTheme);
+        } else if (data['user'] is Map) {
+          (data['user'] as Map)['hero_theme'] = _heroTheme;
+        }
+        _isLoading = false;
+      });
     } catch (_) {
-      if (mounted) {
+      if (mounted && loadSeq == _dashboardLoadSeq) {
         setState(() => _isLoading = false);
       }
     }
@@ -88,6 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
       if (mounted) {
         setState(() {
+          _heroThemeRevision++;
           _heroTheme = updatedTheme;
           final userMap = _dashboardData?['user'];
           if (userMap is Map<String, dynamic>) {
@@ -163,6 +172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               if (!mounted) return;
               final normalized = DashboardService.normalizeHeroTheme(theme);
               setState(() {
+                _heroThemeRevision++;
                 _heroTheme = normalized;
                 final userMap = _dashboardData?['user'];
                 if (userMap is Map<String, dynamic>) {
