@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../core/constants/api_constants.dart';
 import 'models/quiz_model.dart';
 import 'repositories/quiz_repository.dart';
 
@@ -72,6 +73,7 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
       }
       return _SampleQuestion(
         question: q.pertanyaan,
+        fotoUrl: q.fotoSoal,
         answers: answers,
         correctAnswerIndex: q.correctAnswerIndex >= 0 ? q.correctAnswerIndex : 0,
         points: q.poin,
@@ -563,14 +565,46 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
                               ),
                             ],
                           ),
+                          if (currentQ.fotoUrl != null &&
+                              currentQ.fotoUrl!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                constraints:
+                                    const BoxConstraints(maxHeight: 140),
+                                width: double.infinity,
+                                color: const Color(0xFFF1F5F9),
+                                child: Image.network(
+                                  ApiConstants.resolveMediaUrl(
+                                          currentQ.fotoUrl) ??
+                                      currentQ.fotoUrl!,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const SizedBox.shrink(),
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 12),
                           Text(
-                            currentQ.question,
+                            currentQ.question.trim().isNotEmpty
+                                ? currentQ.question
+                                : (currentQ.fotoUrl != null &&
+                                        currentQ.fotoUrl!.isNotEmpty
+                                    ? '🖼️ [Gambar Soal]'
+                                    : 'Pertanyaan #${_currentIndex + 1}'),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize:
+                                  currentQ.question.trim().isNotEmpty ? 16 : 14,
+                              fontStyle: currentQ.question.trim().isEmpty
+                                  ? FontStyle.italic
+                                  : FontStyle.normal,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
+                              color: currentQ.question.trim().isNotEmpty
+                                  ? const Color(0xFF0F172A)
+                                  : const Color(0xFF64748B),
                               height: 1.45,
                             ),
                           ),
@@ -703,12 +737,14 @@ class _QuizPreviewPlayerPageState extends State<QuizPreviewPlayerPage> {
 
 class _SampleQuestion {
   final String question;
+  final String? fotoUrl;
   final List<String> answers;
   final int correctAnswerIndex;
   final int points;
 
   _SampleQuestion({
     required this.question,
+    this.fotoUrl,
     required this.answers,
     required this.correctAnswerIndex,
     required this.points,

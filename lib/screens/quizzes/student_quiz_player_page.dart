@@ -1079,35 +1079,39 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
           const SizedBox(height: 14),
 
           // Elearning Arrava Dark Navy Question Box (bg-slate-900)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          // Disembunyikan otomatis jika teks pertanyaan kosong agar siswa langsung fokus ke visual gambar
+          if (currentQ.pertanyaan.trim().isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                '"${currentQ.pertanyaan}"',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w800,
+                  height: 1.45,
                 ),
-              ],
-            ),
-            child: Text(
-              '"${currentQ.pertanyaan}"',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15.5,
-                fontWeight: FontWeight.w800,
-                height: 1.45,
               ),
             ),
-          ),
+          ],
 
           // Foto Soal (Opsional, jika ada gambar)
           if (resolvedFotoUrl != null) ...[
-            const SizedBox(height: 14),
+            if (currentQ.pertanyaan.trim().isNotEmpty)
+              const SizedBox(height: 14),
             GestureDetector(
               onTap: () => _showFullImage(context, resolvedFotoUrl),
               child: Container(

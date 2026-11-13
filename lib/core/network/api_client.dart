@@ -189,11 +189,28 @@ class ApiClient {
       }
       return data;
     } else {
-      final message = (data is Map && data['message'] != null)
-          ? data['message']
+      String message = (data is Map && data['message'] != null)
+          ? data['message'].toString()
           : (data is Map && data['pesan'] != null)
-          ? data['pesan']
+          ? data['pesan'].toString()
           : 'HTTP Error ${response.statusCode}';
+
+      if (data is Map && data['errors'] is Map) {
+        final errMap = data['errors'] as Map;
+        final errorList = <String>[];
+        for (final entry in errMap.entries) {
+          final val = entry.value;
+          if (val is List) {
+            errorList.addAll(val.map((e) => e.toString()));
+          } else if (val != null) {
+            errorList.add(val.toString());
+          }
+        }
+        if (errorList.isNotEmpty) {
+          message = errorList.join('\n');
+        }
+      }
+
       throw Exception(message);
     }
   }

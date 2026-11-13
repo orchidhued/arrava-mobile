@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -382,6 +382,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
       bottomNavigationBar: QuizNavigation(
         totalQuestions: _questions.length,
         currentQuestion: _currentQuestion,
+        questions: _questions,
         onSelectQuestion: (index) {
           setState(() {
             _currentQuestion = index;
@@ -434,6 +435,19 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
         ),
       ],
     );
+  }
+
+  bool _isSameQuestionImage(QuizQuestion a, QuizQuestion b) {
+    if (a.fotoBytes != null && b.fotoBytes != null) {
+      return listEquals(a.fotoBytes, b.fotoBytes);
+    }
+    if (a.existingFotoUrl != null &&
+        b.existingFotoUrl != null &&
+        !a.removeFoto &&
+        !b.removeFoto) {
+      return a.existingFotoUrl == b.existingFotoUrl;
+    }
+    return false;
   }
 
   void _saveQuiz() {
@@ -582,13 +596,16 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
       for (int i = 0; i < _questions.length; i++) {
         final q = _questions[i];
         final no = i + 1;
-        final qText = q.questionController.text.trim();
+        final hasText = q.hasText;
+        final hasFoto = q.hasFoto;
 
-        if (qText.isEmpty) {
+        if (!hasText && !hasFoto) {
           setState(() => _currentQuestion = i);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Soal #$no: Teks pertanyaan wajib diisi sebelum kuis dipublikasikan!'),
+              content: Text(
+                '⚠️ Soal no. $no harus memiliki teks pertanyaan atau foto soal (tidak boleh kosong keduanya).',
+              ),
               backgroundColor: const Color(0xFFE11D48),
             ),
           );
@@ -624,6 +641,64 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
               SnackBar(
                 content: Text('Soal #$no: Kunci jawaban yang dipilih tidak boleh kosong!'),
                 backgroundColor: const Color(0xFFE11D48),
+              ),
+            );
+            return;
+          }
+        }
+      }
+
+      // Deteksi duplikat cerdas 3 tingkat dalam 1 kuis (persis QuizController Laravel)
+      final count = _questions.length;
+      for (int i = 0; i < count; i++) {
+        for (int j = i + 1; j < count; j++) {
+          final qI = _questions[i];
+          final qJ = _questions[j];
+
+          final textI = qI.questionController.text.trim().toLowerCase();
+          final textJ = qJ.questionController.text.trim().toLowerCase();
+          final sameText = textI.isNotEmpty && textI == textJ;
+          final sameImage = qI.hasFoto && qJ.hasFoto && _isSameQuestionImage(qI, qJ);
+
+          if (sameText && sameImage) {
+            setState(() => _currentQuestion = j);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '❌ Soal no. ${i + 1} dan ${j + 1} benar-benar IDENTIK (teks & gambar sama persis)!',
+                ),
+                backgroundColor: const Color(0xFFE11D48),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+            return;
+          }
+
+          if (sameText && !sameImage) {
+            setState(() => _currentQuestion = j);
+            final snippet = qI.questionController.text.trim();
+            final preview = snippet.length > 35 ? '${snippet.substring(0, 35)}...' : snippet;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '⚠️ Soal no. ${i + 1}, ${j + 1} memiliki teks pertanyaan yang sama persis: "$preview"',
+                ),
+                backgroundColor: const Color(0xFFD97706),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+            return;
+          }
+
+          if (sameImage && !sameText) {
+            setState(() => _currentQuestion = j);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '⚠️ Soal no. ${i + 1}, ${j + 1} memiliki gambar yang sama persis!',
+                ),
+                backgroundColor: const Color(0xFFD97706),
+                duration: const Duration(seconds: 4),
               ),
             );
             return;
@@ -683,7 +758,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
       }
 
       final item = <String, dynamic>{
-        'pertanyaan': qText.isEmpty ? 'Pertanyaan' : qText,
+        'pertanyaan': qText,
         'jenis_soal': typeStr,
         'poin': q.points,
         'durasi_detik': q.timeLimit,

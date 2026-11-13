@@ -325,12 +325,13 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
           ],
 
           Text(
-            q.pertanyaan,
-            style: const TextStyle(
+            q.pertanyaan.trim().isNotEmpty ? q.pertanyaan : q.displayTitle,
+            style: TextStyle(
               fontSize: 14,
               height: 1.4,
+              fontStyle: q.pertanyaan.trim().isEmpty ? FontStyle.italic : FontStyle.normal,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: q.pertanyaan.trim().isNotEmpty ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
 

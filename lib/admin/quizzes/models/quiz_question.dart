@@ -17,6 +17,16 @@ class QuizQuestion {
   String? fotoName;
   bool removeFoto;
 
+  bool get hasText => questionController.text.trim().isNotEmpty;
+  bool get hasFoto =>
+      fotoBytes != null ||
+      (existingFotoUrl != null &&
+          existingFotoUrl!.trim().isNotEmpty &&
+          !removeFoto);
+  bool get isValidContent => hasText || hasFoto;
+  String get displayThumbnailLabel =>
+      hasText ? questionController.text.trim() : (hasFoto ? '🖼️ [Gambar Soal]' : 'Pertanyaan...');
+
   // Legacy/fallback properties
   String level;
   int? idMapel;

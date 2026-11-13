@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../models/quiz_question.dart';
 
 class QuizNavigation extends StatelessWidget {
   final int totalQuestions;
   final int currentQuestion;
+  final List<QuizQuestion>? questions;
   final ValueChanged<int> onSelectQuestion;
   final VoidCallback onAddQuestion;
 
@@ -12,6 +14,7 @@ class QuizNavigation extends StatelessWidget {
     super.key,
     required this.totalQuestions,
     required this.currentQuestion,
+    this.questions,
     required this.onSelectQuestion,
     required this.onAddQuestion,
   });
@@ -118,12 +121,27 @@ class QuizNavigation extends StatelessWidget {
 
   Widget _buildQuestionThumbnail(int index) {
     final bool selected = currentQuestion == index;
+    final q = (questions != null && index < questions!.length)
+        ? questions![index]
+        : null;
+    final bool hasText = q?.hasText ?? false;
+    final bool hasFoto = q?.hasFoto ?? false;
+
+    final String titleText;
+    if (hasText) {
+      final t = q!.questionController.text.trim();
+      titleText = '${index + 1}. ${t.length > 7 ? '${t.substring(0, 7)}..' : t}';
+    } else if (hasFoto) {
+      titleText = '${index + 1}. 🖼️ Gambar';
+    } else {
+      titleText = '${index + 1}. Kuis';
+    }
 
     return InkWell(
       onTap: () => onSelectQuestion(index),
       borderRadius: BorderRadius.circular(9),
       child: Container(
-        width: 68,
+        width: 72,
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFF2563EB) : Colors.white,
@@ -137,7 +155,9 @@ class QuizNavigation extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${index + 1}. Kuis',
+              titleText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w700,

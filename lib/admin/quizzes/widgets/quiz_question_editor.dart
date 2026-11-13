@@ -197,7 +197,7 @@ class QuizQuestionEditor extends StatelessWidget {
         minLines: 3,
         decoration: const InputDecoration(
           border: InputBorder.none,
-          hintText: 'Ketikkan pertanyaan Anda di sini...',
+          hintText: 'Ketikkan pertanyaan Anda di sini... (opsional jika sudah ada gambar)',
           hintStyle: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
           contentPadding: EdgeInsets.zero,
         ),

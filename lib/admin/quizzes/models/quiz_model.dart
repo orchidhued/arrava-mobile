@@ -163,6 +163,11 @@ class QuestionModel {
     return idx >= 0 ? pilihan[idx] : null;
   }
 
+  bool get hasPertanyaan => pertanyaan.trim().isNotEmpty;
+  bool get hasFoto => fotoSoal != null && fotoSoal!.trim().isNotEmpty;
+  String get displayTitle =>
+      hasPertanyaan ? pertanyaan : (hasFoto ? '🖼️ [Gambar Soal]' : 'Pertanyaan');
+
   factory QuestionModel.fromJson(Map<String, dynamic> json) {
     final jenisStr = json['jenis_soal']?.toString();
     final idJenis = _toIntOrNull(json['id_jenis_soal']);
