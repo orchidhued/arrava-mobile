@@ -5,7 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:arrava_mobile/admin/admin_shell.dart';
 import 'package:arrava_mobile/core/storage/secure_storage.dart';
 import 'package:arrava_mobile/screens/dashboard_screen.dart';
-import 'package:arrava_mobile/screens/parent/parent_dashboard_screen.dart';
+import 'package:arrava_mobile/parent/parent_dashboard_screen.dart';
 import 'package:arrava_mobile/services/auth_service.dart';
 import 'package:arrava_mobile/shared/widgets/arrava_logo.dart';
 
