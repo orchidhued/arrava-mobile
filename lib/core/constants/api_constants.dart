@@ -2,7 +2,7 @@ class ApiConstants {
   // Jika di Web / Chrome, atau di Android via USB adb reverse (adb reverse tcp:8000 tcp:8000): gunakan 127.0.0.1
   // Jika di Android via Wi-Fi langsung: gunakan IP Wi-Fi PC (192.168.18.4)
   static String get baseUrl {
-    return 'http://10.10.5.151:8000/api';
+    return 'http://192.168.1.112:8000/api';
     //return 'http://10.10.5.111:8000/api';
   }
 
@@ -16,6 +16,8 @@ class ApiConstants {
   static const String studentProfile = '/student/profile';
   static const String studentHeroTheme = '/student/hero-theme';
   static const String parentDashboard = '/parent/dashboard';
+  static const String parentProfile = '/parent/profile';
+  static const String parentPassword = '/parent/password';
   static const String leaderboard = '/leaderboard';
   static const String adminDashboard = '/admin/dashboard';
   static const String teachers = '/teachers';
