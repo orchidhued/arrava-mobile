@@ -140,6 +140,15 @@ class QuestionModel {
   final int durasiDetik;
   final String? fotoSoal;
   final List<OptionModel> pilihan;
+  final bool isBank;
+  final String? sumberLabel;
+  final int? idMapel;
+  final String? mapelNama;
+  final int? idJenjang;
+  final String? jenjangNama;
+  final String tingkatSoal;
+  final String? penulisNama;
+  final String? fotoUrl;
 
   const QuestionModel({
     this.idSoal,
@@ -152,6 +161,15 @@ class QuestionModel {
     this.durasiDetik = 20,
     this.fotoSoal,
     this.pilihan = const [],
+    this.isBank = false,
+    this.sumberLabel,
+    this.idMapel,
+    this.mapelNama,
+    this.idJenjang,
+    this.jenjangNama,
+    this.tingkatSoal = 'sedang',
+    this.penulisNama,
+    this.fotoUrl,
   });
 
   int get correctAnswerIndex {
@@ -164,7 +182,7 @@ class QuestionModel {
   }
 
   bool get hasPertanyaan => pertanyaan.trim().isNotEmpty;
-  bool get hasFoto => fotoSoal != null && fotoSoal!.trim().isNotEmpty;
+  bool get hasFoto => (fotoSoal != null && fotoSoal!.trim().isNotEmpty) || (fotoUrl != null && fotoUrl!.trim().isNotEmpty);
   String get displayTitle =>
       hasPertanyaan ? pertanyaan : (hasFoto ? '🖼️ [Gambar Soal]' : 'Pertanyaan');
 
@@ -183,6 +201,10 @@ class QuestionModel {
       jenis = JenisSoal.kuis;
     }
 
+    final bool isBank = _toBool(json['is_bank']) || (json['id_quiz'] == null && json['sumber_label'] != null);
+    final String? fotoSoal = _toStringOrNull(json['foto_soal']);
+    final String? fotoUrl = _toStringOrNull(json['foto_url']);
+
     return QuestionModel(
       idSoal: _toIntOrNull(json['id_soal']),
       kodeSoal: _toStringOrNull(json['kode_soal']),
@@ -192,8 +214,17 @@ class QuestionModel {
       jawabanBenar: _toStringOrNull(json['jawaban_benar']),
       poin: _toInt(json['poin'], fallback: 10),
       durasiDetik: _toInt(json['durasi_detik'], fallback: 20),
-      fotoSoal: _toStringOrNull(json['foto_soal']),
+      fotoSoal: fotoSoal,
       pilihan: _parseList(json['pilihan'], OptionModel.fromJson),
+      isBank: isBank,
+      sumberLabel: _toStringOrNull(json['sumber_label']),
+      idMapel: _toIntOrNull(json['id_mapel']),
+      mapelNama: _toStringOrNull(json['mapel_nama']),
+      idJenjang: _toIntOrNull(json['id_jenjang']),
+      jenjangNama: _toStringOrNull(json['jenjang_nama']),
+      tingkatSoal: _toStringOrNull(json['tingkat_soal']) ?? 'sedang',
+      penulisNama: _toStringOrNull(json['penulis_nama']),
+      fotoUrl: fotoUrl,
     );
   }
 
@@ -208,6 +239,15 @@ class QuestionModel {
       'poin': poin,
       'durasi_detik': durasiDetik,
       'pilihan': pilihan.map((e) => e.toJson()).toList(),
+      'is_bank': isBank,
+      if (sumberLabel != null) 'sumber_label': sumberLabel,
+      if (idMapel != null) 'id_mapel': idMapel,
+      if (mapelNama != null) 'mapel_nama': mapelNama,
+      if (idJenjang != null) 'id_jenjang': idJenjang,
+      if (jenjangNama != null) 'jenjang_nama': jenjangNama,
+      'tingkat_soal': tingkatSoal,
+      if (penulisNama != null) 'penulis_nama': penulisNama,
+      if (fotoUrl != null) 'foto_url': fotoUrl,
     };
   }
 
@@ -222,6 +262,15 @@ class QuestionModel {
     int? durasiDetik,
     String? fotoSoal,
     List<OptionModel>? pilihan,
+    bool? isBank,
+    String? sumberLabel,
+    int? idMapel,
+    String? mapelNama,
+    int? idJenjang,
+    String? jenjangNama,
+    String? tingkatSoal,
+    String? penulisNama,
+    String? fotoUrl,
   }) {
     return QuestionModel(
       idSoal: idSoal ?? this.idSoal,
@@ -234,6 +283,15 @@ class QuestionModel {
       durasiDetik: durasiDetik ?? this.durasiDetik,
       fotoSoal: fotoSoal ?? this.fotoSoal,
       pilihan: pilihan ?? this.pilihan,
+      isBank: isBank ?? this.isBank,
+      sumberLabel: sumberLabel ?? this.sumberLabel,
+      idMapel: idMapel ?? this.idMapel,
+      mapelNama: mapelNama ?? this.mapelNama,
+      idJenjang: idJenjang ?? this.idJenjang,
+      jenjangNama: jenjangNama ?? this.jenjangNama,
+      tingkatSoal: tingkatSoal ?? this.tingkatSoal,
+      penulisNama: penulisNama ?? this.penulisNama,
+      fotoUrl: fotoUrl ?? this.fotoUrl,
     );
   }
 }

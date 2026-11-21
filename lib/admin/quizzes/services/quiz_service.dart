@@ -106,6 +106,8 @@ class QuizService {
     return await ApiClient.get(endpoint);
   }
 
+  Future<List<MapelModel>> fetchMapels() => fetchMapelModels();
+
   Future<List<MapelModel>> fetchMapelModels({
     Map<String, String>? queryParams,
   }) async {
@@ -132,10 +134,56 @@ class QuizService {
     int page = 1,
     String? search,
   }) async {
-    final response = await fetchQuestionBank(page: page, search: search);
+    return fetchBankSoalList(search: search);
+  }
+
+  Future<List<QuestionModel>> fetchBankSoalList({
+    String sumber = 'all',
+    int? mapelId,
+    int? jenjangId,
+    String? jenisSoal,
+    String? tingkatSoal,
+    String? search,
+    int limit = 150,
+  }) async {
+    final query = <String, String>{
+      'sumber': sumber,
+      'limit': limit.toString(),
+    };
+    if (mapelId != null) query['mapel_id'] = mapelId.toString();
+    if (jenjangId != null) query['jenjang_id'] = jenjangId.toString();
+    if (jenisSoal != null && jenisSoal != 'all') query['jenis_soal'] = jenisSoal;
+    if (tingkatSoal != null && tingkatSoal != 'all') query['tingkat_soal'] = tingkatSoal;
+    if (search != null && search.trim().isNotEmpty) query['q'] = search.trim();
+
+    final endpoint = _withQuery(ApiConstants.bankSoalData, query);
+    final response = await ApiClient.get(endpoint);
     return _extractList(response)
         .whereType<Map>()
         .map((e) => QuestionModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
+  }
+
+  Future<Map<String, dynamic>> copySoalToBank(List<int> soalIds) async {
+    final response = await ApiClient.post(
+      ApiConstants.copyToBank,
+      body: {'soal_ids': soalIds},
+    );
+    return (response is Map) ? Map<String, dynamic>.from(response) : {};
+  }
+
+  Future<Map<String, dynamic>> assignSoalToQuiz(int idQuiz, List<int> soalIds) async {
+    final response = await ApiClient.post(
+      ApiConstants.assignToQuiz,
+      body: {
+        'id_quiz': idQuiz,
+        'soal_ids': soalIds,
+      },
+    );
+    return (response is Map) ? Map<String, dynamic>.from(response) : {};
+  }
+
+  Future<void> deleteSoal(int idSoal) async {
+    await ApiClient.delete(ApiConstants.deleteSoal(idSoal));
   }
 }

@@ -12,6 +12,7 @@ import '../shared/widgets/menu_pintasan_belajar.dart';
 import '../shared/widgets/notification_sheet.dart';
 import '../shared/widgets/samudra_hero_section.dart';
 import '../shared/widgets/tween_float_background.dart';
+import 'dungeon/dungeon_lobby.dart';
 import 'leaderboard/leaderboard_screen.dart';
 import 'modules/student_module_list_page.dart';
 import 'profile/student_profile_page.dart';
@@ -344,6 +345,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                           const SizedBox(height: 16),
 
+                          // Banner Dungeon Soal (Arcade Mode)
+                          _buildDungeonBanner(),
+
+                          const SizedBox(height: 16),
+
                           // Banner Notifikasi Presensi Aktif Hari Ini (Sinkron dengan Elearning Web)
                           Consumer<NotificationProvider>(
                             builder: (context, notifProv, _) {
@@ -520,6 +526,141 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ===========================================================================
   // WIDGET BUILDERS
   // ===========================================================================
+
+  Widget _buildDungeonBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0A192F), Color(0xFF10315A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.5), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFFB2E7FC),
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            right: -10,
+            bottom: -15,
+            child: Opacity(
+              opacity: 0.2,
+              child: Image.asset(
+                'assets/dungeon/dungeon-door.webp',
+                width: 110,
+                height: 110,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: Image.asset(
+                  'assets/dungeon/nyawa/heart-shine.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.castle_rounded, color: Color(0xFF38BDF8), size: 26),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'DUNGEON SOAL',
+                          style: GoogleFonts.fredoka(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF43F5E),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'ARCADE',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Taklukkan lantai dungeon, jaga nyawamu, & raih combo!',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFFBAE6FD),
+                        fontWeight: FontWeight.w500,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DungeonLobbyPage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0284C7),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: const Size(0, 36),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: Color(0xFF38BDF8), width: 1.5),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Masuk ➔',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildTopHeader(Map<String, dynamic>? user) {
     return Container(
