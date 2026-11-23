@@ -10,6 +10,7 @@ import 'notification_sheet.dart';
 class AppHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onProfileTap;
   final VoidCallback? onLogoutTap;
 
   // true  = profile bisa diklik
@@ -20,6 +21,7 @@ class AppHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.onNotificationTap,
+    this.onProfileTap,
     this.onLogoutTap,
     this.profileEnabled = true,
   });
@@ -144,9 +146,10 @@ class AppHeader extends StatelessWidget {
           // ============================================================
           GestureDetector(
             onTap: profileEnabled
-                ? () {
-                    Navigator.pushNamed(context, '/admin/profile');
-                  }
+                ? onProfileTap ??
+                      () {
+                        Navigator.pushNamed(context, '/admin/profile');
+                      }
                 : null,
             child: Opacity(
               opacity: profileEnabled ? 1.0 : 0.55,
