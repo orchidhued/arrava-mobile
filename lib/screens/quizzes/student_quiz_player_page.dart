@@ -460,7 +460,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,

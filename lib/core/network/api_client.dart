@@ -90,23 +90,28 @@ class ApiClient {
     final url = _buildUri(endpoint);
     try {
       if (kDebugMode) debugPrint('[API $method] Requesting: $url');
+      // 1. Siapkan Header (Token & Tipe Data)
       final headers = await _getHeaders();
-      final encoded = body != null ? jsonEncode(body) : null;
-      final Future<http.Response> req;
-      switch (method) {
-        case 'POST':
-          req = http.post(url, headers: headers, body: encoded);
-          break;
-        case 'PUT':
-          req = http.put(url, headers: headers, body: encoded);
-          break;
-        case 'PATCH':
-          req = http.patch(url, headers: headers, body: encoded);
-          break;
-        default:
-          throw ArgumentError('Unsupported HTTP method: $method');
+      // 2. PROSES PEMBUNGKUSAN KE JSON
+      // Jika ada data (body), ubah menjadi teks JSON string
+      String? jsonPayload;
+      if (body != null) {
+        jsonPayload = jsonEncode(body);
       }
-      final response = await req.timeout(_timeout);
+      // 3. PROSES PENGIRIMAN HTTP KE LARAVEL
+      final Future<http.Response> request;
+      if (method == 'POST') {
+        request = http.post(url, headers: headers, body: jsonPayload);
+      } else if (method == 'PUT') {
+        request = http.put(url, headers: headers, body: jsonPayload);
+      } else if (method == 'PATCH') {
+        request = http.patch(url, headers: headers, body: jsonPayload);
+      } else {
+        throw ArgumentError('Metode HTTP tidak didukung: $method');
+      }
+      // 4. Tunggu respons dari server (Maksimal 10 detik)
+      final response = await request.timeout(_timeout);
+      // 5. Bongkar respons JSON yang dibalas server
       return _handleResponse(response, url);
     } on TimeoutException catch (_) {
       throw Exception(
@@ -120,22 +125,13 @@ class ApiClient {
     }
   }
 
-  static Future<dynamic> post(
-    String endpoint, {
-    Map<String, dynamic>? body,
-  }) =>
+  static Future<dynamic> post(String endpoint, {Map<String, dynamic>? body}) =>
       _sendJson('POST', endpoint, body: body);
 
-  static Future<dynamic> put(
-    String endpoint, {
-    Map<String, dynamic>? body,
-  }) =>
+  static Future<dynamic> put(String endpoint, {Map<String, dynamic>? body}) =>
       _sendJson('PUT', endpoint, body: body);
 
-  static Future<dynamic> patch(
-    String endpoint, {
-    Map<String, dynamic>? body,
-  }) =>
+  static Future<dynamic> patch(String endpoint, {Map<String, dynamic>? body}) =>
       _sendJson('PATCH', endpoint, body: body);
 
   static Future<dynamic> delete(String endpoint) async {

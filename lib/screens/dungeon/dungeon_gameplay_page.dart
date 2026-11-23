@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -139,9 +140,12 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
           : null;
 
       final bool isBenar = hasil['is_benar'] == true || hasil['benar'] == true;
-      final bool isGameOver = (statusSesi?['nyawa'] != null && (statusSesi!['nyawa'] as num).toInt() <= 0)
-          || (statusSesi?['selesai'] == true && statusSesi?['alasan_selesai'] == 'game_over')
-          || hasil['is_game_over'] == true;
+      final bool isGameOver =
+          (statusSesi?['nyawa'] != null &&
+              (statusSesi!['nyawa'] as num).toInt() <= 0) ||
+          (statusSesi?['selesai'] == true &&
+              statusSesi?['alasan_selesai'] == 'game_over') ||
+          hasil['is_game_over'] == true;
       final int skorTotal = prov.skor;
       final int lantai = prov.lantai;
       final soalBerikutnya = prov.soalAktif;
@@ -215,7 +219,10 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
           canPop: false,
           child: Dialog(
             backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(20),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -223,108 +230,149 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFF43F5E), width: 3),
                 boxShadow: const [
-                  BoxShadow(color: Color(0x66F43F5E), blurRadius: 20, offset: Offset(0, 8)),
+                  BoxShadow(
+                    color: Color(0x66F43F5E),
+                    blurRadius: 20,
+                    offset: Offset(0, 8),
+                  ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const PixelHeartSprite(size: 64, state: 'dead'),
-                  const SizedBox(height: 14),
-                  Text(
-                    'GAME OVER',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF43F5E),
-                      letterSpacing: 1.5,
+              child: SingleChildScrollView(
+                // <-- DIBUNGKUS INI AGAR TIDAK PERNAH OVERFLOW
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const PixelHeartSprite(size: 64, state: 'dead'),
+                    const SizedBox(height: 14),
+                    Text(
+                      'GAME OVER',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFF43F5E),
+                        letterSpacing: 1.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Seluruh nyawamu telah habis di kedalaman dungeon.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Seluruh nyawamu telah habis di kedalaman dungeon.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Column(
-                          children: [
-                            const Text('Skor Akhir', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$skor',
-                              style: GoogleFonts.fredoka(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFFBBF24),
-                              ),
-                            ),
-                          ],
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15),
                         ),
-                        Container(width: 1, height: 34, color: Colors.white24),
-                        Column(
-                          children: [
-                            const Text('Lantai Tertinggi', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Lt. $lantai',
-                              style: GoogleFonts.fredoka(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF38BDF8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Column(
+                            children: [
+                              const Text(
+                                'Skor Akhir',
+                                style: TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 11,
+                                ),
                               ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$skor',
+                                style: GoogleFonts.fredoka(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFFBBF24),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            width: 1,
+                            height: 34,
+                            color: Colors.white24,
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                'Lantai Tertinggi',
+                                style: TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Lt. $lantai',
+                                style: GoogleFonts.fredoka(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF38BDF8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              Navigator.pop(context);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Colors.white30,
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
                             ),
-                          ],
+                            child: const Text(
+                              'Ke Lobby',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _mulaiPetualangan();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0284C7),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                            ),
+                            child: const Text(
+                              'Coba Lagi',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(context); // Tutup dialog
-                            Navigator.pop(context); // Keluar ke lobby
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white30, width: 1.5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                          ),
-                          child: const Text('Ke Lobby', style: TextStyle(color: Colors.white)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _mulaiPetualangan(); // Restart
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0284C7),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                          ),
-                          child: const Text('Coba Lagi', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -342,6 +390,10 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
           canPop: false,
           child: Dialog(
             backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -349,48 +401,59 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFF10B981), width: 3),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('👑', style: TextStyle(fontSize: 54)),
-                  const SizedBox(height: 8),
-                  Text(
-                    'DUNGEON TUNTAS!',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF10B981),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Luar biasa! Kamu menaklukkan seluruh soal di dungeon ini!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Total Skor: $skor Poin',
-                    style: GoogleFonts.fredoka(fontSize: 20, color: const Color(0xFFFBBF24)),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+              child: SingleChildScrollView(
+                // <-- DIBUNGKUS INI
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('👑', style: TextStyle(fontSize: 54)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'DUNGEON TUNTAS!',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF10B981),
                       ),
-                      child: const Text('Klaim Kemenangan', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Luar biasa! Kamu menaklukkan seluruh soal di dungeon ini!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Total Skor: $skor Poin',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 20,
+                        color: const Color(0xFFFBBF24),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text(
+                          'Klaim Kemenangan',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -405,8 +468,13 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF0F172A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Tinggalkan Petualangan?', style: TextStyle(color: Colors.white)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Tinggalkan Petualangan?',
+            style: TextStyle(color: Colors.white),
+          ),
           content: const Text(
             'Apakah kamu yakin ingin menyerah dan keluar? Skor yang diperoleh sampai saat ini akan disimpan.',
             style: TextStyle(color: Colors.white70, fontSize: 13),
@@ -414,12 +482,20 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Lanjut Main', style: TextStyle(color: Colors.white60)),
+              child: const Text(
+                'Lanjut Main',
+                style: TextStyle(color: Colors.white60),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF43F5E)),
-              child: const Text('Ya, Menyerah', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF43F5E),
+              ),
+              child: const Text(
+                'Ya, Menyerah',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -465,7 +541,10 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                   children: [
                     CircularProgressIndicator(color: Color(0xFF38BDF8)),
                     SizedBox(height: 16),
-                    Text('Mempersiapkan Arena...', style: TextStyle(color: Colors.white70)),
+                    Text(
+                      'Mempersiapkan Arena...',
+                      style: TextStyle(color: Colors.white70),
+                    ),
                   ],
                 ),
               )
@@ -476,9 +555,17 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: Color(0xFFF43F5E), size: 48),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Color(0xFFF43F5E),
+                        size: 48,
+                      ),
                       const SizedBox(height: 12),
-                      Text(errorMessage, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+                      Text(
+                        errorMessage,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _mulaiPetualangan,
@@ -543,7 +630,10 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                   if (_pendingNextSoal != null) {
                     _siapkanSoalBaru(_pendingNextSoal);
                   } else {
-                    _showVictoryDialog(skor: _pendingSkor, lantai: _pendingLantai);
+                    _showVictoryDialog(
+                      skor: _pendingSkor,
+                      lantai: _pendingLantai,
+                    );
                   }
                 },
               ),
@@ -555,16 +645,22 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
 
   Widget _buildArenaContent(DungeonProvider prov) {
     final soal = prov.soalAktif;
-    final pilihanList = (soal?['pilihan'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final String tingkat = soal?['tingkat_soal']?.toString().toUpperCase() ?? 'SEDANG';
+    final pilihanList =
+        (soal?['pilihan'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final String tingkat =
+        soal?['tingkat_soal']?.toString().toUpperCase() ?? 'SEDANG';
     final Color tingkatColor = tingkat == 'MUDAH'
         ? const Color(0xFF10B981)
-        : (tingkat == 'SULIT' ? const Color(0xFFA855F7) : const Color(0xFFF59E0B));
+        : (tingkat == 'SULIT'
+              ? const Color(0xFFA855F7)
+              : const Color(0xFFF59E0B));
 
     final double progressTimer = (_sisaDetik / _durasiTotal).clamp(0.0, 1.0);
     final Color timerColor = progressTimer > 0.4
         ? const Color(0xFF10B981)
-        : (progressTimer > 0.2 ? const Color(0xFFFBBF24) : const Color(0xFFF43F5E));
+        : (progressTimer > 0.2
+              ? const Color(0xFFFBBF24)
+              : const Color(0xFFF43F5E));
 
     return SafeArea(
       child: Column(
@@ -576,7 +672,9 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               color: Color(0xFF0A182E),
-              border: Border(bottom: BorderSide(color: Color(0xFF1E293B), width: 1.5)),
+              border: Border(
+                bottom: BorderSide(color: Color(0xFF1E293B), width: 1.5),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -586,7 +684,10 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                   onTap: _handleTombolKeluar,
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF1E293B),
                       borderRadius: BorderRadius.circular(10),
@@ -595,9 +696,20 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.close_rounded, size: 16, color: Colors.white70),
+                        Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: Colors.white70,
+                        ),
                         SizedBox(width: 4),
-                        Text('Menyerah', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                        Text(
+                          'Menyerah',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -677,7 +789,10 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: tingkatColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
@@ -694,7 +809,11 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                       ),
                       Row(
                         children: [
-                          Icon(Icons.timer_outlined, size: 16, color: timerColor),
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 16,
+                            color: timerColor,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '$_sisaDetik dtk',
@@ -733,14 +852,19 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                   ),
 
                   // Gambar Soal jika ada
-                  if (soal?['gambar'] != null && soal!['gambar'].toString().isNotEmpty) ...[
+                  if (soal?['gambar'] != null &&
+                      soal!['gambar'].toString().isNotEmpty) ...[
                     const SizedBox(height: 14),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: Image.network(
-                        ApiConstants.resolveMediaUrl(soal['gambar'].toString()) ?? '',
+                        ApiConstants.resolveMediaUrl(
+                              soal['gambar'].toString(),
+                            ) ??
+                            '',
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox.shrink(),
                       ),
                     ),
                   ],
@@ -755,11 +879,13 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: pilihanList.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final pil = pilihanList[index];
                         final idPilihan = pil['id_pilihan'];
-                        final teksPilihan = pil['teks_pilihan']?.toString() ?? '';
+                        final teksPilihan =
+                            pil['teks_pilihan']?.toString() ?? '';
                         final bool isSelected = _selectedJawaban == idPilihan;
 
                         Color btnColor = const Color(0xFF0F1E36);
@@ -785,11 +911,16 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                         return Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: _isSubmitting ? null : () => _kirimJawaban(jawaban: idPilihan),
+                            onTap: _isSubmitting
+                                ? null
+                                : () => _kirimJawaban(jawaban: idPilihan),
                             borderRadius: BorderRadius.circular(16),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
                               decoration: BoxDecoration(
                                 color: btnColor,
                                 borderRadius: BorderRadius.circular(16),
@@ -805,7 +936,11 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                                   ),
                                 ],
                               ),
-                              transform: Matrix4.translationValues(0, isSelected ? 2 : 0, 0),
+                              transform: Matrix4.translationValues(
+                                0,
+                                isSelected ? 2 : 0,
+                                0,
+                              ),
                               child: Row(
                                 children: [
                                   // Label A, B, C, D
@@ -815,17 +950,23 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: isSelected ? Colors.white : const Color(0xFF1E3A5F),
+                                      color: isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF1E3A5F),
                                     ),
                                     child: Text(
                                       String.fromCharCode(65 + index),
                                       style: TextStyle(
                                         color: isSelected
                                             ? (_answerFeedback == true
-                                                ? const Color(0xFF059669)
-                                                : (_answerFeedback == false
-                                                    ? const Color(0xFFE11D48)
-                                                    : const Color(0xFF0284C7)))
+                                                  ? const Color(0xFF059669)
+                                                  : (_answerFeedback == false
+                                                        ? const Color(
+                                                            0xFFE11D48,
+                                                          )
+                                                        : const Color(
+                                                            0xFF0284C7,
+                                                          )))
                                             : Colors.white,
                                         fontWeight: FontWeight.w900,
                                         fontSize: 13,
@@ -863,7 +1004,10 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                         fillColor: const Color(0xFF0F1E36),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF1E3A5F), width: 2),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF1E3A5F),
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -874,12 +1018,19 @@ class _DungeonGameplayPageState extends State<DungeonGameplayPage>
                       child: ElevatedButton(
                         onPressed: _isSubmitting
                             ? null
-                            : () => _kirimJawaban(jawaban: _isianController.text.trim()),
+                            : () => _kirimJawaban(
+                                jawaban: _isianController.text.trim(),
+                              ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0284C7),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
-                        child: const Text('Kirim Jawaban', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Kirim Jawaban',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],
