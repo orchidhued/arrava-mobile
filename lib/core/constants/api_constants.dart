@@ -29,7 +29,7 @@ class ApiConstants {
 
   static String attendanceScan(int sessionId) => '/$sessionId/scan';
 
-  /// Memformat URL gambar atau media agar selalu dapat diakses dari Web maupun HP fisik Android
+  /// Memformat URL gambar atau media agar dapat diakses dari Web maupun HP fisik Android.
   static String? resolveMediaUrl(String? url) {
     if (url == null ||
         url.trim().isEmpty ||
@@ -71,13 +71,13 @@ class ApiConstants {
       final cleanPath = trimmed.startsWith('/')
           ? trimmed.substring(1)
           : trimmed;
-      final prefix = cleanPath.startsWith('api/storage/')
+      final storagePath = cleanPath.startsWith('api/storage/')
           ? cleanPath
-          : (cleanPath.startsWith('storage/')
-                ? 'api/$cleanPath'
-                : 'api/storage/$cleanPath');
-      final portPart = baseUri.hasPort ? ':${baseUri.port}' : '';
-      return '${baseUri.scheme}://${baseUri.host}$portPart/$prefix';
+          : cleanPath.startsWith('storage/')
+          ? 'api/$cleanPath'
+          : 'api/storage/$cleanPath';
+      final origin = baseUri.replace(path: '', query: null, fragment: null);
+      return origin.resolve('/$storagePath').toString();
     } catch (_) {
       return trimmed;
     }

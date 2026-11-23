@@ -734,10 +734,19 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   );
 
   Widget _avatar(Map<String, dynamic> user, {double size = 94}) {
-    final rawUrl =
-        (user['foto_profil'] ?? user['foto_profil_url'] ?? user['foto'])
-            ?.toString();
-    final resolvedUrl = ApiConstants.resolveMediaUrl(rawUrl);
+    final photoValues = [
+      user['foto_profil'],
+      user['foto_profil_url'],
+      user['foto'],
+      _profileData?['foto_profil'],
+      _profileData?['foto_profil_url'],
+      _profileData?['foto'],
+    ];
+    String? resolvedUrl;
+    for (final value in photoValues) {
+      resolvedUrl = ApiConstants.resolveMediaUrl(value?.toString());
+      if (resolvedUrl != null) break;
+    }
     final url = resolvedUrl != null
         ? (resolvedUrl.contains('?')
               ? '$resolvedUrl&v=$_photoRevision'
