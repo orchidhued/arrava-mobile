@@ -6,12 +6,22 @@ import '../../core/theme/app_colors.dart';
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final bool isTeacher;
+  final bool _isParent;
 
   const AppBottomNavigation({
     super.key,
     required this.currentIndex,
     required this.onTap,
-  });
+    this.isTeacher = false,
+  }) : _isParent = false;
+
+  const AppBottomNavigation.parent({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : isTeacher = false,
+       _isParent = true;
 
   @override
   Widget build(BuildContext context) {
@@ -25,64 +35,126 @@ class AppBottomNavigation extends StatelessWidget {
             offset: Offset(0, -3),
           ),
         ],
-        border: Border(
-          top: BorderSide(color: Color(0xFFE2F0FD), width: 1.2),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFE2F0FD), width: 1.2)),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
           height: 64,
           child: Row(
-            children: [
-              _NavigationItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
-                label: 'Beranda',
-                isSelected: currentIndex == 0,
-                onTap: () => onTap(0),
-              ),
-
-              _NavigationItem(
-                icon: Icons.menu_book_outlined,
-                activeIcon: Icons.menu_book_rounded,
-                label: 'Modul',
-                isSelected: currentIndex == 1,
-                onTap: () => onTap(1),
-              ),
-
-              _NavigationItem(
-                icon: Icons.school_outlined,
-                activeIcon: Icons.school_rounded,
-                label: 'Guru',
-                isSelected: currentIndex == 2,
-                onTap: () => onTap(2),
-              ),
-
-              _NavigationItem(
-                icon: Icons.people_outline,
-                activeIcon: Icons.people_rounded,
-                label: 'Siswa',
-                isSelected: currentIndex == 3,
-                onTap: () => onTap(3),
-              ),
-
-              _NavigationItem(
-                icon: Icons.qr_code_scanner_outlined,
-                activeIcon: Icons.qr_code_scanner_rounded,
-                label: 'Presensi',
-                isSelected: currentIndex == 4,
-                onTap: () => onTap(4),
-              ),
-
-              _NavigationItem(
-                icon: Icons.quiz_outlined,
-                activeIcon: Icons.quiz_rounded,
-                label: 'Kuis',
-                isSelected: currentIndex == 5,
-                onTap: () => onTap(5),
-              ),
-            ],
+            children: _isParent
+                ? [
+                    _NavigationItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: 'Beranda',
+                      isSelected: currentIndex == 0,
+                      onTap: () => onTap(0),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.family_restroom_outlined,
+                      activeIcon: Icons.family_restroom_rounded,
+                      label: 'Anak Saya',
+                      isSelected: currentIndex == 1,
+                      onTap: () => onTap(1),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.bar_chart_outlined,
+                      activeIcon: Icons.bar_chart_rounded,
+                      label: 'Monitoring',
+                      isSelected: currentIndex == 2,
+                      onTap: () => onTap(2),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.person_outline,
+                      activeIcon: Icons.person_rounded,
+                      label: 'Profil',
+                      isSelected: currentIndex == 3,
+                      onTap: () => onTap(3),
+                    ),
+                  ]
+                : isTeacher
+                ? [
+                    _NavigationItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: 'Beranda',
+                      isSelected: currentIndex == 0,
+                      onTap: () => onTap(0),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.menu_book_outlined,
+                      activeIcon: Icons.menu_book_rounded,
+                      label: 'Modul',
+                      isSelected: currentIndex == 1,
+                      onTap: () => onTap(1),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.quiz_outlined,
+                      activeIcon: Icons.quiz_rounded,
+                      label: 'Kuis',
+                      isSelected: currentIndex == 2,
+                      onTap: () => onTap(2),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.qr_code_scanner_outlined,
+                      activeIcon: Icons.qr_code_scanner_rounded,
+                      label: 'Presensi',
+                      isSelected: currentIndex == 3,
+                      onTap: () => onTap(3),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.person_outline,
+                      activeIcon: Icons.person_rounded,
+                      label: 'Profil',
+                      isSelected: currentIndex == 4,
+                      onTap: () => onTap(4),
+                    ),
+                  ]
+                : [
+                    _NavigationItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: 'Beranda',
+                      isSelected: currentIndex == 0,
+                      onTap: () => onTap(0),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.menu_book_outlined,
+                      activeIcon: Icons.menu_book_rounded,
+                      label: 'Modul',
+                      isSelected: currentIndex == 1,
+                      onTap: () => onTap(1),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.school_outlined,
+                      activeIcon: Icons.school_rounded,
+                      label: 'Guru',
+                      isSelected: currentIndex == 2,
+                      onTap: () => onTap(2),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.people_outline,
+                      activeIcon: Icons.people_rounded,
+                      label: 'Siswa',
+                      isSelected: currentIndex == 3,
+                      onTap: () => onTap(3),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.qr_code_scanner_outlined,
+                      activeIcon: Icons.qr_code_scanner_rounded,
+                      label: 'Presensi',
+                      isSelected: currentIndex == 4,
+                      onTap: () => onTap(4),
+                    ),
+                    _NavigationItem(
+                      icon: Icons.quiz_outlined,
+                      activeIcon: Icons.quiz_rounded,
+                      label: 'Kuis',
+                      isSelected: currentIndex == 5,
+                      onTap: () => onTap(5),
+                    ),
+                  ],
           ),
         ),
       ),
@@ -123,7 +195,9 @@ class _NavigationItem extends StatelessWidget {
               curve: Curves.easeInOut,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFDDF3FF) : Colors.transparent,
+                color: isSelected
+                    ? const Color(0xFFDDF3FF)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

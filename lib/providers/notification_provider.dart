@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../models/notification_model.dart';
 import '../services/notification_service.dart';
+import '../services/local_notification_service.dart';
 
 class NotificationProvider with ChangeNotifier {
   List<NotificationModel> _notifications = [];
@@ -35,6 +37,15 @@ class NotificationProvider with ChangeNotifier {
         _notifications = (res['notifikasi'] as List<NotificationModel>?) ?? [];
         _role = res['role']?.toString() ?? 'siswa';
         _error = null;
+        //  Kumpulkan semua notifikasi yang belum dibaca
+        final unreadList = _notifications.where((n) => !n.isRead).toList();
+        if (unreadList.isNotEmpty) {
+          final notif = unreadList.first;
+          LocalNotificationService.showNotification(
+            title: notif.judul,
+            body: notif.pesan,
+          );
+        }
       } else if (res['error'] != null) {
         _error = res['error'].toString();
       }
@@ -63,7 +74,9 @@ class NotificationProvider with ChangeNotifier {
     bool hasUnread = _notifications.any((n) => !n.isRead);
     if (!hasUnread) return;
 
-    _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
+    _notifications = _notifications
+        .map((n) => n.copyWith(isRead: true))
+        .toList();
     notifyListeners();
 
     await NotificationService.markAllRead();
@@ -77,4 +90,3 @@ class NotificationProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +21,7 @@ class StudentQuizPlayerPage extends StatefulWidget {
 
 class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   int _currentIndex = 0;
-  final Map<int, String> _studentAnswers = {}; // id_soal => jawaban ('A', 'B', ...)
+  final Map<int, String> _studentAnswers = {}; // id_soal => jawaban
   int? _selectedChoiceIndex;
   bool _isAnswerSubmittedForCurrentQ = false;
   bool _isSubmittingFinal = false;
@@ -63,8 +64,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     AudioService.syncPreferences();
     _questions = widget.quiz.soal;
     if (_questions.isNotEmpty) {
-      _remainingSeconds =
-          _currentQ.durasiDetik > 0 ? _currentQ.durasiDetik : 20;
+      _remainingSeconds = _currentQ.durasiDetik > 0
+          ? _currentQ.durasiDetik
+          : 20;
     }
     if (_questions.isEmpty) {
       _loadQuestionsFromApi();
@@ -104,14 +106,19 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     if (draft != null && draft['answers'] != null) {
       final answers = draft['answers'] as Map<int, String>;
       if (answers.isNotEmpty) {
-        final int draftIndex = (draft['currentIndex'] as int? ?? 0).clamp(0, _questions.length - 1);
+        final int draftIndex = (draft['currentIndex'] as int? ?? 0).clamp(
+          0,
+          _questions.length - 1,
+        );
         final int? savedRemaining = draft['remainingSeconds'] as int?;
 
         final restore = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: Row(
               children: [
                 Container(
@@ -120,7 +127,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                     color: const Color(0xFF2563EB).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.history_rounded, color: Color(0xFF2563EB), size: 22),
+                  child: const Icon(
+                    Icons.history_rounded,
+                    color: Color(0xFF2563EB),
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
@@ -133,23 +144,38 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
             ),
             content: Text(
               'Ditemukan draft pengerjaan sebelumnya (${answers.length} soal sudah dijawab).\n\nApakah Anda ingin melanjutkan pengerjaan atau mulai ulang dari awal?',
-              style: const TextStyle(fontSize: 13.5, color: Color(0xFF475569), height: 1.45),
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: Color(0xFF475569),
+                height: 1.45,
+              ),
             ),
             actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Mulai Ulang', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Mulai Ulang',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   elevation: 0,
                 ),
-                child: const Text('Lanjutkan', style: TextStyle(fontWeight: FontWeight.w700)),
+                child: const Text(
+                  'Lanjutkan',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),
@@ -287,12 +313,13 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     AudioService.triggerHaptic();
 
     final choices = _currentQ.pilihan;
-    final label = customLabel ??
+    final label =
+        customLabel ??
         (choiceIndex < choices.length
             ? choices[choiceIndex].label
             : (choiceIndex < _kahootLabels.length
-                ? _kahootLabels[choiceIndex]
-                : 'A'));
+                  ? _kahootLabels[choiceIndex]
+                  : 'A'));
     _studentAnswers[_currentQ.idSoal ?? _currentIndex] = label;
     _saveDraft();
 
@@ -378,7 +405,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
       builder: (_) => const Center(
         child: Card(
           elevation: 6,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Row(
@@ -398,7 +427,10 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
     );
 
     final provider = context.read<QuizProvider>();
-    final result = await provider.submitQuiz(widget.quiz.idQuiz, _studentAnswers);
+    final result = await provider.submitQuiz(
+      widget.quiz.idQuiz,
+      _studentAnswers,
+    );
 
     if (mounted) {
       Navigator.pop(context); // Close loading dialog
@@ -408,7 +440,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
         _showResultDialog(result);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mengirim jawaban ke server. Draft pengerjaan tetap tersimpan aman.')),
+          const SnackBar(
+            content: Text(
+              'Gagal mengirim jawaban ke server. Draft pengerjaan tetap tersimpan aman.',
+            ),
+          ),
         );
       }
     }
@@ -424,7 +460,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -650,12 +686,20 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                         color: const Color(0xFF2563EB).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.tune_rounded, color: Color(0xFF2563EB), size: 20),
+                      child: const Icon(
+                        Icons.tune_rounded,
+                        color: Color(0xFF2563EB),
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
                       'Pengaturan Kuis',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A)),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
                   ],
                 ),
@@ -666,9 +710,24 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                     final isSound = snapshot.data ?? true;
                     return SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      secondary: const Icon(Icons.volume_up_rounded, color: Color(0xFF2563EB)),
-                      title: const Text('Efek Suara (SFX)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                      subtitle: const Text('Suara tombol dan notifikasi kuis', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      secondary: const Icon(
+                        Icons.volume_up_rounded,
+                        color: Color(0xFF2563EB),
+                      ),
+                      title: const Text(
+                        'Efek Suara (SFX)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Suara tombol dan notifikasi kuis',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
                       value: isSound,
                       activeThumbColor: const Color(0xFF2563EB),
                       onChanged: (val) async {
@@ -686,9 +745,24 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                     final isHaptic = snapshot.data ?? true;
                     return SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      secondary: const Icon(Icons.vibration_rounded, color: Color(0xFF10B981)),
-                      title: const Text('Getaran (Haptic Feedback)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                      subtitle: const Text('Getar lembut saat memilih opsi jawaban', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      secondary: const Icon(
+                        Icons.vibration_rounded,
+                        color: Color(0xFF10B981),
+                      ),
+                      title: const Text(
+                        'Getaran (Haptic Feedback)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Getar lembut saat memilih opsi jawaban',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
                       value: isHaptic,
                       activeThumbColor: const Color(0xFF10B981),
                       onChanged: (val) async {
@@ -710,12 +784,20 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.cloud_done_rounded, size: 18, color: Color(0xFF059669)),
+                      const Icon(
+                        Icons.cloud_done_rounded,
+                        size: 18,
+                        color: Color(0xFF059669),
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '${_studentAnswers.length} dari ${_questions.length} soal tersimpan otomatis.',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF334155), fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF334155),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -734,16 +816,26 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Keluar dari Kuis?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        title: const Text(
+          'Keluar dari Kuis?',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+        ),
         content: Text(
           'Progres pengerjaanmu (${_studentAnswers.length} dari ${_questions.length} soal) tersimpan otomatis sebagai draft.\n\nKamu dapat melanjutkannya kapan saja.',
-          style: const TextStyle(fontSize: 13.5, color: Color(0xFF475569), height: 1.4),
+          style: const TextStyle(
+            fontSize: 13.5,
+            color: Color(0xFF475569),
+            height: 1.4,
+          ),
         ),
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Lanjutkan Kuis', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Lanjutkan Kuis',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -753,10 +845,15 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
-            child: const Text('Keluar (Simpan Draft)', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Keluar (Simpan Draft)',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),
@@ -965,10 +1062,14 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   }
 
   Widget _buildQuestionCard(QuestionModel currentQ) {
-    final String? resolvedFotoUrl = ApiConstants.resolveMediaUrl(currentQ.fotoSoal);
+    final String? resolvedFotoUrl = ApiConstants.resolveMediaUrl(
+      currentQ.fotoSoal,
+    );
     final String typeLabel = currentQ.jenisSoal == JenisSoal.trueFalse
         ? 'Benar atau Salah'
-        : (currentQ.jenisSoal == JenisSoal.isianSingkat ? 'Isian Singkat' : 'Pilihan Ganda');
+        : (currentQ.jenisSoal == JenisSoal.isianSingkat
+              ? 'Isian Singkat'
+              : 'Pilihan Ganda');
 
     return Container(
       width: double.infinity,
@@ -993,7 +1094,10 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEEF2FF),
                   borderRadius: BorderRadius.circular(20),
@@ -1011,7 +1115,10 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               const SizedBox(width: 6),
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(20),
@@ -1055,7 +1162,10 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               if (_isWayground) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _remainingSeconds <= 5
                         ? const Color(0xFFFFE4E6)
@@ -1135,29 +1245,43 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                             if (progress == null) return child;
                             return const Padding(
                               padding: EdgeInsets.all(28),
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4F46E5)),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF4F46E5),
+                              ),
                             );
                           },
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            padding: const EdgeInsets.all(20),
-                            child: const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.broken_image_rounded, color: Color(0xFF94A3B8), size: 30),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Gambar soal tidak dapat dimuat',
-                                  style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                child: const Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.broken_image_rounded,
+                                      color: Color(0xFF94A3B8),
+                                      size: 30,
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Gambar soal tidak dapat dimuat',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
                         ),
                       ),
                     ),
                     Container(
                       margin: const EdgeInsets.all(8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(8),
@@ -1169,7 +1293,11 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                           SizedBox(width: 4),
                           Text(
                             'Perbesar',
-                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -1206,10 +1334,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                   panEnabled: true,
                   minScale: 0.8,
                   maxScale: 4.0,
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.contain,
-                  ),
+                  child: Image.network(imageUrl, fit: BoxFit.contain),
                 ),
               ),
             ),
@@ -1242,7 +1367,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
         decoration: BoxDecoration(
           color: const Color(0xFFEEF2FF), // bg-indigo-50
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFC7D2FE)), // border-indigo-200
+          border: Border.all(
+            color: const Color(0xFFC7D2FE),
+          ), // border-indigo-200
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1273,10 +1400,16 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               ),
               decoration: InputDecoration(
                 hintText: 'Ketikkan jawaban Anda di sini...',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13.5),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 13.5,
+                ),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: Color(0xFFA5B4FC)),
@@ -1287,7 +1420,10 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF4F46E5),
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -1295,17 +1431,26 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _isAnswerSubmittedForCurrentQ ? null : _submitEssayAnswer,
+                onPressed: _isAnswerSubmittedForCurrentQ
+                    ? null
+                    : _submitEssayAnswer,
                 icon: const Icon(Icons.send_rounded, size: 16),
                 label: Text(
-                  _isAnswerSubmittedForCurrentQ ? 'Jawaban Tersimpan ✓' : 'Kirim Jawaban Singkat',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  _isAnswerSubmittedForCurrentQ
+                      ? 'Jawaban Tersimpan ✓'
+                      : 'Kirim Jawaban Singkat',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4F46E5),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 1,
                 ),
               ),
@@ -1317,8 +1462,20 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
 
     // 2. Benar / Salah (True / False)
     if (currentQ.jenisSoal == JenisSoal.trueFalse || choices.length == 2) {
-      final optA = choices.isNotEmpty ? choices[0] : const OptionModel(label: 'A', teksPilihan: 'Benar', isCorrect: true);
-      final optB = choices.length > 1 ? choices[1] : const OptionModel(label: 'B', teksPilihan: 'Salah', isCorrect: false);
+      final optA = choices.isNotEmpty
+          ? choices[0]
+          : const OptionModel(
+              label: 'A',
+              teksPilihan: 'Benar',
+              isCorrect: true,
+            );
+      final optB = choices.length > 1
+          ? choices[1]
+          : const OptionModel(
+              label: 'B',
+              teksPilihan: 'Salah',
+              isCorrect: false,
+            );
 
       return Column(
         children: [
@@ -1348,7 +1505,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
         final symbol = _kahootSymbols[index % _kahootSymbols.length];
         final label = opt.label.isNotEmpty
             ? opt.label
-            : (index < _kahootLabels.length ? _kahootLabels[index] : '${index + 1}');
+            : (index < _kahootLabels.length
+                  ? _kahootLabels[index]
+                  : '${index + 1}');
 
         return _buildChoiceCard(
           index: index,
@@ -1384,7 +1543,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0),
+                color: isSelected
+                    ? const Color(0xFF4F46E5)
+                    : const Color(0xFFE2E8F0),
                 width: isSelected ? 2.0 : 1.5,
               ),
               boxShadow: [
@@ -1431,9 +1592,13 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                   child: Text(
                     text.isEmpty ? 'Pilihan $label' : text,
                     style: TextStyle(
-                      color: isSelected ? const Color(0xFF4338CA) : const Color(0xFF1E293B),
+                      color: isSelected
+                          ? const Color(0xFF4338CA)
+                          : const Color(0xFF1E293B),
                       fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w700,
                       height: 1.3,
                     ),
                   ),
@@ -1447,9 +1612,13 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF4F46E5)
+                        : Colors.transparent,
                     border: Border.all(
-                      color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFCBD5E1),
+                      color: isSelected
+                          ? const Color(0xFF4F46E5)
+                          : const Color(0xFFCBD5E1),
                       width: 2,
                     ),
                   ),
@@ -1517,7 +1686,9 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               runSpacing: 8,
               children: List.generate(_questions.length, (i) {
                 final bool isCurrent = i == _currentIndex;
-                final bool isAnswered = _studentAnswers.containsKey(_questions[i].idSoal ?? i);
+                final bool isAnswered = _studentAnswers.containsKey(
+                  _questions[i].idSoal ?? i,
+                );
 
                 Color bgColor = const Color(0xFFF1F5F9);
                 Color textColor = const Color(0xFF64748B);
@@ -1526,7 +1697,10 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                 if (isCurrent) {
                   bgColor = const Color(0xFF4F46E5);
                   textColor = Colors.white;
-                  border = Border.all(color: const Color(0xFF4338CA), width: 1.5);
+                  border = Border.all(
+                    color: const Color(0xFF4338CA),
+                    width: 1.5,
+                  );
                 } else if (isAnswered) {
                   bgColor = const Color(0xFFECFDF5);
                   textColor = const Color(0xFF059669);
@@ -1594,8 +1768,13 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF475569),
                   side: const BorderSide(color: Color(0xFFCBD5E1)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1605,27 +1784,42 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
             Expanded(
               child: _isLastQuestion
                   ? ElevatedButton.icon(
-                      onPressed: _isSubmittingFinal ? null : () => _finishAndSubmitQuiz(),
+                      onPressed: _isSubmittingFinal
+                          ? null
+                          : () => _finishAndSubmitQuiz(),
                       icon: _isSubmittingFinal
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('🚀', style: TextStyle(fontSize: 15)),
                       label: Text(
-                        _isSubmittingFinal ? 'Mengirim...' : 'Kumpulkan Jawaban',
+                        _isSubmittingFinal
+                            ? 'Mengirim...'
+                            : 'Kumpulkan Jawaban',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4F46E5),
                         foregroundColor: Colors.white,
                         minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     )
                   : ElevatedButton.icon(
@@ -1636,15 +1830,23 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                         'Soal Selanjutnya',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4F46E5),
                         foregroundColor: Colors.white,
                         minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
             ),

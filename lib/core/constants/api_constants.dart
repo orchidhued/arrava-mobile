@@ -2,8 +2,7 @@ class ApiConstants {
   // Jika di Web / Chrome, atau di Android via USB adb reverse (adb reverse tcp:8000 tcp:8000): gunakan 127.0.0.1
   // Jika di Android via Wi-Fi langsung: gunakan IP Wi-Fi PC (192.168.18.4)
   static String get baseUrl {
-    return 'http://127.0.0.1:8000/api';
-    //return 'http://192.168.18.4:8000/api';
+    return 'https://arrava.my.id/api';
     //return 'http://10.10.5.111:8000/api';
   }
 
@@ -17,6 +16,8 @@ class ApiConstants {
   static const String studentProfile = '/student/profile';
   static const String studentHeroTheme = '/student/hero-theme';
   static const String parentDashboard = '/parent/dashboard';
+  static const String parentProfile = '/parent/profile';
+  static const String parentPassword = '/parent/password';
   static const String leaderboard = '/leaderboard';
   static const String adminDashboard = '/admin/dashboard';
   static const String teachers = '/teachers';
@@ -24,7 +25,12 @@ class ApiConstants {
   static const String activeAttendanceSessions = '/sesi-aktif';
   static const String notifikasiCheck = '/notifikasi/check';
   static const String notifikasiMarkRead = '/notifikasi/mark-read';
-
+  static const String dungeon = '/dungeon';
+  static const String dungeonRiwayat = '/dungeon/riwayat';
+  static const String bankSoalData = '/soal/bank-data';
+  static const String copyToBank = '/soal/copy-to-bank';
+  static const String assignToQuiz = '/soal/assign-to-quiz';
+  static String deleteSoal(int id) => '/soal/$id';
   static String attendanceRecap(int sessionId) => '/sesi/$sessionId/rekap';
 
   static String attendanceScan(int sessionId) => '/$sessionId/scan';
