@@ -31,6 +31,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
   // Quiz-level settings
   String _level = 'SMA / MA / SMK Sederajat';
   int? _idMapel;
+  int? _idTingkatKelas;
   String _difficulty = 'Mudah';
   String _modePengerjaan = 'wayground';
   int _durasiTotalMenit = 30;
@@ -64,6 +65,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
       _descriptionController.text = q.deskripsi ?? '';
       _level = q.namaJenjang ?? 'SMA / MA / SMK Sederajat';
       _idMapel = q.idMapel;
+      _idTingkatKelas = q.idTingkatKelas;
       _difficulty = q.namaTingkat ?? 'Mudah';
       _modePengerjaan = q.modePengerjaan.isNotEmpty ? q.modePengerjaan : 'wayground';
       _durasiTotalMenit = q.durasiTotalMenit ?? 30;
@@ -111,6 +113,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<QuizProvider>().fetchMapels();
+        context.read<QuizProvider>().fetchTingkatKelas();
       }
     });
   }
@@ -294,7 +297,9 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                     QuizProperties(
                       question: _question,
                       availableMapels: context.watch<QuizProvider>().mapels,
+                      availableTingkatKelas: context.watch<QuizProvider>().tingkatKelasList,
                       level: _level,
+                      idTingkatKelas: _idTingkatKelas,
                       idMapel: _idMapel,
                       difficulty: _difficulty,
                       modePengerjaan: _modePengerjaan,
@@ -321,6 +326,32 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
                       onChangedLevel: (lvl) {
                         setState(() {
                           _level = lvl;
+                          _idTingkatKelas = null;
+                          // Reset pilihan mapel jika tidak valid di jenjang yang baru
+                          if (_idMapel != null) {
+                            final mapels = context.read<QuizProvider>().mapels;
+                            final current = mapels.where((m) => m.idMapel == _idMapel).firstOrNull;
+                            if (current != null) {
+                              final nameLower = current.namaMapel.toLowerCase();
+                              final isSmaOnly = current.idJenjang == 3 ||
+                                  nameLower.contains('fisika') ||
+                                  nameLower.contains('kimia') ||
+                                  nameLower.contains('biologi');
+                              final isIpaIpsUmum = current.idMapel == 4 || current.idMapel == 5 ||
+                                  nameLower.contains('ilmu pengetahuan alam') ||
+                                  nameLower.contains('ilmu pengetahuan sosial');
+                              if ((lvl.contains('SD') || lvl.contains('SMP')) && isSmaOnly) {
+                                _idMapel = null;
+                              } else if (lvl.contains('SMA') && isIpaIpsUmum) {
+                                _idMapel = null;
+                              }
+                            }
+                          }
+                        });
+                      },
+                      onChangedTingkatKelas: (tkId) {
+                        setState(() {
+                          _idTingkatKelas = tkId;
                         });
                       },
                       onChangedMapel: (mId) {
@@ -792,6 +823,7 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
       'judul': title,
       'deskripsi': _descriptionController.text.trim().isNotEmpty ? _descriptionController.text.trim() : null,
       'id_jenjang': jenjangMap[_level] ?? 3,
+      'id_tingkat_kelas': _idTingkatKelas,
       'id_mapel': _idMapel,
       'id_tingkatquiz': difficultyMap[_difficulty] ?? 1,
       'mode_pengerjaan': _modePengerjaan,

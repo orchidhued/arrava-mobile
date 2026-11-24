@@ -376,6 +376,45 @@ class QuizSubmissionResult {
 }
 
 // =============================================================================
+// TINGKAT KELAS MODEL - tingkatan kelas per jenjang
+// =============================================================================
+class TingkatKelasModel {
+  final int idTingkat;
+  final int idJenjang;
+  final String nama;
+  final int urutan;
+  final String? namaJenjang;
+
+  const TingkatKelasModel({
+    required this.idTingkat,
+    required this.idJenjang,
+    required this.nama,
+    required this.urutan,
+    this.namaJenjang,
+  });
+
+  factory TingkatKelasModel.fromJson(Map<String, dynamic> json) {
+    return TingkatKelasModel(
+      idTingkat: _toInt(json['id_tingkat']),
+      idJenjang: _toInt(json['id_jenjang']),
+      nama: json['nama']?.toString() ?? '',
+      urutan: _toInt(json['urutan']),
+      namaJenjang: _toStringOrNull(json['nama_jenjang']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_tingkat': idTingkat,
+      'id_jenjang': idJenjang,
+      'nama': nama,
+      'urutan': urutan,
+      if (namaJenjang != null) 'nama_jenjang': namaJenjang,
+    };
+  }
+}
+
+// =============================================================================
 // MAPEL MODEL - mata pelajaran
 // =============================================================================
 class MapelModel {
@@ -430,6 +469,8 @@ class QuizModel {
   // --- Kategori / relasi ---
   final int? idJenjang;
   final String? namaJenjang;
+  final int? idTingkatKelas;
+  final String? namaTingkatKelas;
   final int? idMapel;
   final String? namaMapel;
   final int? idPembuat;
@@ -508,6 +549,8 @@ class QuizModel {
     this.deskripsi,
     this.idJenjang,
     this.namaJenjang,
+    this.idTingkatKelas,
+    this.namaTingkatKelas,
     this.idMapel,
     this.namaMapel,
     this.idPembuat,
@@ -544,6 +587,8 @@ class QuizModel {
       deskripsi: _toStringOrNull(json['deskripsi']),
       idJenjang: _toIntOrNull(json['id_jenjang']),
       namaJenjang: _toStringOrNull(json['nama_jenjang']),
+      idTingkatKelas: _toIntOrNull(json['id_tingkat_kelas']),
+      namaTingkatKelas: _toStringOrNull(json['nama_tingkat_kelas']),
       idMapel: _toIntOrNull(json['id_mapel']),
       namaMapel: _toStringOrNull(json['nama_mapel']),
       idPembuat: _toIntOrNull(json['id_pembuat']),
@@ -585,6 +630,8 @@ class QuizModel {
       'judul': judul,
       'deskripsi': deskripsi,
       'id_jenjang': idJenjang,
+      if (idTingkatKelas != null) 'id_tingkat_kelas': idTingkatKelas,
+      if (namaTingkatKelas != null) 'nama_tingkat_kelas': namaTingkatKelas,
       if (idMapel != null) 'id_mapel': idMapel,
       if (namaMapel != null) 'nama_mapel': namaMapel,
       'id_tingkatquiz': idTingkatQuiz,
@@ -607,6 +654,8 @@ class QuizModel {
     String? deskripsi,
     int? idJenjang,
     String? namaJenjang,
+    int? idTingkatKelas,
+    String? namaTingkatKelas,
     int? idMapel,
     String? namaMapel,
     int? idPembuat,
@@ -639,6 +688,8 @@ class QuizModel {
       deskripsi: deskripsi ?? this.deskripsi,
       idJenjang: idJenjang ?? this.idJenjang,
       namaJenjang: namaJenjang ?? this.namaJenjang,
+      idTingkatKelas: idTingkatKelas ?? this.idTingkatKelas,
+      namaTingkatKelas: namaTingkatKelas ?? this.namaTingkatKelas,
       idMapel: idMapel ?? this.idMapel,
       namaMapel: namaMapel ?? this.namaMapel,
       idPembuat: idPembuat ?? this.idPembuat,

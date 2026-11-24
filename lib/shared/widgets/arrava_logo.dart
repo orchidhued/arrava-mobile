@@ -90,8 +90,14 @@ class ArravaLogo extends StatelessWidget {
     final logoWidget = SizedBox(
       width: size,
       height: size,
-      child: const CustomPaint(
-        painter: ArravaLogoPainter(),
+      child: Image.asset(
+        'assets/icon/appIconARRAVA.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const CustomPaint(
+          painter: ArravaLogoPainter(),
+        ),
       ),
     );
 

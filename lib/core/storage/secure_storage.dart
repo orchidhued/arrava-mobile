@@ -3,9 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class SecureStorage {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
   static Future<void> write(String key, String value) async {
@@ -34,8 +32,8 @@ class SecureStorage {
     } catch (_) {}
   }
 
-  static Future<String?> getToken() async {
-    return await read('auth_token');
+  static Future<String?> getToken() {
+    return read('auth_token');
   }
 
   static Future<void> setToken(String token) async {

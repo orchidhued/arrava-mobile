@@ -319,11 +319,34 @@ class _StudentModuleListPageState extends State<StudentModuleListPage> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            ElevatedButton.icon(
-                              onPressed: _loadModules,
-                              icon: const Icon(Icons.refresh, size: 16),
-                              label: const Text('Coba Lagi'),
-                            ),
+                            if (moduleProvider.error!.toLowerCase().contains('sesi') ||
+                                moduleProvider.error!.toLowerCase().contains('unauthenticated') ||
+                                moduleProvider.error!.contains('401'))
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  await AuthService.logout();
+                                  if (!context.mounted) return;
+                                  Navigator.of(context).pushNamedAndRemoveUntil(
+                                    '/login',
+                                    (route) => false,
+                                  );
+                                },
+                                icon: const Icon(Icons.login_rounded, size: 16),
+                                label: const Text('Masuk Ulang'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFEF4444),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              )
+                            else
+                              ElevatedButton.icon(
+                                onPressed: _loadModules,
+                                icon: const Icon(Icons.refresh, size: 16),
+                                label: const Text('Coba Lagi'),
+                              ),
                           ],
                         ),
                       ),

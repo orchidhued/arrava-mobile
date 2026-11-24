@@ -8,6 +8,8 @@ class ModuleModel {
   final String? namaTipe;
   final int? idJenjang;
   final String? namaJenjang;
+  final int? idTingkatKelas;
+  final String? namaTingkatKelas;
   final int? idMapel;
   final String? namaMapel;
   final int? idPembuat;
@@ -46,6 +48,8 @@ class ModuleModel {
     this.namaTipe,
     this.idJenjang,
     this.namaJenjang,
+    this.idTingkatKelas,
+    this.namaTingkatKelas,
     this.idMapel,
     this.namaMapel,
     this.idPembuat,
@@ -107,6 +111,8 @@ class ModuleModel {
     String? namaTipe,
     int? idJenjang,
     String? namaJenjang,
+    int? idTingkatKelas,
+    String? namaTingkatKelas,
     int? idMapel,
     String? namaMapel,
     int? idPembuat,
@@ -141,6 +147,8 @@ class ModuleModel {
       namaTipe: namaTipe ?? this.namaTipe,
       idJenjang: idJenjang ?? this.idJenjang,
       namaJenjang: namaJenjang ?? this.namaJenjang,
+      idTingkatKelas: idTingkatKelas ?? this.idTingkatKelas,
+      namaTingkatKelas: namaTingkatKelas ?? this.namaTingkatKelas,
       idMapel: idMapel ?? this.idMapel,
       namaMapel: namaMapel ?? this.namaMapel,
       idPembuat: idPembuat ?? this.idPembuat,
@@ -197,6 +205,10 @@ class ModuleModel {
           ? int.tryParse(json['id_jenjang'].toString())
           : null,
       namaJenjang: json['nama_jenjang']?.toString(),
+      idTingkatKelas: json['id_tingkat_kelas'] != null
+          ? int.tryParse(json['id_tingkat_kelas'].toString())
+          : null,
+      namaTingkatKelas: json['nama_tingkat_kelas']?.toString(),
       idMapel: json['id_mapel'] != null
           ? int.tryParse(json['id_mapel'].toString())
           : null,
@@ -275,6 +287,8 @@ class ModuleModel {
       'nama_tipe': namaTipe,
       'id_jenjang': idJenjang,
       'nama_jenjang': namaJenjang,
+      'id_tingkat_kelas': idTingkatKelas,
+      'nama_tingkat_kelas': namaTingkatKelas,
       'id_mapel': idMapel,
       'nama_mapel': namaMapel,
       'id_quiz': idQuiz,

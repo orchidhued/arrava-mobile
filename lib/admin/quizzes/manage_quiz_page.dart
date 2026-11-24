@@ -85,7 +85,7 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
   }
 
   List<String> _getMapels(QuizProvider quizProvider) {
-    final mapels = <String>{
+    final allNames = <String>{
       ...quizProvider.mapels
           .map((m) => m.namaMapel.trim())
           .where((s) => s.isNotEmpty),
@@ -94,6 +94,26 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
           .whereType<String>()
           .where((s) => s.isNotEmpty),
     }.toList();
+
+    // Filter berdasarkan _selectedJenjang
+    final mapels = allNames.where((nama) {
+      final nameLower = nama.toLowerCase();
+      final isSmaOnly = nameLower.contains('fisika') ||
+          nameLower.contains('kimia') ||
+          nameLower.contains('biologi');
+      final isIpaIpsUmum = nameLower.contains('ilmu pengetahuan alam') ||
+          nameLower == 'ipa' ||
+          nameLower.contains('ilmu pengetahuan sosial') ||
+          nameLower == 'ips';
+
+      if (_selectedJenjang.contains('SD') || _selectedJenjang.contains('SMP')) {
+        if (isSmaOnly) return false;
+      } else if (_selectedJenjang.contains('SMA')) {
+        if (isIpaIpsUmum) return false;
+      }
+      return true;
+    }).toList();
+
     mapels.sort();
     return mapels;
   }
@@ -586,7 +606,24 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
         StudentStyleFilterChipBar(
           options: _jenjangFilters,
           selectedOption: _selectedJenjang,
-          onSelected: (val) => setState(() => _selectedJenjang = val),
+          onSelected: (val) => setState(() {
+            _selectedJenjang = val;
+            if (_selectedMapel != 'Semua Mapel') {
+              final nameLower = _selectedMapel.toLowerCase();
+              final isSmaOnly = nameLower.contains('fisika') ||
+                  nameLower.contains('kimia') ||
+                  nameLower.contains('biologi');
+              final isIpaIpsUmum = nameLower.contains('ilmu pengetahuan alam') ||
+                  nameLower == 'ipa' ||
+                  nameLower.contains('ilmu pengetahuan sosial') ||
+                  nameLower == 'ips';
+              if ((val.contains('SD') || val.contains('SMP')) && isSmaOnly) {
+                _selectedMapel = 'Semua Mapel';
+              } else if (val.contains('SMA') && isIpaIpsUmum) {
+                _selectedMapel = 'Semua Mapel';
+              }
+            }
+          }),
         ),
         const SizedBox(height: 8),
         StudentStyleFilterChipBar(
@@ -701,6 +738,28 @@ class _ManageQuizPageState extends State<ManageQuizPage> {
                         ),
                       ),
                     ),
+                    if (quiz.namaTingkatKelas != null && quiz.namaTingkatKelas!.isNotEmpty) ...[
+                      const SizedBox(width: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4).withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF86EFAC), width: 0.5),
+                        ),
+                        child: Text(
+                          '🏷️ ${quiz.namaTingkatKelas}',
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF15803D),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (quiz.namaMapel != null && quiz.namaMapel!.isNotEmpty) ...[
                       const SizedBox(width: 5),
                       Container(

@@ -147,9 +147,15 @@ class _LoginScreenState extends State<LoginScreen>
     final rememberMe = await SecureStorage.read('remember_me');
     if (rememberMe == 'true') {
       final savedEmail = await SecureStorage.read('saved_email');
-      if (savedEmail != null && savedEmail.isNotEmpty && mounted) {
+      final savedPassword = await SecureStorage.read('saved_password');
+      if (mounted) {
         setState(() {
-          _emailController.text = savedEmail;
+          if (savedEmail != null && savedEmail.isNotEmpty) {
+            _emailController.text = savedEmail;
+          }
+          if (savedPassword != null && savedPassword.isNotEmpty) {
+            _passwordController.text = savedPassword;
+          }
           _rememberMe = true;
         });
       }
@@ -179,9 +185,11 @@ class _LoginScreenState extends State<LoginScreen>
 
       if (_rememberMe) {
         await SecureStorage.write('saved_email', _emailController.text.trim());
+        await SecureStorage.write('saved_password', _passwordController.text);
         await SecureStorage.write('remember_me', 'true');
       } else {
         await SecureStorage.delete('saved_email');
+        await SecureStorage.delete('saved_password');
         await SecureStorage.delete('remember_me');
       }
 

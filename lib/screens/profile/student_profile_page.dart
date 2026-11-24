@@ -1235,6 +1235,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                             Icons.school_outlined,
                             {
                               'Jenjang': _value(user, 'nama_jenjang'),
+                              'Tingkat Kelas': _value(user, 'nama_tingkat_kelas', _value(user, 'kelas', '-')),
                               'Sekolah': _value(user, 'asal_sekolah'),
                             },
                           ),

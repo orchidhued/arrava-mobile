@@ -338,6 +338,7 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
   }
 
   void _goToQuestion(int index) {
+    if (_isWayground) return; // Mode Wayground bersifat sekuensial (waktu per soal), tidak boleh loncat soal
     if (index < 0 || index >= _questions.length) return;
     if (index == _currentIndex) return;
 
@@ -950,8 +951,8 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
                         // Area Pilihan Jawaban
                         _buildAnswerArea(currentQ, choices),
 
-                        // Navigasi Nomor Soal
-                        _buildQuestionNavStrip(),
+                        // Navigasi Nomor Soal (Khusus mode biasa / non-wayground)
+                        if (!_isWayground) _buildQuestionNavStrip(),
                       ],
                     ),
                   ),
@@ -959,8 +960,8 @@ class _StudentQuizPlayerPageState extends State<StudentQuizPlayerPage> {
               ),
             ),
 
-            // 4. BOTTOM DOCKED CONTROLS
-            _buildBottomControls(),
+            // 4. BOTTOM DOCKED CONTROLS (Khusus mode biasa / non-wayground)
+            if (!_isWayground) _buildBottomControls(),
           ],
         ),
       ),

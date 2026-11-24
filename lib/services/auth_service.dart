@@ -65,6 +65,7 @@ class AuthService {
   static Future<void> logout() async {
     final rememberMe = await SecureStorage.read('remember_me');
     final savedEmail = await SecureStorage.read('saved_email');
+    final savedPassword = await SecureStorage.read('saved_password');
 
     try {
       await ApiClient.post(ApiConstants.logout);
@@ -73,9 +74,14 @@ class AuthService {
     }
     await SecureStorage.deleteAll();
 
-    if (rememberMe == 'true' && savedEmail != null && savedEmail.isNotEmpty) {
+    if (rememberMe == 'true') {
       await SecureStorage.write('remember_me', 'true');
-      await SecureStorage.write('saved_email', savedEmail);
+      if (savedEmail != null && savedEmail.isNotEmpty) {
+        await SecureStorage.write('saved_email', savedEmail);
+      }
+      if (savedPassword != null && savedPassword.isNotEmpty) {
+        await SecureStorage.write('saved_password', savedPassword);
+      }
     }
   }
 }

@@ -84,7 +84,7 @@ class _ModulePageContentState extends State<_ModulePageContent> {
     List<ModuleModel> modules,
     List<String> masterMapelNames,
   ) {
-    final mapels = <String>{
+    final allNames = <String>{
       ...masterMapelNames
           .map((s) => s.trim())
           .where((s) => s.isNotEmpty),
@@ -93,6 +93,25 @@ class _ModulePageContentState extends State<_ModulePageContent> {
           .whereType<String>()
           .where((s) => s.isNotEmpty),
     }.toList();
+
+    final mapels = allNames.where((nama) {
+      final nameLower = nama.toLowerCase();
+      final isSmaOnly = nameLower.contains('fisika') ||
+          nameLower.contains('kimia') ||
+          nameLower.contains('biologi');
+      final isIpaIpsUmum = nameLower.contains('ilmu pengetahuan alam') ||
+          nameLower == 'ipa' ||
+          nameLower.contains('ilmu pengetahuan sosial') ||
+          nameLower == 'ips';
+
+      if (_selectedJenjang.contains('SD') || _selectedJenjang.contains('SMP')) {
+        if (isSmaOnly) return false;
+      } else if (_selectedJenjang.contains('SMA')) {
+        if (isIpaIpsUmum) return false;
+      }
+      return true;
+    }).toList();
+
     mapels.sort();
     return mapels;
   }
@@ -360,7 +379,24 @@ class _ModulePageContentState extends State<_ModulePageContent> {
         StudentStyleFilterChipBar(
           options: _jenjangFilters,
           selectedOption: _selectedJenjang,
-          onSelected: (value) => setState(() => _selectedJenjang = value),
+          onSelected: (value) => setState(() {
+            _selectedJenjang = value;
+            if (_selectedMapel != 'Semua Mapel') {
+              final nameLower = _selectedMapel.toLowerCase();
+              final isSmaOnly = nameLower.contains('fisika') ||
+                  nameLower.contains('kimia') ||
+                  nameLower.contains('biologi');
+              final isIpaIpsUmum = nameLower.contains('ilmu pengetahuan alam') ||
+                  nameLower == 'ipa' ||
+                  nameLower.contains('ilmu pengetahuan sosial') ||
+                  nameLower == 'ips';
+              if ((value.contains('SD') || value.contains('SMP')) && isSmaOnly) {
+                _selectedMapel = 'Semua Mapel';
+              } else if (value.contains('SMA') && isIpaIpsUmum) {
+                _selectedMapel = 'Semua Mapel';
+              }
+            }
+          }),
         ),
         if (mapels.isNotEmpty) ...[
           const SizedBox(height: 8),

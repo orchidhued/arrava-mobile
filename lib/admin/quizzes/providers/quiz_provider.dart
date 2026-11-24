@@ -25,6 +25,9 @@ class QuizProvider with ChangeNotifier {
   List<MapelModel> _mapels = [];
   List<MapelModel> get mapels => UnmodifiableListView(_mapels);
 
+  List<TingkatKelasModel> _tingkatKelasList = [];
+  List<TingkatKelasModel> get tingkatKelasList => UnmodifiableListView(_tingkatKelasList);
+
   QuizModel? _selectedQuiz;
   QuizModel? get selectedQuiz => _selectedQuiz;
 
@@ -104,6 +107,16 @@ class QuizProvider with ChangeNotifier {
       _safeNotify();
     } catch (e) {
       // Menjaga mapels tetap berjalan lancar jika endpoint bermasalah
+    }
+  }
+
+  Future<void> fetchTingkatKelas({int? jenjang}) async {
+    try {
+      final result = await _repository.getTingkatKelas(jenjang: jenjang);
+      _tingkatKelasList = result;
+      _safeNotify();
+    } catch (e) {
+      // Menjaga tetap berjalan lancar jika endpoint bermasalah
     }
   }
 

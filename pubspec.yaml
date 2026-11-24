@@ -45,6 +45,7 @@ flutter:
   assets:
     - assets/animations/
     - assets/
+    - assets/icon/
     - assets/images/auth/
     - assets/badges/
     - assets/karakter/

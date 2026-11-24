@@ -213,11 +213,17 @@ class ApiClient {
       }
       return data;
     } else {
-      String message = (data is Map && data['message'] != null)
-          ? data['message'].toString()
-          : (data is Map && data['pesan'] != null)
-          ? data['pesan'].toString()
-          : 'HTTP Error ${response.statusCode}';
+      String message;
+      if (response.statusCode == 401) {
+        SecureStorage.delete('auth_token');
+        message = 'Sesi login telah berakhir. Silakan masuk kembali.';
+      } else {
+        message = (data is Map && data['message'] != null)
+            ? data['message'].toString()
+            : (data is Map && data['pesan'] != null)
+            ? data['pesan'].toString()
+            : 'HTTP Error ${response.statusCode}';
+      }
 
       if (data is Map && data['errors'] is Map) {
         final errMap = data['errors'] as Map;

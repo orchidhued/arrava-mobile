@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../admin/quizzes/models/quiz_model.dart';
 import '../../admin/quizzes/providers/quiz_provider.dart';
+import '../../core/storage/preferences_service.dart';
 import '../../services/auth_service.dart';
 import '../../shared/widgets/student_style_filter_bar.dart';
 import '../../core/constants/api_constants.dart';
@@ -27,6 +28,7 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
       'Semua'; // 'Semua', 'Belum Dikerjakan', 'Lulus', 'Belum Lulus'
   String _selectedMapel = 'Semua Mapel';
   int? _userJenjangId;
+  Set<int> _activeDraftQuizIds = {};
 
   @override
   void initState() {
@@ -47,6 +49,24 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
       status: 'tersedia',
       jenjang: parsedJenjangId,
     );
+    if (!mounted) return;
+    await _checkDrafts();
+  }
+
+  Future<void> _checkDrafts() async {
+    final quizzes = context.read<QuizProvider>().quizzes;
+    final Set<int> drafts = {};
+    for (final q in quizzes) {
+      final hasDraft = await PreferencesService.hasQuizDraft(q.idQuiz);
+      if (hasDraft) {
+        drafts.add(q.idQuiz);
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _activeDraftQuizIds = drafts;
+      });
+    }
   }
 
   @override
@@ -119,6 +139,14 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 
         return StatefulBuilder(
           builder: (context, setSheetState) {
+            final bool hasDraft = _activeDraftQuizIds.contains(quiz.idQuiz);
+            final Color sheetBtnBg = hasDraft
+                ? const Color(0xFFF59E0B)
+                : (quiz.hasTaken ? const Color(0xFF12233F) : _blue);
+            final Color sheetBtnShadow = hasDraft
+                ? const Color(0xFFB45309)
+                : (quiz.hasTaken ? const Color(0xFF0A1526) : const Color(0xFF00628E));
+
             return Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -332,12 +360,12 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                       width: double.infinity,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: _blue,
+                        color: sheetBtnBg,
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Color(0xFF00628E),
-                            offset: Offset(0, 4),
+                            color: sheetBtnShadow,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -378,22 +406,28 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
 
                                   if (!ctx.mounted || !context.mounted) return;
                                   Navigator.pop(ctx); // Close sheet
-                                  Navigator.push(
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) =>
                                           StudentQuizPlayerPage(quiz: quiz),
                                     ),
                                   );
+                                  if (mounted) {
+                                    _loadQuizzes();
+                                  }
                                 } else {
                                   Navigator.pop(ctx);
-                                  Navigator.push(
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) =>
                                           StudentQuizPlayerPage(quiz: quiz),
                                     ),
                                   );
+                                  if (mounted) {
+                                    _loadQuizzes();
+                                  }
                                 }
                               },
                         icon: isVerifying
@@ -405,11 +439,20 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Icon(Icons.play_arrow_rounded, size: 20),
+                            : Icon(
+                                hasDraft
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.play_arrow_rounded,
+                                size: 20,
+                              ),
                         label: Text(
                           isVerifying
                               ? 'Memverifikasi...'
-                              : 'Mulai Kerjakan Kuis 🚀',
+                              : (hasDraft
+                                  ? 'Lanjutkan Pengerjaan 🚀'
+                                  : (quiz.hasTaken
+                                      ? 'Kerjakan Ulang 🚀'
+                                      : 'Mulai Kerjakan Kuis 🚀')),
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 13,
@@ -706,11 +749,34 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: _loadQuizzes,
-                                icon: const Icon(Icons.refresh, size: 16),
-                                label: const Text('Coba Lagi'),
-                              ),
+                              if (quizProvider.error!.toLowerCase().contains('sesi') ||
+                                  quizProvider.error!.toLowerCase().contains('unauthenticated') ||
+                                  quizProvider.error!.contains('401'))
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await AuthService.logout();
+                                    if (!context.mounted) return;
+                                    Navigator.of(context).pushNamedAndRemoveUntil(
+                                      '/login',
+                                      (route) => false,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.login_rounded, size: 16),
+                                  label: const Text('Masuk Ulang'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFEF4444),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                )
+                              else
+                                ElevatedButton.icon(
+                                  onPressed: _loadQuizzes,
+                                  icon: const Icon(Icons.refresh, size: 16),
+                                  label: const Text('Coba Lagi'),
+                                ),
                             ],
                           ),
                         ),
@@ -980,121 +1046,154 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: Color(0xFFF1F5F9), width: 1.0)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Status Kuis (Kiri)
-          if (quiz.isExpired)
-            const Row(
+      child: () {
+        final bool hasDraft = _activeDraftQuizIds.contains(quiz.idQuiz);
+        final String actionLabel = hasDraft
+            ? 'Lanjutkan'
+            : (quiz.hasTaken ? 'Kerjakan Ulang' : 'Kerjakan');
+        final IconData actionIcon = hasDraft
+            ? Icons.play_arrow_rounded
+            : (quiz.hasTaken
+                ? Icons.replay_rounded
+                : Icons.arrow_forward_rounded);
+        final Color btnBgColor = quiz.isExpired
+            ? const Color(0xFF94A3B8)
+            : (hasDraft
+                ? const Color(0xFFF59E0B)
+                : (quiz.hasTaken ? const Color(0xFF12233F) : _blue));
+        final Color btnShadowColor = quiz.isExpired
+            ? Colors.transparent
+            : (hasDraft
+                ? const Color(0xFFB45309)
+                : (quiz.hasTaken
+                    ? const Color(0xFF0A1526)
+                    : const Color(0xFF00628E)));
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Status Kuis (Kiri)
+            if (quiz.isExpired)
+              const Row(
+                children: [
+                  Icon(Icons.circle, size: 7, color: Color(0xFFEF4444)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Kadaluarsa',
+                    style: TextStyle(
+                      color: Color(0xFFEF4444),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              )
+            else if (hasDraft)
+              const Row(
+                children: [
+                  Icon(Icons.circle, size: 7, color: Color(0xFFF59E0B)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Sedang Dikerjakan',
+                    style: TextStyle(
+                      color: Color(0xFFD97706),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              )
+            else
+              const Row(
+                children: [
+                  Icon(Icons.circle, size: 7, color: Color(0xFF10B981)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Tersedia',
+                    style: TextStyle(
+                      color: Color(0xFF10B981),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+
+            // Tombol Aksi (Kanan): Detail + Kerjakan / Lanjutkan
+            Row(
               children: [
-                Icon(Icons.circle, size: 7, color: Color(0xFFEF4444)),
-                SizedBox(width: 4),
-                Text(
-                  'Kadaluarsa',
-                  style: TextStyle(
-                    color: Color(0xFFEF4444),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                OutlinedButton(
+                  onPressed: () => _showQuizDetailSheet(quiz),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF334155),
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    minimumSize: const Size(0, 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Detail',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                   ),
                 ),
-              ],
-            )
-          else
-            const Row(
-              children: [
-                Icon(Icons.circle, size: 7, color: Color(0xFF10B981)),
-                SizedBox(width: 4),
-                Text(
-                  'Tersedia',
-                  style: TextStyle(
-                    color: Color(0xFF10B981),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                const SizedBox(width: 6),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: btnBgColor,
+                    boxShadow: [
+                      if (!quiz.isExpired)
+                        BoxShadow(
+                          color: btnShadowColor,
+                          offset: const Offset(0, 3),
+                        ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: quiz.isExpired
+                        ? null
+                        : () => _showQuizDetailSheet(quiz),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      disabledForegroundColor: Colors.white70,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      minimumSize: const Size(0, 32),
+                      shape: const StadiumBorder(),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          actionLabel,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          actionIcon,
+                          size: 13,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-
-          // Tombol Aksi (Kanan): Detail + Kerjakan
-          Row(
-            children: [
-              OutlinedButton(
-                onPressed: () => _showQuizDetailSheet(quiz),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF334155),
-                  side: const BorderSide(color: Color(0xFFCBD5E1)),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 3,
-                  ),
-                  minimumSize: const Size(0, 30),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Detail',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: quiz.isExpired
-                      ? const Color(0xFF94A3B8)
-                      : (quiz.hasTaken ? const Color(0xFF12233F) : _blue),
-                  boxShadow: [
-                    if (!quiz.isExpired)
-                      BoxShadow(
-                        color: quiz.hasTaken
-                            ? const Color(0xFF0A1526)
-                            : const Color(0xFF00628E),
-                        offset: const Offset(0, 3),
-                      ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: quiz.isExpired
-                      ? null
-                      : () => _showQuizDetailSheet(quiz),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    disabledForegroundColor: Colors.white70,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    minimumSize: const Size(0, 32),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        quiz.hasTaken ? 'Kerjakan Ulang' : 'Kerjakan',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        quiz.hasTaken
-                            ? Icons.replay_rounded
-                            : Icons.arrow_forward_rounded,
-                        size: 13,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        );
+      }(),
     );
 
     final cardBody = Padding(

@@ -616,9 +616,30 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
   Widget build(BuildContext context) {
     final filtered = _getFilteredQuestions();
 
+    final filteredMapels = _mapels.where((m) {
+      final nameLower = m.namaMapel.toLowerCase();
+      final isSmaOnly = m.idJenjang == 3 ||
+          nameLower.contains('fisika') ||
+          nameLower.contains('kimia') ||
+          nameLower.contains('biologi');
+      final isIpaIpsUmum = m.idMapel == 4 ||
+          m.idMapel == 5 ||
+          nameLower.contains('ilmu pengetahuan alam') ||
+          nameLower == 'ipa' ||
+          nameLower.contains('ilmu pengetahuan sosial') ||
+          nameLower == 'ips';
+
+      if (_selectedJenjang.contains('SD') || _selectedJenjang.contains('SMP')) {
+        if (isSmaOnly) return false;
+      } else if (_selectedJenjang.contains('SMA')) {
+        if (isIpaIpsUmum) return false;
+      }
+      return true;
+    }).toList();
+
     final List<String> mapelOptions = [
       'Semua Mapel',
-      ..._mapels.map((m) => m.namaMapel),
+      ...filteredMapels.map((m) => m.namaMapel),
     ];
 
     return Scaffold(
@@ -836,7 +857,34 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
             label: 'Jenjang',
             options: _jenjangFilters,
             selectedOption: _selectedJenjang,
-            onSelected: (val) => setState(() => _selectedJenjang = val),
+            onSelected: (val) {
+              setState(() {
+                _selectedJenjang = val;
+                if (_selectedMapel != 'Semua Mapel') {
+                  final current = _mapels.where((m) => m.namaMapel == _selectedMapel).firstOrNull;
+                  if (current != null) {
+                    final nameLower = current.namaMapel.toLowerCase();
+                    final isSmaOnly = current.idJenjang == 3 ||
+                        nameLower.contains('fisika') ||
+                        nameLower.contains('kimia') ||
+                        nameLower.contains('biologi');
+                    final isIpaIpsUmum = current.idMapel == 4 ||
+                        current.idMapel == 5 ||
+                        nameLower.contains('ilmu pengetahuan alam') ||
+                        nameLower == 'ipa' ||
+                        nameLower.contains('ilmu pengetahuan sosial') ||
+                        nameLower == 'ips';
+                    if ((val.contains('SD') || val.contains('SMP')) && isSmaOnly) {
+                      _selectedMapel = 'Semua Mapel';
+                      _selectedMapelId = null;
+                    } else if (val.contains('SMA') && isIpaIpsUmum) {
+                      _selectedMapel = 'Semua Mapel';
+                      _selectedMapelId = null;
+                    }
+                  }
+                }
+              });
+            },
           ),
         ],
       ),

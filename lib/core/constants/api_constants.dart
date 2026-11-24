@@ -12,6 +12,8 @@ class ApiConstants {
   static const String modules = '/modules';
   static const String quizzes = '/quizzes';
   static const String mapel = '/mapel';
+  static const String tingkatKelas = '/tingkat-kelas';
+  static String tingkatKelasByJenjang(int jenjangId) => '/tingkat-kelas/$jenjangId';
   static const String studentDashboard = '/student/dashboard';
   static const String studentProfile = '/student/profile';
   static const String studentHeroTheme = '/student/hero-theme';

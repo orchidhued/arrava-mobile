@@ -14,6 +14,11 @@ import 'package:arrava_mobile/services/local_notification_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   await LocalNotificationService.init();
 
   runApp(

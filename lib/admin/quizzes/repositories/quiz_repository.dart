@@ -30,6 +30,10 @@ class QuizRepository {
     return await _service.fetchMapelModels(queryParams: queryParams);
   }
 
+  Future<List<TingkatKelasModel>> getTingkatKelas({int? jenjang}) async {
+    return await _service.fetchTingkatKelasModels(jenjang: jenjang);
+  }
+
   Future<QuizModel> getQuizById(int id) async {
     final response = await _service.fetchQuizById(id);
     return QuizModel.fromJson(response['data']);

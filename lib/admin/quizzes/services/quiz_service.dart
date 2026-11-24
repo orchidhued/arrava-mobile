@@ -119,6 +119,25 @@ class QuizService {
   }
 
   // ---------------------------------------------------------------------------
+  // TINGKAT KELAS
+  // ---------------------------------------------------------------------------
+
+  Future<dynamic> fetchTingkatKelasRaw({int? jenjang}) async {
+    final endpoint = jenjang != null
+        ? ApiConstants.tingkatKelasByJenjang(jenjang)
+        : ApiConstants.tingkatKelas;
+    return await ApiClient.get(endpoint);
+  }
+
+  Future<List<TingkatKelasModel>> fetchTingkatKelasModels({int? jenjang}) async {
+    final response = await fetchTingkatKelasRaw(jenjang: jenjang);
+    return _extractList(response)
+        .whereType<Map>()
+        .map((e) => TingkatKelasModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  // ---------------------------------------------------------------------------
   // BANK SOAL
   // ---------------------------------------------------------------------------
 

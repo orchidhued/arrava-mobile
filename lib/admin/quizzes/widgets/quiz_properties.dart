@@ -9,9 +9,11 @@ import '../models/quiz_question.dart';
 class QuizProperties extends StatelessWidget {
   final QuizQuestion question;
   final List<MapelModel> availableMapels;
+  final List<TingkatKelasModel> availableTingkatKelas;
 
   // Quiz-level properties
   final String level;
+  final int? idTingkatKelas;
   final int? idMapel;
   final String difficulty;
   final String modePengerjaan;
@@ -30,6 +32,7 @@ class QuizProperties extends StatelessWidget {
   final ValueChanged<int> onChangedTimeLimit;
   final ValueChanged<int> onChangedPoints;
   final ValueChanged<String> onChangedLevel;
+  final ValueChanged<int?>? onChangedTingkatKelas;
   final ValueChanged<int?> onChangedMapel;
   final ValueChanged<String> onChangedDifficulty;
   final ValueChanged<String> onChangedMode;
@@ -46,7 +49,9 @@ class QuizProperties extends StatelessWidget {
     super.key,
     required this.question,
     this.availableMapels = const [],
+    this.availableTingkatKelas = const [],
     required this.level,
+    this.idTingkatKelas,
     this.idMapel,
     required this.difficulty,
     required this.modePengerjaan,
@@ -63,6 +68,7 @@ class QuizProperties extends StatelessWidget {
     required this.onChangedTimeLimit,
     required this.onChangedPoints,
     required this.onChangedLevel,
+    this.onChangedTingkatKelas,
     required this.onChangedMapel,
     required this.onChangedDifficulty,
     required this.onChangedMode,
@@ -283,6 +289,12 @@ class QuizProperties extends StatelessWidget {
           _buildLevelDropdown(),
           const SizedBox(height: 14),
 
+          // Tingkat Kelas
+          if (availableTingkatKelas.isNotEmpty) ...[
+            _buildTingkatKelasDropdown(),
+            const SizedBox(height: 14),
+          ],
+
           // Mapel
           _buildMapelDropdown(),
           const SizedBox(height: 14),
@@ -315,6 +327,88 @@ class QuizProperties extends StatelessWidget {
           _buildTokenSection(),
         ],
       ),
+    );
+  }
+
+  // Dropdown Tingkat Kelas
+  Widget _buildTingkatKelasDropdown() {
+    int? currentJenjangId;
+    if (level.contains('SD')) {
+      currentJenjangId = 1;
+    } else if (level.contains('SMP')) {
+      currentJenjangId = 2;
+    } else if (level.contains('SMA')) {
+      currentJenjangId = 3;
+    }
+
+    final filteredKelas = availableTingkatKelas.where((tk) {
+      if (currentJenjangId != null) {
+        return tk.idJenjang == currentJenjangId;
+      }
+      return true;
+    }).toList();
+
+    final hasMatchingValue = idTingkatKelas == null || filteredKelas.any((tk) => tk.idTingkat == idTingkatKelas);
+    final effectiveValue = hasMatchingValue ? idTingkatKelas : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.class_outlined, size: 16, color: Color(0xFF0D9488)),
+            SizedBox(width: 6),
+            Text(
+              'Tingkat Kelas (Opsional)',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF334155),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<int?>(
+          value: effectiveValue,
+          isExpanded: true,
+          decoration: _inputDecoration(),
+          icon: const Icon(Icons.expand_more, size: 19, color: Color(0xFF94A3B8)),
+          items: [
+            const DropdownMenuItem<int?>(
+              value: null,
+              child: Text(
+                'Semua Kelas (Umum Sejenjang)',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ),
+            ...filteredKelas.map((tk) {
+              return DropdownMenuItem<int?>(
+                value: tk.idTingkat,
+                child: Text(
+                  tk.nama,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              );
+            }),
+          ],
+          onChanged: (val) {
+            if (onChangedTingkatKelas != null) {
+              onChangedTingkatKelas!(val);
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -378,7 +472,28 @@ class QuizProperties extends StatelessWidget {
 
   // Dropdown Mapel
   Widget _buildMapelDropdown() {
-    final bool hasMatch = idMapel != null && availableMapels.any((m) => m.idMapel == idMapel);
+    // Filter mapel berdasarkan level/jenjang
+    final filteredMapels = availableMapels.where((m) {
+      final nameLower = m.namaMapel.toLowerCase();
+      final isSmaOnly = m.idJenjang == 3 ||
+          nameLower.contains('fisika') ||
+          nameLower.contains('kimia') ||
+          nameLower.contains('biologi');
+      final isIpaIpsUmum = m.idMapel == 4 || m.idMapel == 5 ||
+          nameLower.contains('ilmu pengetahuan alam') ||
+          nameLower.contains('ilmu pengetahuan sosial');
+
+      if (level.contains('SD') || level.contains('SMP')) {
+        // SD & SMP: Sembunyikan mapel SMA (Fisika, Kimia, Biologi)
+        if (isSmaOnly) return false;
+      } else if (level.contains('SMA')) {
+        // SMA: Sembunyikan IPA umum & IPS umum (karena IPA dipecah Fisika/Kimia/Biologi, IPS untuk SD/SMP)
+        if (isIpaIpsUmum) return false;
+      }
+      return true;
+    }).toList();
+
+    final bool hasMatch = idMapel != null && filteredMapels.any((m) => m.idMapel == idMapel);
     final int? selectedValue = hasMatch ? idMapel : null;
 
     return Column(
@@ -405,6 +520,7 @@ class QuizProperties extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<int?>(
+          key: ValueKey('mapel_${level}_$selectedValue'),
           initialValue: selectedValue,
           isExpanded: true,
           decoration: _inputDecoration(),
@@ -421,7 +537,7 @@ class QuizProperties extends StatelessWidget {
                 ),
               ),
             ),
-            ...availableMapels.map((mapel) {
+            ...filteredMapels.map((mapel) {
               return DropdownMenuItem<int?>(
                 value: mapel.idMapel,
                 child: Text(
