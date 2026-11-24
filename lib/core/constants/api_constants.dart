@@ -3,7 +3,7 @@ class ApiConstants {
   // Jika di Android via Wi-Fi langsung: gunakan IP Wi-Fi PC (192.168.18.4)
   static String get baseUrl {
     return 'https://arrava.my.id/api';
-    //return 'http://10.10.5.111:8000/api';
+    //return 'http://10.39.196.102:8000/api';
   }
 
   static const String login = '/login';
@@ -13,7 +13,8 @@ class ApiConstants {
   static const String quizzes = '/quizzes';
   static const String mapel = '/mapel';
   static const String tingkatKelas = '/tingkat-kelas';
-  static String tingkatKelasByJenjang(int jenjangId) => '/tingkat-kelas/$jenjangId';
+  static String tingkatKelasByJenjang(int jenjangId) =>
+      '/tingkat-kelas/$jenjangId';
   static const String studentDashboard = '/student/dashboard';
   static const String studentProfile = '/student/profile';
   static const String studentHeroTheme = '/student/hero-theme';
