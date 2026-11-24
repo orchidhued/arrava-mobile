@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/dashboard_service.dart';
 import '../../shared/widgets/app_header.dart';
@@ -86,6 +87,26 @@ class _StudentPageState extends State<StudentPage> {
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
+  String? _getStudentPhotoUrl(Map<String, dynamic> student) {
+    final user = student['user'];
+    final photoValues = [
+      student['foto_profil'],
+      student['foto_profil_url'],
+      student['foto'],
+      if (user is Map) ...[
+        user['foto_profil'],
+        user['foto_profil_url'],
+        user['foto'],
+      ],
+    ];
+
+    for (final value in photoValues) {
+      final url = ApiConstants.resolveMediaUrl(value?.toString());
+      if (url != null) return url;
+    }
+    return null;
+  }
+
   List<Map<String, dynamic>> _getFilteredStudents() {
     final q = _searchQuery.toLowerCase();
 
@@ -160,7 +181,9 @@ class _StudentPageState extends State<StudentPage> {
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.all(32.0),
-                          child: CircularProgressIndicator(color: AppColors.primary),
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
                         ),
                       )
                     else if (filtered.isEmpty)
@@ -174,20 +197,30 @@ class _StudentPageState extends State<StudentPage> {
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.person_off_outlined, size: 40, color: Colors.grey[400]),
+                            Icon(
+                              Icons.person_off_outlined,
+                              size: 40,
+                              color: Colors.grey[400],
+                            ),
                             const SizedBox(height: 10),
                             Text(
                               _hasActiveFilters
                                   ? 'Tidak ada siswa yang cocok dengan filter atau kata kunci saat ini.'
                                   : 'Belum ada data siswa di database',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
                             ),
                             if (_hasActiveFilters) ...[
                               const SizedBox(height: 12),
                               OutlinedButton.icon(
                                 onPressed: _resetFilters,
-                                icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+                                icon: const Icon(
+                                  Icons.filter_alt_off_rounded,
+                                  size: 16,
+                                ),
                                 label: const Text('Reset Filter'),
                               ),
                             ],
@@ -365,7 +398,11 @@ class _StudentPageState extends State<StudentPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.primary),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  size: 14,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 5),
                 Text(
                   'Data terhubung dari database',
@@ -440,6 +477,7 @@ class _StudentPageState extends State<StudentPage> {
     final status = student['status']?.toString() ?? 'Aktif';
     final totalPoin = student['total_poin'] ?? 0;
     final initials = _getInitials(name);
+    final photoUrl = _getStudentPhotoUrl(student);
 
     return Container(
       width: double.infinity,
@@ -462,7 +500,7 @@ class _StudentPageState extends State<StudentPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStudentAvatar(initials),
+                _buildStudentAvatar(initials, photoUrl),
 
                 const SizedBox(width: 12),
 
@@ -516,7 +554,10 @@ class _StudentPageState extends State<StudentPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFDDF3FF),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0xFFB2E7FC), width: 1),
+                              border: Border.all(
+                                color: const Color(0xFFB2E7FC),
+                                width: 1,
+                              ),
                             ),
                             child: Text(
                               jenjang,
@@ -536,7 +577,10 @@ class _StudentPageState extends State<StudentPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0xFFFDE68A), width: 1),
+                              border: Border.all(
+                                color: const Color(0xFFFDE68A),
+                                width: 1,
+                              ),
                             ),
                             child: Text(
                               '⭐ $totalPoin XP',
@@ -594,7 +638,7 @@ class _StudentPageState extends State<StudentPage> {
     );
   }
 
-  Widget _buildStudentAvatar(String initials) {
+  Widget _buildStudentAvatar(String initials, String? photoUrl) {
     return Container(
       width: 48,
       height: 48,
@@ -620,14 +664,33 @@ class _StudentPageState extends State<StudentPage> {
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
-        child: Text(
-          initials,
-          style: GoogleFonts.nunitoSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w900,
-            color: AppColors.primary,
-          ),
-        ),
+        child: photoUrl == null
+            ? _buildStudentAvatarFallback(initials)
+            : ClipOval(
+                child: Image.network(
+                  photoUrl,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, error, _) {
+                    debugPrint(
+                      '[STUDENT AVATAR ERROR] Failed loading image from: $photoUrl | Error: $error',
+                    );
+                    return _buildStudentAvatarFallback(initials);
+                  },
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildStudentAvatarFallback(String initials) {
+    return Text(
+      initials,
+      style: GoogleFonts.nunitoSans(
+        fontSize: 15,
+        fontWeight: FontWeight.w900,
+        color: AppColors.primary,
       ),
     );
   }

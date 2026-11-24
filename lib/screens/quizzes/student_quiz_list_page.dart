@@ -7,6 +7,7 @@ import '../../admin/quizzes/providers/quiz_provider.dart';
 import '../../services/auth_service.dart';
 import '../../shared/widgets/student_style_filter_bar.dart';
 import '../../core/constants/api_constants.dart';
+import '../dungeon/dungeon_lobby.dart';
 import 'student_quiz_player_page.dart';
 
 class StudentQuizListPage extends StatefulWidget {
@@ -515,6 +516,48 @@ class _StudentQuizListPageState extends State<StudentQuizListPage> {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Tab Dungeon Soal (Sinkron dengan Elearning Web quiz-header-tabs)
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DungeonLobbyPage(),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(30),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F2B48),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                color: const Color(0xFF38BDF8),
+                                width: 1.2,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('🏰', style: TextStyle(fontSize: 12)),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Dungeon',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF38BDF8),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const Spacer(),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesService {
@@ -15,10 +16,6 @@ class PreferencesService {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
   }
-
-  // --------------------------------------------------------------------------
-  // PENGATURAN AUDIO & HAPTIC
-  // --------------------------------------------------------------------------
 
   /// Memeriksa apakah efek suara kuis diaktifkan (default: true)
   static Future<bool> isSoundEnabled() async {
@@ -70,7 +67,9 @@ class PreferencesService {
     try {
       final prefs = await _getInstance();
       // Konversi key int ke string untuk JSON serialization
-      final stringAnswers = answers.map((key, value) => MapEntry(key.toString(), value));
+      final stringAnswers = answers.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
       final payload = {
         'quizId': quizId,
         'answers': stringAnswers,
@@ -141,4 +140,3 @@ class PreferencesService {
     } catch (_) {}
   }
 }
-

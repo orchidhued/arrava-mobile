@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'profile/admin_profile_page.dart';
 import 'teachers/teacher_page.dart';
 import 'modules/module_page.dart';
 import '../shared/widgets/app_bottom_navigation.dart';
@@ -25,6 +26,7 @@ class _AdminShellState extends State<AdminShell> {
       body: _buildCurrentPage(),
 
       bottomNavigationBar: AppBottomNavigation(
+        isTeacher: widget.isTeacher,
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
@@ -36,9 +38,26 @@ class _AdminShellState extends State<AdminShell> {
   }
 
   Widget _buildCurrentPage() {
+    if (widget.isTeacher) {
+      switch (_currentIndex) {
+        case 0:
+          return AdminDashboardPage(isTeacher: true);
+        case 1:
+          return const ModulePage();
+        case 2:
+          return const QuizMenuPage();
+        case 3:
+          return const AttendancePage();
+        case 4:
+          return const AdminProfilePage();
+        default:
+          return AdminDashboardPage(isTeacher: true);
+      }
+    }
+
     switch (_currentIndex) {
       case 0:
-        return AdminDashboardPage(isTeacher: widget.isTeacher);
+        return AdminDashboardPage(isTeacher: false);
 
       case 1:
         return const ModulePage();
@@ -56,7 +75,7 @@ class _AdminShellState extends State<AdminShell> {
         return const QuizMenuPage();
 
       default:
-        return AdminDashboardPage(isTeacher: widget.isTeacher);
+        return AdminDashboardPage(isTeacher: false);
     }
   }
 }

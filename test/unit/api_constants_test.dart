@@ -22,6 +22,39 @@ void main() {
       expect(url.startsWith('http://'), isTrue);
       expect(url.endsWith('/api'), isTrue);
     });
+
+    test('Media paths resolve to the API storage route', () {
+      expect(
+        ApiConstants.resolveMediaUrl('profil-siswa/photo.jpg'),
+        'http://127.0.0.1:8000/api/storage/profil-siswa/photo.jpg',
+      );
+      expect(
+        ApiConstants.resolveMediaUrl('/storage/profil-siswa/photo.jpg'),
+        'http://127.0.0.1:8000/api/storage/profil-siswa/photo.jpg',
+      );
+      expect(
+        ApiConstants.resolveMediaUrl('/api/storage/profil-siswa/photo.jpg'),
+        'http://127.0.0.1:8000/api/storage/profil-siswa/photo.jpg',
+      );
+      expect(
+        ApiConstants.resolveMediaUrl('api/storage/profil-siswa/photo.jpg'),
+        'http://127.0.0.1:8000/api/storage/profil-siswa/photo.jpg',
+      );
+    });
+
+    test('Media URLs on the local backend are normalized to the API host', () {
+      expect(
+        ApiConstants.resolveMediaUrl(
+          'http://localhost:8000/api/storage/profil-siswa/photo.jpg',
+        ),
+        'http://127.0.0.1:8000/api/storage/profil-siswa/photo.jpg',
+      );
+      expect(
+        ApiConstants.resolveMediaUrl(
+          'http://localhost:8000/storage/profil-siswa/photo.jpg',
+        ),
+        'http://127.0.0.1:8000/api/storage/profil-siswa/photo.jpg',
+      );
+    });
   });
 }
-

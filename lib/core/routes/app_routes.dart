@@ -5,6 +5,7 @@ import 'package:arrava_mobile/admin/profile/admin_profile_page.dart';
 import 'package:arrava_mobile/admin/quizzes/manage_quiz_page.dart';
 import 'package:arrava_mobile/auth/login.dart';
 import 'package:arrava_mobile/screens/dashboard_screen.dart';
+import 'package:arrava_mobile/screens/dungeon/dungeon_lobby.dart';
 import 'package:arrava_mobile/screens/quizzes/student_quiz_list_page.dart';
 
 class AppRoutes {
@@ -15,6 +16,7 @@ class AppRoutes {
   static const String manageQuizzes = '/admin/quizzes';
   static const String studentQuizzes = '/student/quizzes';
   static const String quizzes = '/quizzes';
+  static const String dungeon = '/dungeon';
 
   static Map<String, WidgetBuilder> get routes => {
         login: (_) => const LoginScreen(),
@@ -24,5 +26,6 @@ class AppRoutes {
         manageQuizzes: (_) => const ManageQuizPage(),
         studentQuizzes: (_) => const StudentQuizListPage(),
         quizzes: (_) => const ManageQuizPage(),
+        dungeon: (_) => const DungeonLobbyPage(),
       };
 }

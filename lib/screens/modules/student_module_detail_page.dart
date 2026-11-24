@@ -88,7 +88,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         const SnackBar(
           backgroundColor: Color(0xFFE11D48),
           behavior: SnackBarBehavior.floating,
-          content: Text('Berkas dokumen PDF belum diunggah atau tidak tersedia.'),
+          content: Text(
+            'Berkas dokumen PDF belum diunggah atau tidak tersedia.',
+          ),
         ),
       );
       return;
@@ -132,8 +134,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         SnackBar(
           backgroundColor: const Color(0xFF059669),
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           content: Row(
             children: [
               const Icon(Icons.stars_rounded, color: Colors.amber, size: 24),
@@ -144,7 +147,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                       ? 'Selamat! Materi selesai dan modul tuntas (+${_modul.poinModul} EXP)'
                       : 'Materi berhasil ditandai selesai! Silakan lanjutkan ke Kuis Modul.',
                   style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 13),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
@@ -177,14 +182,17 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
       final bool? proceed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: const Row(
             children: [
               Icon(Icons.help_outline_rounded, color: Color(0xFFD97706)),
               SizedBox(width: 8),
-              Text('Belum Lengkap',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                'Belum Lengkap',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           content: Text(
@@ -218,8 +226,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
     }
 
     setState(() => _isSubmittingKuis = true);
-    final result =
-        await provider.submitModuleQuiz(_modul.idModul, _selectedAnswers);
+    final result = await provider.submitModuleQuiz(
+      _modul.idModul,
+      _selectedAnswers,
+    );
     setState(() => _isSubmittingKuis = false);
 
     if (!mounted) {
@@ -245,9 +255,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         SnackBar(
           backgroundColor: const Color(0xFFE11D48),
           behavior: SnackBarBehavior.floating,
-          content: Text(
-            provider.error ?? 'Gagal mengumpulkan kuis modul.',
-          ),
+          content: Text(provider.error ?? 'Gagal mengumpulkan kuis modul.'),
         ),
       );
     }
@@ -262,153 +270,180 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         final bool isTuntas = result.isTuntas;
 
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           contentPadding: const EdgeInsets.all(24),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: isLulus
-                      ? const Color(0xFFD1FAE5)
-                      : const Color(0xFFFEE2E2),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    isLulus ? '🏆' : '⚠️',
-                    style: const TextStyle(fontSize: 36),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: isLulus
+                        ? const Color(0xFFD1FAE5)
+                        : const Color(0xFFFEE2E2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      isLulus ? '🏆' : '⚠️',
+                      style: const TextStyle(fontSize: 36),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isLulus ? 'Lulus KKM Kuis Modul!' : 'Belum Mencapai KKM',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: isLulus
-                      ? const Color(0xFF065F46)
-                      : const Color(0xFF991B1B),
+                const SizedBox(height: 16),
+                Text(
+                  isLulus ? 'Lulus KKM Kuis Modul!' : 'Belum Mencapai KKM',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: isLulus
+                        ? const Color(0xFF065F46)
+                        : const Color(0xFF991B1B),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Skor Akhir: ${result.skor}% (KKM: ${result.kkm}%)',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF475569),
+                const SizedBox(height: 6),
+                Text(
+                  'Skor Akhir: ${result.skor}% (KKM: ${result.kkm}%)',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF475569),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        const Text('Benar',
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          const Text(
+                            'Benar',
                             style: TextStyle(
-                                fontSize: 11, color: Color(0xFF64748B))),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${result.benar} / ${result.totalSoal}',
-                          style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${result.benar} / ${result.totalSoal}',
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF059669)),
-                        ),
-                      ],
-                    ),
-                    Container(
-                        height: 24, width: 1, color: const Color(0xFFCBD5E1)),
-                    Column(
-                      children: [
-                        const Text('Status Modul',
+                              color: Color(0xFF059669),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        height: 24,
+                        width: 1,
+                        color: const Color(0xFFCBD5E1),
+                      ),
+                      Column(
+                        children: [
+                          const Text(
+                            'Status Modul',
                             style: TextStyle(
-                                fontSize: 11, color: Color(0xFF64748B))),
-                        const SizedBox(height: 2),
-                        Text(
-                          isTuntas ? 'Tuntas ✅' : 'Belum Selesai',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isTuntas
-                                ? const Color(0xFF059669)
-                                : const Color(0xFFD97706),
+                              fontSize: 11,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isTuntas ? 'Tuntas ✅' : 'Belum Selesai',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isTuntas
+                                  ? const Color(0xFF059669)
+                                  : const Color(0xFFD97706),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  isTuntas && result.poinDiberikan > 0
+                      ? 'Selamat! Modul tuntas sempurna dan kamu mendapatkan +${result.poinDiberikan} EXP! 🎓🎉'
+                      : isLulus
+                      ? 'Hebat! Kamu lulus evaluasi kuis modul. Pastikan materi juga sudah ditandai selesai agar modul tuntas.'
+                      : 'Nilai kamu belum mencapai KKM (${result.kkm}%). Silakan pelajari kembali materi dan coba lagi ya!',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF475569),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    if (!isLulus)
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            setState(() {
+                              _selectedAnswers.clear();
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFCBD5E1)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Coba Lagi',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ],
+                      ),
+                    if (!isLulus) const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Selesai',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                isTuntas && result.poinDiberikan > 0
-                    ? 'Selamat! Modul tuntas sempurna dan kamu mendapatkan +${result.poinDiberikan} EXP! 🎓🎉'
-                    : isLulus
-                        ? 'Hebat! Kamu lulus evaluasi kuis modul. Pastikan materi juga sudah ditandai selesai agar modul tuntas.'
-                        : 'Nilai kamu belum mencapai KKM (${result.kkm}%). Silakan pelajari kembali materi dan coba lagi ya!',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF475569),
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  if (!isLulus)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          setState(() {
-                            _selectedAnswers.clear();
-                          });
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFCBD5E1)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('Coba Lagi',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  if (!isLulus) const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text('Selesai',
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -425,9 +460,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         setState(() => _isLoadingQuiz = false);
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => StudentQuizPlayerPage(quiz: quiz),
-          ),
+          MaterialPageRoute(builder: (_) => StudentQuizPlayerPage(quiz: quiz)),
         ).then((_) => _loadFreshDetails());
       }
     } catch (e) {
@@ -450,8 +483,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
     final bool isVideo = modul.isVideo;
     final String typeName =
         modul.namaTipe ?? (isVideo ? 'Video Pembelajaran' : 'Dokumen PDF');
-    final Color badgeColor =
-        isVideo ? const Color(0xFFDC2626) : _blue;
+    final Color badgeColor = isVideo ? const Color(0xFFDC2626) : _blue;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -548,14 +580,21 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
               ),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 color: const Color(0xFF0F172A),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.play_circle_fill, size: 14, color: Color(0xFFEF4444)),
+                        Icon(
+                          Icons.play_circle_fill,
+                          size: 14,
+                          color: Color(0xFFEF4444),
+                        ),
                         SizedBox(width: 6),
                         Text(
                           'Pemutar Video In-App',
@@ -593,8 +632,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
 
     // Tampilan PDF
     final pdfUrl = modul.pdfDocumentUrl;
-    final resolvedPdfUrl =
-        pdfUrl != null ? ApiConstants.resolveMediaUrl(pdfUrl) : null;
+    final resolvedPdfUrl = pdfUrl != null
+        ? ApiConstants.resolveMediaUrl(pdfUrl)
+        : null;
 
     if (_showInAppPdf && resolvedPdfUrl != null) {
       return Container(
@@ -610,14 +650,21 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 color: const Color(0xFF1E293B),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.picture_as_pdf, size: 16, color: Color(0xFF60A5FA)),
+                        Icon(
+                          Icons.picture_as_pdf,
+                          size: 16,
+                          color: Color(0xFF60A5FA),
+                        ),
                         SizedBox(width: 6),
                         Text(
                           'Pembaca PDF In-App',
@@ -632,14 +679,21 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                     InkWell(
                       onTap: () => setState(() => _showInAppPdf = false),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
                           'Tutup Pratinjau ✕',
-                          style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -721,23 +775,42 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () => setState(() => _showInAppPdf = true),
-                    icon: const Icon(Icons.chrome_reader_mode_rounded, size: 16),
-                    label: const Text('Baca di Aplikasi 📖', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    icon: const Icon(
+                      Icons.chrome_reader_mode_rounded,
+                      size: 16,
+                    ),
+                    label: const Text(
+                      'Baca di Aplikasi 📖',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFF1D4ED8),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                   OutlinedButton.icon(
                     onPressed: () => _handleOpenPdfExternal(),
                     icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                    label: const Text('Aplikasi Luar ↗', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'Aplikasi Luar ↗',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: const BorderSide(color: Colors.white70),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ],
@@ -749,8 +822,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
     );
   }
 
-  Widget _buildInfoCard(
-      ModuleModel modul, String typeName, Color badgeColor) {
+  Widget _buildInfoCard(ModuleModel modul, String typeName, Color badgeColor) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -759,10 +831,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFDCEFFF)),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0xFFB2E7FC),
-            offset: Offset(0, 4),
-          ),
+          BoxShadow(color: Color(0xFFB2E7FC), offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -773,8 +842,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             runSpacing: 8,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: badgeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -790,8 +861,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
               ),
               if (modul.namaJenjang != null)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(8),
@@ -807,8 +880,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 ),
               if (modul.namaMapel != null && modul.namaMapel!.isNotEmpty)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3E8FF),
                     borderRadius: BorderRadius.circular(8),
@@ -824,8 +899,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   ),
                 ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
@@ -852,8 +929,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: modul.isTuntas
                       ? const Color(0xFFD1FAE5)
@@ -903,15 +982,11 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
         color: isTuntas ? const Color(0xFFF0FDF4) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isTuntas
-              ? const Color(0xFFA7F3D0)
-              : const Color(0xFFDCEFFF),
+          color: isTuntas ? const Color(0xFFA7F3D0) : const Color(0xFFDCEFFF),
         ),
         boxShadow: [
           BoxShadow(
-            color: isTuntas
-                ? const Color(0xFFA7F3D0)
-                : const Color(0xFFB2E7FC),
+            color: isTuntas ? const Color(0xFFA7F3D0) : const Color(0xFFB2E7FC),
             offset: const Offset(0, 4),
           ),
         ],
@@ -924,7 +999,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             builder: (context, constraints) {
               final isVeryCompact = constraints.maxWidth < 320;
               final badge = Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: isTuntas
                       ? const Color(0xFF059669)
@@ -947,7 +1025,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w800,
-                        color: isTuntas ? Colors.white : const Color(0xFF92400E),
+                        color: isTuntas
+                            ? Colors.white
+                            : const Color(0xFF92400E),
                       ),
                     ),
                   ],
@@ -1030,9 +1110,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                     ),
                     child: Center(
                       child: Icon(
-                        isTuntas
-                            ? Icons.check
-                            : Icons.track_changes_rounded,
+                        isTuntas ? Icons.check : Icons.track_changes_rounded,
                         color: isTuntas ? Colors.white : _blue,
                         size: 18,
                       ),
@@ -1083,9 +1161,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isMateriSelesai
-                  ? Colors.white
-                  : const Color(0xFFF8FAFC),
+              color: isMateriSelesai ? Colors.white : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isMateriSelesai
@@ -1107,11 +1183,14 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   child: Center(
                     child: isMateriSelesai
                         ? const Icon(Icons.check, size: 14, color: Colors.white)
-                        : const Text('1',
+                        : const Text(
+                            '1',
                             style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF475569))),
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1122,7 +1201,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                       const Text(
                         '1. Pelajari Materi',
                         style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       Text(
                         isMateriSelesai
@@ -1143,34 +1224,45 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 ),
                 if (!isMateriSelesai)
                   ElevatedButton(
-                    onPressed:
-                        _isMarkingDone ? null : _handleCompleteMateri,
+                    onPressed: _isMarkingDone ? null : _handleCompleteMateri,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4F46E5),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       minimumSize: const Size(0, 32),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: _isMarkingDone
                         ? const SizedBox(
                             width: 12,
                             height: 12,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : const Text('Tandai Selesai',
+                        : const Text(
+                            'Tandai Selesai',
                             style: TextStyle(
-                                fontSize: 11, fontWeight: FontWeight.w700)),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   )
                 else
-                  const Text('Tuntas ✓',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF059669))),
+                  const Text(
+                    'Tuntas ✓',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF059669),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1183,15 +1275,15 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
               color: isQuizLulus
                   ? Colors.white
                   : (modul.isQuizSelesai
-                      ? const Color(0xFFFFFBEB)
-                      : const Color(0xFFF8FAFC)),
+                        ? const Color(0xFFFFFBEB)
+                        : const Color(0xFFF8FAFC)),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isQuizLulus
                     ? const Color(0xFFA7F3D0)
                     : (modul.isQuizSelesai
-                        ? const Color(0xFFFDE68A)
-                        : const Color(0xFFE2E8F0)),
+                          ? const Color(0xFFFDE68A)
+                          : const Color(0xFFE2E8F0)),
               ),
             ),
             child: Row(
@@ -1203,18 +1295,21 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                     color: isQuizLulus
                         ? const Color(0xFF059669)
                         : (modul.isQuizSelesai
-                            ? const Color(0xFFD97706)
-                            : const Color(0xFFE2E8F0)),
+                              ? const Color(0xFFD97706)
+                              : const Color(0xFFE2E8F0)),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: isQuizLulus
                         ? const Icon(Icons.check, size: 14, color: Colors.white)
-                        : const Text('2',
+                        : const Text(
+                            '2',
                             style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF475569))),
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1225,16 +1320,18 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                       Text(
                         '2. Kuis Modul (KKM: $kkm%)',
                         style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       Text(
                         !hasQuiz
                             ? 'Tanpa Kuis Evaluasi (Bebas Kuis)'
                             : isQuizLulus
-                                ? 'Lulus KKM (Nilai: ${modul.nilaiQuiz}%)'
-                                : modul.isQuizSelesai
-                                    ? 'Remedial (Nilai: ${modul.nilaiQuiz}%)'
-                                    : 'Belum Dikerjakan (${modul.soalModul.length} Soal)',
+                            ? 'Lulus KKM (Nilai: ${modul.nilaiQuiz}%)'
+                            : modul.isQuizSelesai
+                            ? 'Remedial (Nilai: ${modul.nilaiQuiz}%)'
+                            : 'Belum Dikerjakan (${modul.soalModul.length} Soal)',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: (isQuizLulus || modul.isQuizSelesai)
@@ -1243,8 +1340,8 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                           color: isQuizLulus
                               ? const Color(0xFF059669)
                               : (modul.isQuizSelesai
-                                  ? const Color(0xFFB45309)
-                                  : const Color(0xFF94A3B8)),
+                                    ? const Color(0xFFB45309)
+                                    : const Color(0xFF94A3B8)),
                         ),
                       ),
                     ],
@@ -1263,21 +1360,31 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                           ? const Color(0xFF334155)
                           : Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       minimumSize: const Size(0, 32),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text(isQuizLulus ? 'Lihat Kuis' : 'Kerjakan',
-                        style: const TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w700)),
+                    child: Text(
+                      isQuizLulus ? 'Lihat Kuis' : 'Kerjakan',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   )
                 else
-                  const Text('Bebas Kuis',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF94A3B8))),
+                  const Text(
+                    'Bebas Kuis',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1291,9 +1398,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE2E8F0)),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: Row(
         children: [
@@ -1301,9 +1406,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
           _buildSingleTab(
             1,
             'Catatan',
-            modul.catatan.isNotEmpty
-                ? '${modul.catatan.length}'
-                : null,
+            modul.catatan.isNotEmpty ? '${modul.catatan.length}' : null,
           ),
           _buildSingleTab(
             2,
@@ -1311,8 +1414,8 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             modul.isQuizLulus
                 ? '✓ Lulus'
                 : (modul.hasQuizModul
-                    ? '${modul.soalModul.length} Soal'
-                    : null),
+                      ? '${modul.soalModul.length} Soal'
+                      : null),
             isBadgeSuccess: modul.isQuizLulus,
           ),
         ],
@@ -1320,8 +1423,12 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
     );
   }
 
-  Widget _buildSingleTab(int index, String title, String? badgeText,
-      {bool isBadgeSuccess = false}) {
+  Widget _buildSingleTab(
+    int index,
+    String title,
+    String? badgeText, {
+    bool isBadgeSuccess = false,
+  }) {
     final bool isActive = _activeTabIndex == index;
     return Expanded(
       child: InkWell(
@@ -1331,8 +1438,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color:
-                    isActive ? const Color(0xFF4F46E5) : Colors.transparent,
+                color: isActive ? const Color(0xFF4F46E5) : Colors.transparent,
                 width: 2.5,
               ),
             ),
@@ -1344,8 +1450,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 title,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight:
-                      isActive ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                   color: isActive
                       ? const Color(0xFF4F46E5)
                       : const Color(0xFF64748B),
@@ -1354,14 +1459,16 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
               if (badgeText != null) ...[
                 const SizedBox(width: 4),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: isBadgeSuccess
                         ? const Color(0xFFD1FAE5)
                         : (isActive
-                            ? const Color(0xFFEEF2FF)
-                            : const Color(0xFFF1F5F9)),
+                              ? const Color(0xFFEEF2FF)
+                              : const Color(0xFFF1F5F9)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -1372,8 +1479,8 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                       color: isBadgeSuccess
                           ? const Color(0xFF065F46)
                           : (isActive
-                              ? const Color(0xFF4F46E5)
-                              : const Color(0xFF64748B)),
+                                ? const Color(0xFF4F46E5)
+                                : const Color(0xFF64748B)),
                     ),
                   ),
                 ),
@@ -1411,10 +1518,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: const Color(0xFFDCEFFF)),
             boxShadow: const [
-              BoxShadow(
-                color: Color(0xFFB2E7FC),
-                offset: Offset(0, 4),
-              ),
+              BoxShadow(color: Color(0xFFB2E7FC), offset: Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -1452,10 +1556,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: const Color(0xFFDCEFFF)),
               boxShadow: const [
-                BoxShadow(
-                  color: Color(0xFFB2E7FC),
-                  offset: Offset(0, 4),
-                ),
+                BoxShadow(color: Color(0xFFB2E7FC), offset: Offset(0, 4)),
               ],
             ),
             child: Column(
@@ -1472,10 +1573,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 const SizedBox(height: 4),
                 const Text(
                   'Tandai materi selesai untuk melengkapi langkah pertama penyelesaian modul.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF465673),
-                  ),
+                  style: TextStyle(fontSize: 11, color: Color(0xFF465673)),
                 ),
                 const SizedBox(height: 12),
                 Container(
@@ -1485,10 +1583,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                     color: _blue,
                     borderRadius: BorderRadius.circular(22),
                     boxShadow: const [
-                      BoxShadow(
-                        color: Color(0xFF00628E),
-                        offset: Offset(0, 4),
-                      ),
+                      BoxShadow(color: Color(0xFF00628E), offset: Offset(0, 4)),
                     ],
                   ),
                   child: ElevatedButton.icon(
@@ -1498,7 +1593,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(Icons.check, size: 18),
                     label: Text(
@@ -1506,7 +1603,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                           ? 'Menyimpan Progres...'
                           : 'Tandai Selesai Menonton/Membaca',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 12),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -1531,10 +1630,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: const Color(0xFFDCEFFF)),
             boxShadow: const [
-              BoxShadow(
-                color: Color(0xFFB2E7FC),
-                offset: Offset(0, 4),
-              ),
+              BoxShadow(color: Color(0xFFB2E7FC), offset: Offset(0, 4)),
             ],
           ),
           child: Row(
@@ -1546,7 +1642,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  isVideo ? Icons.ondemand_video_rounded : Icons.description_outlined,
+                  isVideo
+                      ? Icons.ondemand_video_rounded
+                      : Icons.description_outlined,
                   size: 22,
                   color: const Color(0xFF475569),
                 ),
@@ -1557,7 +1655,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isVideo ? 'Media Video Pembelajaran' : 'Bahan Dokumen PDF',
+                      isVideo
+                          ? 'Media Video Pembelajaran'
+                          : 'Bahan Dokumen PDF',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
@@ -1606,8 +1706,11 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.videogame_asset_rounded,
-                          color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.videogame_asset_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     const Text(
@@ -1636,14 +1739,17 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   width: double.infinity,
                   height: 40,
                   child: ElevatedButton.icon(
-                    onPressed:
-                        _isLoadingQuiz ? null : _handleStartConnectedQuiz,
+                    onPressed: _isLoadingQuiz
+                        ? null
+                        : _handleStartConnectedQuiz,
                     icon: _isLoadingQuiz
                         ? const SizedBox(
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Color(0xFF581C87)),
+                              strokeWidth: 2,
+                              color: Color(0xFF581C87),
+                            ),
                           )
                         : const Icon(Icons.play_arrow_rounded, size: 18),
                     label: Text(
@@ -1651,13 +1757,16 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                           ? 'Memuat Kuis...'
                           : 'Buka Latihan Soal Terkait ⚡',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 12),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFF581C87),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
@@ -1726,8 +1835,11 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.bookmark_border_rounded,
-                        size: 18, color: Color(0xFF2563EB)),
+                    child: const Icon(
+                      Icons.bookmark_border_rounded,
+                      size: 18,
+                      color: Color(0xFF2563EB),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -1840,8 +1952,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
               ),
               if (modul.isQuizLulus)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF059669),
                     borderRadius: BorderRadius.circular(20),
@@ -1857,8 +1971,10 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                 )
               else if (modul.isQuizSelesai)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF3C7),
                     border: Border.all(color: const Color(0xFFFCD34D)),
@@ -1901,7 +2017,9 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEEF2FF),
                         borderRadius: BorderRadius.circular(6),
@@ -2009,8 +2127,11 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                               ),
                             ),
                             if (isSelected)
-                              const Icon(Icons.check_circle,
-                                  color: Color(0xFF4F46E5), size: 18),
+                              const Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF4F46E5),
+                                size: 18,
+                              ),
                           ],
                         ),
                       ),
@@ -2030,10 +2151,7 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
             color: _blue,
             borderRadius: BorderRadius.circular(24),
             boxShadow: const [
-              BoxShadow(
-                color: Color(0xFF00628E),
-                offset: Offset(0, 4),
-              ),
+              BoxShadow(color: Color(0xFF00628E), offset: Offset(0, 4)),
             ],
           ),
           child: ElevatedButton(
@@ -2049,12 +2167,13 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text(
                     '🚀 Kumpulkan Jawaban Kuis Modul',
-                    style:
-                        TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                   ),
           ),
         ),
