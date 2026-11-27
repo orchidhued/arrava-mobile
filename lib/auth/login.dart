@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'registration.dart';
+
 import 'package:arrava_mobile/admin/admin_shell.dart';
 import 'package:arrava_mobile/core/storage/secure_storage.dart';
 import 'package:arrava_mobile/screens/dashboard_screen.dart';
@@ -163,6 +165,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _handleLogin() async {
+    if (_isLoading) return;
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
@@ -736,6 +739,16 @@ class _LoginScreenState extends State<LoginScreen>
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                  ),
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const RegistrationScreen(),
+                            ),
+                          ),
+                    child: const Text('Daftar sebagai siswa'),
                   ),
                 ],
               ),
