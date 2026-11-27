@@ -37,6 +37,6 @@ class SecureStorage {
   }
 
   static Future<void> setToken(String token) async {
-    await write('auth_token', token);
+    await _storage.write(key: 'auth_token', value: token);
   }
 }

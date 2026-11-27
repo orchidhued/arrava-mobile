@@ -10,29 +10,56 @@ class AuthService {
     final response = await ApiClient.post(
       ApiConstants.login,
       body: {'email': email, 'password': password},
+      authenticated: false,
     );
 
     final data = response;
 
     if (data['success'] == true) {
       final token = data['token'];
-      if (token != null) {
-        await SecureStorage.setToken(token.toString());
-      }
-
       final user = data['user'];
-      if (user != null) {
-        await SecureStorage.write('user_id', user['id_user']?.toString() ?? '');
-        await SecureStorage.write('user_name', user['nama']?.toString() ?? '');
-        await SecureStorage.write('user_email', user['email']?.toString() ?? '');
-        await SecureStorage.write('user_role', user['id_tipeuser']?.toString() ?? '');
-        await SecureStorage.write('user_jenjang', user['id_jenjang']?.toString() ?? '');
+      if (token is! String || token.isEmpty || user is! Map) {
+        throw Exception('Respons login tidak lengkap.');
       }
+      await _saveUser(user);
+      await SecureStorage.setToken(token);
 
       return data;
     }
 
     throw Exception(data['message'] ?? 'Login gagal.');
+  }
+
+  static Future<void> _saveUser(Map user) async {
+    await SecureStorage.write('user_id', user['id_user']?.toString() ?? '');
+    await SecureStorage.write('user_name', user['nama']?.toString() ?? '');
+    await SecureStorage.write('user_email', user['email']?.toString() ?? '');
+    await SecureStorage.write(
+      'user_role',
+      user['id_tipeuser']?.toString() ?? '',
+    );
+    await SecureStorage.write(
+      'user_jenjang',
+      user['id_jenjang']?.toString() ?? '',
+    );
+  }
+
+  static Future<String?> restoreRole() async {
+    if (!await isLoggedIn()) return null;
+    try {
+      final response = await ApiClient.get(ApiConstants.me);
+      if (response is Map &&
+          response['success'] == true &&
+          response['user'] is Map) {
+        await _saveUser(response['user'] as Map);
+      }
+    } on ApiResponseException catch (error) {
+      if (error.invalidSession) return null;
+      if (error.statusCode == 403) rethrow;
+    } catch (_) {
+      // Use the cached profile when the server is temporarily unreachable.
+    }
+    return getRole();
   }
 
   static Future<String?> getToken() async {

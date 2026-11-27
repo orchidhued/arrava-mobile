@@ -10,18 +10,22 @@ import '../storage/secure_storage.dart';
 class ApiResponseException implements Exception {
   final int statusCode;
   final String message;
+  final int? retryAfter;
+  final bool invalidSession;
 
-  const ApiResponseException(this.statusCode, this.message);
+  const ApiResponseException(
+    this.statusCode,
+    this.message, {
+    this.retryAfter,
+    this.invalidSession = false,
+  });
 
   @override
   String toString() => 'Exception: $message';
 }
 
 class ApiClient {
-  static Future<dynamic> uploadProfilePhoto(
-    List<int> bytes,
-    String filename,
-  ) =>
+  static Future<dynamic> uploadProfilePhoto(List<int> bytes, String filename) =>
       postMultipart(
         '/student/profile',
         fields: {'_method': 'PUT'},
@@ -54,7 +58,7 @@ class ApiClient {
         final streamed = await request.send();
         return http.Response.fromStream(streamed);
       })().timeout(const Duration(seconds: 30));
-      return _handleResponse(response, url);
+      return await _handleResponse(response, headers);
     } on TimeoutException {
       throw Exception('Upload foto terlalu lama. Silakan coba lagi.');
     } on http.ClientException catch (e) {
@@ -80,8 +84,10 @@ class ApiClient {
     return Uri.parse('$base$path');
   }
 
-  static Future<Map<String, String>> _getHeaders() async {
-    final token = await SecureStorage.getToken();
+  static Future<Map<String, String>> _getHeaders({
+    bool authenticated = true,
+  }) async {
+    final token = authenticated ? await SecureStorage.getToken() : null;
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
@@ -90,13 +96,16 @@ class ApiClient {
     };
   }
 
-  static Future<dynamic> get(String endpoint) async {
+  static Future<dynamic> get(
+    String endpoint, {
+    bool authenticated = true,
+  }) async {
     final url = _buildUri(endpoint);
     try {
       if (kDebugMode) debugPrint('[API GET] Requesting: $url');
-      final headers = await _getHeaders();
+      final headers = await _getHeaders(authenticated: authenticated);
       final response = await http.get(url, headers: headers).timeout(_timeout);
-      return _handleResponse(response, url);
+      return await _handleResponse(response, headers);
     } on TimeoutException catch (_) {
       throw Exception(
         'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
@@ -113,12 +122,13 @@ class ApiClient {
     String method,
     String endpoint, {
     Map<String, dynamic>? body,
+    bool authenticated = true,
   }) async {
     final url = _buildUri(endpoint);
     try {
       if (kDebugMode) debugPrint('[API $method] Requesting: $url');
       // 1. Siapkan Header (Token & Tipe Data)
-      final headers = await _getHeaders();
+      final headers = await _getHeaders(authenticated: authenticated);
       // 2. PROSES PEMBUNGKUSAN KE JSON
       // Jika ada data (body), ubah menjadi teks JSON string
       String? jsonPayload;
@@ -139,7 +149,7 @@ class ApiClient {
       // 4. Tunggu respons dari server (Maksimal 10 detik)
       final response = await request.timeout(_timeout);
       // 5. Bongkar respons JSON yang dibalas server
-      return _handleResponse(response, url);
+      return await _handleResponse(response, headers);
     } on TimeoutException catch (_) {
       throw Exception(
         'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
@@ -152,8 +162,11 @@ class ApiClient {
     }
   }
 
-  static Future<dynamic> post(String endpoint, {Map<String, dynamic>? body}) =>
-      _sendJson('POST', endpoint, body: body);
+  static Future<dynamic> post(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    bool authenticated = true,
+  }) => _sendJson('POST', endpoint, body: body, authenticated: authenticated);
 
   static Future<dynamic> put(String endpoint, {Map<String, dynamic>? body}) =>
       _sendJson('PUT', endpoint, body: body);
@@ -169,7 +182,7 @@ class ApiClient {
       final response = await http
           .delete(url, headers: headers)
           .timeout(_timeout);
-      return _handleResponse(response, url);
+      return await _handleResponse(response, headers);
     } on TimeoutException catch (_) {
       throw Exception(
         'Koneksi timeout ($url). Server backend tidak merespons dalam 10 detik.',
@@ -182,20 +195,17 @@ class ApiClient {
     }
   }
 
-  static dynamic _handleResponse(http.Response response, Uri url) {
-    if (kDebugMode) {
-      debugPrint(
-        '[API RESPONSE] [$url] Status: ${response.statusCode} | Body: ${response.body}',
-      );
-    }
-
+  static Future<dynamic> _handleResponse(
+    http.Response response,
+    Map<String, String> headers,
+  ) async {
     dynamic data;
     try {
       data = jsonDecode(response.body);
     } catch (_) {
       throw ApiResponseException(
         response.statusCode,
-        'Format respons server tidak valid (${response.statusCode}): ${response.body.length > 100 ? response.body.substring(0, 100) : response.body}',
+        'Format respons server tidak valid (${response.statusCode}).',
       );
     }
 
@@ -214,9 +224,19 @@ class ApiClient {
       return data;
     } else {
       String message;
-      if (response.statusCode == 401) {
-        SecureStorage.delete('auth_token');
-        message = 'Sesi login telah berakhir. Silakan masuk kembali.';
+      final authorization = headers['Authorization'];
+      final invalidSession =
+          authorization != null &&
+          data is Map &&
+          (response.statusCode == 401 || data['code'] == 'session_revoked');
+      if (invalidSession) {
+        final currentToken = await SecureStorage.getToken();
+        if (authorization == 'Bearer $currentToken') {
+          await SecureStorage.delete('auth_token');
+        }
+        message =
+            data['message']?.toString() ??
+            'Sesi login telah berakhir. Silakan masuk kembali.';
       } else {
         message = (data is Map && data['message'] != null)
             ? data['message'].toString()
@@ -241,7 +261,14 @@ class ApiClient {
         }
       }
 
-      throw ApiResponseException(response.statusCode, message);
+      throw ApiResponseException(
+        response.statusCode,
+        message,
+        invalidSession: invalidSession,
+        retryAfter:
+            int.tryParse('${data is Map ? data['retry_after'] ?? '' : ''}') ??
+            int.tryParse(response.headers['retry-after'] ?? ''),
+      );
     }
   }
 }
