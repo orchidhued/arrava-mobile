@@ -85,26 +85,54 @@ class NativeVideoPlayerView(
                             width: 100%;
                             height: 100%;
                         }
-                        iframe {
-                            position: absolute;
-                            top: 0;
-                            left: 0;
+                        #player {
                             width: 100%;
                             height: 100%;
-                            border: 0;
                         }
                     </style>
                 </head>
                 <body>
                     <div class="video-wrapper">
-                        <iframe 
-                            src="https://www.youtube.com/embed/$youtubeId?autoplay=0&playsinline=1&rel=0&modestbranding=1&fs=1&enablejsapi=1" 
-                            title="Video Pembelajaran" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            allowfullscreen>
-                        </iframe>
+                        <div id="player"></div>
                     </div>
+                    <script>
+                        const lockedVideoId = '$youtubeId';
+                        let player;
+
+                        function onYouTubeIframeAPIReady() {
+                            player = new YT.Player('player', {
+                                videoId: lockedVideoId,
+                                playerVars: {
+                                    autoplay: 0,
+                                    controls: 1,
+                                    playsinline: 1,
+                                    rel: 0,
+                                    fs: 0,
+                                    iv_load_policy: 3,
+                                    disablekb: 1
+                                },
+                                events: {
+                                    onReady: function() {
+                                        window.setInterval(function() {
+                                            const currentVideoId = player.getVideoData().video_id;
+                                            if (currentVideoId && currentVideoId !== lockedVideoId) {
+                                                player.loadVideoById(lockedVideoId);
+                                            }
+                                        }, 250);
+                                    },
+                                    onStateChange: function(event) {
+                                        const currentVideoId = player.getVideoData().video_id;
+                                        if (currentVideoId && currentVideoId !== lockedVideoId) {
+                                            player.loadVideoById(lockedVideoId);
+                                        } else if (event.data === YT.PlayerState.ENDED) {
+                                            player.cueVideoById(lockedVideoId);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    </script>
+                    <script src="https://www.youtube.com/iframe_api"></script>
                 </body>
                 </html>
             """.trimIndent()

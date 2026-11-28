@@ -72,14 +72,6 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
     }
   }
 
-  /// Opsi fallback untuk membuka video di YouTube eksternal jika siswa menginginkan
-  Future<void> _handlePlayVideoExternal() async {
-    final rawUrl = _modul.videoPlayUrl;
-    if (rawUrl == null || rawUrl.trim().isEmpty) return;
-    final resolvedUrl = ApiConstants.resolveMediaUrl(rawUrl) ?? rawUrl;
-    await LauncherService.openUrl(resolvedUrl);
-  }
-
   /// Membuka dokumen PDF di aplikasi eksternal (Google Drive / PDF Reader)
   Future<void> _handleOpenPdfExternal({bool useGoogleDocs = false}) async {
     final rawUrl = _modul.pdfDocumentUrl;
@@ -606,19 +598,12 @@ class _StudentModuleDetailPageState extends State<StudentModuleDetailPage> {
                         ),
                       ],
                     ),
-                    InkWell(
-                      onTap: _handlePlayVideoExternal,
-                      child: const Row(
-                        children: [
-                          Text(
-                            'Buka di YouTube ↗',
-                            style: TextStyle(
-                              color: Color(0xFF94A3B8),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                    const Text(
+                      'Video modul terkunci',
+                      style: TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
